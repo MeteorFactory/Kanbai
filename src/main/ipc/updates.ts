@@ -47,16 +47,21 @@ const TOOLS_TO_CHECK: ToolCheck[] = [
     checkCommand: 'git',
     checkArgs: ['--version'],
   },
-  {
-    name: 'cargo',
-    checkCommand: 'cargo',
-    checkArgs: ['--version'],
-  },
-  {
-    name: 'rtk',
-    checkCommand: 'rtk',
-    checkArgs: ['--version'],
-  },
+  // cargo & rtk — Windows only
+  ...(IS_WIN
+    ? [
+        {
+          name: 'cargo',
+          checkCommand: 'cargo',
+          checkArgs: ['--version'],
+        },
+        {
+          name: 'rtk',
+          checkCommand: 'rtk',
+          checkArgs: ['--version'],
+        },
+      ]
+    : []),
 ]
 
 async function getVersion(command: string, args: string[]): Promise<string | null> {

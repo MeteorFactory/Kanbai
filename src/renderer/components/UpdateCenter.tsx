@@ -3,6 +3,8 @@ import { useUpdateStore } from '../lib/stores/updateStore'
 import { useAppUpdateStore } from '../lib/stores/appUpdateStore'
 import { useI18n } from '../lib/i18n'
 
+const IS_WIN_RENDERER = navigator.platform.startsWith('Win')
+
 export function UpdateCenter() {
   const { t } = useI18n()
   const [isOpen, setIsOpen] = useState(false)
@@ -222,17 +224,17 @@ export function UpdateCenter() {
                         {installingTool === update.tool ? '...' : t('updates.update')}
                       </button>
                     )}
-                    {!update.installed && update.tool === 'cargo' && (
+                    {IS_WIN_RENDERER && !update.installed && update.tool === 'cargo' && (
                       <button className="notification-item-btn notification-item-btn--install" onClick={() => handleInstall(update.tool, update.scope)} disabled={installingTool === update.tool}>
                         {installingTool === update.tool ? '...' : t('updates.install')}
                       </button>
                     )}
-                    {!update.installed && update.tool === 'rtk' && (
+                    {IS_WIN_RENDERER && !update.installed && update.tool === 'rtk' && (
                       <button className="notification-item-btn notification-item-btn--install" onClick={() => handleInstall(update.tool, update.scope)} disabled={installingTool === update.tool}>
                         {installingTool === update.tool ? '...' : t('updates.install')}
                       </button>
                     )}
-                    {update.installed && update.tool === 'rtk' && (
+                    {IS_WIN_RENDERER && update.installed && update.tool === 'rtk' && (
                       <button className="notification-item-btn notification-item-btn--uninstall" onClick={() => handleUninstall(update.tool)} disabled={installingTool === update.tool}>
                         {installingTool === update.tool ? '...' : t('updates.uninstall')}
                       </button>

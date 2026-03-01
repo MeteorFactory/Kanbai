@@ -59,7 +59,6 @@ export function getExtendedToolPaths(): string[] {
     '/opt/homebrew/sbin',
     '/usr/local/bin',
     '/usr/local/sbin',
-    `${home}/.cargo/bin`,
     `${home}/.nvm/versions/node`,
   ]
 }
@@ -229,8 +228,6 @@ export function getUpdateCommands(): Record<string, { command: string; args: str
     npm_brew: { command: 'brew', args: ['upgrade', 'node'] },
     npm: { command: 'npm', args: ['install', '-g', 'npm@latest'] },
     claude: { command: 'npm', args: ['install', '-g', '@anthropic-ai/claude-code@latest'] },
-    cargo: { command: 'brew', args: ['install', 'rustup'] },
-    rtk: { command: 'cargo', args: ['install', '--git', 'https://github.com/rtk-ai/rtk'] },
   }
 }
 

@@ -2,7 +2,7 @@ import { IpcMain } from 'electron'
 import fs from 'fs'
 import path from 'path'
 import { IPC_CHANNELS, PackageInfo, PackageManagerType, PkgNlMessage, ProjectPackageManager } from '../../shared/types/index'
-import { crossExecFile } from '../../shared/platform'
+import { crossExecFile, IS_WIN } from '../../shared/platform'
 import { askPackageQuestion, cancelPackageQuery } from '../services/packages/nlPackages'
 
 interface DetectInput {
@@ -86,8 +86,8 @@ function detectManagersInProject(project: { id: string; path: string; name: stri
     })
   }
 
-  // cargo — Cargo.toml
-  if (fs.existsSync(path.join(projectPath, 'Cargo.toml'))) {
+  // cargo — Cargo.toml (Windows only)
+  if (IS_WIN && fs.existsSync(path.join(projectPath, 'Cargo.toml'))) {
     results.push({
       projectId: project.id,
       projectName: project.name,
