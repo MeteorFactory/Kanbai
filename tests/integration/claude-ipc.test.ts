@@ -21,12 +21,20 @@ function createMockChildProcess() {
 
 let lastChildProcess: ReturnType<typeof createMockChildProcess>
 
-vi.mock('child_process', () => ({
-  spawn: vi.fn(() => {
-    lastChildProcess = createMockChildProcess()
-    return lastChildProcess
-  }),
-}))
+// Mock crossSpawn and killChildProcess from platform (instead of child_process directly)
+vi.mock('../../src/shared/platform', async () => {
+  const actual = await vi.importActual<typeof import('../../src/shared/platform')>('../../src/shared/platform')
+  return {
+    ...actual,
+    crossSpawn: vi.fn(() => {
+      lastChildProcess = createMockChildProcess()
+      return lastChildProcess
+    }),
+    killChildProcess: vi.fn((child: { kill: (signal?: string) => boolean }, signal?: string) => {
+      child.kill(signal)
+    }),
+  }
+})
 
 // Mock uuid
 let uuidCounter = 0

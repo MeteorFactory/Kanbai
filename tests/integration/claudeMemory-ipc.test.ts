@@ -3,6 +3,7 @@ import fs from 'fs'
 import path from 'path'
 import os from 'os'
 import { createMockIpcMain } from '../mocks/electron'
+import { IS_WIN } from '../helpers/platform'
 
 const TEST_DIR = path.join(os.tmpdir(), `.mirehub-claudememory-ipc-test-${process.pid}-${Date.now()}`)
 const projectDir = path.join(TEST_DIR, 'test-project')
@@ -1078,7 +1079,7 @@ coAuthors:
   // ---------------------------------------------------------------------------
 
   describe('claude:memoryLinkSharedRule', () => {
-    it('cree un symlink vers une regle partagee', async () => {
+    it.skipIf(IS_WIN)('cree un symlink vers une regle partagee', async () => {
       const sharedDir = path.join(TEST_DIR, '.mirehub', 'shared-rules')
       fs.mkdirSync(sharedDir, { recursive: true })
       fs.writeFileSync(path.join(sharedDir, 'shared.md'), '# Shared Content', 'utf-8')
@@ -1129,7 +1130,7 @@ coAuthors:
       expect(fs.readFileSync(path.join(rulesDir, 'conflict.md'), 'utf-8')).toBe('# Local Rule')
     })
 
-    it('remplace un symlink existant du meme nom', async () => {
+    it.skipIf(IS_WIN)('remplace un symlink existant du meme nom', async () => {
       const sharedDir = path.join(TEST_DIR, '.mirehub', 'shared-rules')
       fs.mkdirSync(sharedDir, { recursive: true })
       fs.writeFileSync(path.join(sharedDir, 'update.md'), '# Updated Shared', 'utf-8')
@@ -1155,7 +1156,7 @@ coAuthors:
   })
 
   describe('claude:memoryUnlinkSharedRule', () => {
-    it('supprime un symlink', async () => {
+    it.skipIf(IS_WIN)('supprime un symlink', async () => {
       const sharedDir = path.join(TEST_DIR, '.mirehub', 'shared-rules')
       fs.mkdirSync(sharedDir, { recursive: true })
       fs.writeFileSync(path.join(sharedDir, 'linked.md'), '# Linked', 'utf-8')
@@ -1355,7 +1356,7 @@ Use strict mode.`,
   // ---------------------------------------------------------------------------
 
   describe('workflow complet: regles partagees + linking', () => {
-    it('cree, lie, et delie une regle partagee', async () => {
+    it.skipIf(IS_WIN)('cree, lie, et delie une regle partagee', async () => {
       // Step 1: Creer une regle partagee
       await mockIpcMain._invoke('claude:memoryWriteSharedRule', {
         filename: 'shared-conventions.md',
@@ -1512,7 +1513,7 @@ Use strict mode.`,
       expect(content).toBe(unicodeContent)
     })
 
-    it('listMdFilesRecursive detecte correctement les symlinks vers des .md', async () => {
+    it.skipIf(IS_WIN)('listMdFilesRecursive detecte correctement les symlinks vers des .md', async () => {
       const rulesDir = path.join(projectDir, '.claude', 'rules')
       fs.mkdirSync(rulesDir, { recursive: true })
 

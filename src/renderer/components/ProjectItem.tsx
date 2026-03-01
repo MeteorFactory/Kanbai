@@ -136,11 +136,11 @@ export function ProjectItem({ project, isActive }: ProjectItemProps) {
   const handleCreateClaudeTerminal = useCallback((e: React.MouseEvent) => {
     e.stopPropagation()
     const termStore = useTerminalTabStore.getState()
-    termStore.createSplitTab(project.workspaceId, project.path, `Claude - ${project.path.split('/').pop() ?? project.name}`, 'claude', null)
+    termStore.createSplitTab(project.workspaceId, project.path, `Claude - ${project.path.split(/[\\/]/).pop() ?? project.name}`, 'claude', null)
     useViewStore.getState().setViewMode('terminal')
   }, [project.workspaceId, project.path, project.name])
 
-  const folderName = project.path.split('/').pop() ?? project.name
+  const folderName = project.path.split(/[\\/]/).pop() ?? project.name
 
   const contextMenuItems: ContextMenuItem[] = [
     {

@@ -3,6 +3,7 @@ import fs from 'fs'
 import path from 'path'
 import os from 'os'
 import { IPC_CHANNELS } from '../../shared/types'
+import { IS_WIN } from '../../shared/platform'
 import { installActivityHooks } from '../services/activityHooks'
 
 const ENVS_DIR = path.join(os.homedir(), '.mirehub', 'envs')
@@ -152,14 +153,20 @@ export function registerWorkspaceEnvHandlers(ipcMain: IpcMain): void {
         ensureEnvsDir()
         const envDir = getEnvDir(workspaceName)
 
-        // Clean existing env dir
+        // Clean existing env dir: remove old symlinks/junctions AND leftover
+        // copied directories (from a previous fs.cpSync fallback).
+        // Preserve .claude/ and CLAUDE.md which are managed by applyCludeRulesToEnv.
+        const PRESERVED = new Set(['.claude', 'CLAUDE.md'])
         if (fs.existsSync(envDir)) {
           const existing = fs.readdirSync(envDir)
           for (const entry of existing) {
+            if (PRESERVED.has(entry)) continue
             const entryPath = path.join(envDir, entry)
             const stat = fs.lstatSync(entryPath)
             if (stat.isSymbolicLink()) {
               fs.unlinkSync(entryPath)
+            } else if (stat.isDirectory()) {
+              fs.rmSync(entryPath, { recursive: true, force: true })
             }
           }
         } else {
@@ -178,7 +185,13 @@ export function registerWorkspaceEnvHandlers(ipcMain: IpcMain): void {
             finalLink = `${linkPath}-${suffix++}`
           }
 
-          fs.symlinkSync(projectPath, finalLink, 'dir')
+          try {
+            // On Windows, use 'junction' — junctions do NOT require admin
+            // privileges or Developer Mode (unlike 'dir' symlinks).
+            fs.symlinkSync(projectPath, finalLink, IS_WIN ? 'junction' : 'dir')
+          } catch {
+            throw new Error(`Failed to create symlink: ${projectPath} -> ${finalLink}`)
+          }
         }
 
         // Auto-apply Claude rules from the first project that has them

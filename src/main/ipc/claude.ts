@@ -1,8 +1,9 @@
 import { IpcMain, BrowserWindow, Notification } from 'electron'
-import { spawn, ChildProcess } from 'child_process'
+import { ChildProcess } from 'child_process'
 import { v4 as uuid } from 'uuid'
 import { IPC_CHANNELS, ClaudeSession } from '../../shared/types'
 import { MAX_LOOP_ERRORS_BEFORE_STOP, DEFAULT_LOOP_DELAY_MS } from '../../shared/constants/defaults'
+import { killChildProcess, crossSpawn } from '../../shared/platform'
 
 interface ManagedClaudeSession {
   session: ClaudeSession
@@ -38,7 +39,7 @@ function startClaudeProcess(managed: ManagedClaudeSession, projectPath: string):
     args.push('-p', managed.session.prompt)
   }
 
-  const proc = spawn('claude', args, {
+  const proc = crossSpawn('claude', args, {
     cwd: projectPath,
     env: { ...process.env },
     stdio: ['pipe', 'pipe', 'pipe'],
@@ -150,7 +151,7 @@ export function registerClaudeHandlers(ipcMain: IpcMain): void {
     if (managed) {
       managed.session.loopMode = false
       if (managed.process) {
-        managed.process.kill('SIGTERM')
+        killChildProcess(managed.process, 'SIGTERM')
       }
       managed.session.status = 'completed'
       managed.session.endedAt = Date.now()
@@ -171,7 +172,7 @@ export function cleanupClaudeSessions(): void {
   for (const [, managed] of sessions) {
     managed.session.loopMode = false
     if (managed.process) {
-      managed.process.kill('SIGTERM')
+      killChildProcess(managed.process, 'SIGTERM')
     }
   }
   sessions.clear()

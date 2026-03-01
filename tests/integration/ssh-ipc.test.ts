@@ -3,6 +3,7 @@ import fs from 'fs'
 import path from 'path'
 import os from 'os'
 import { createMockIpcMain } from '../mocks/electron'
+import { IS_WIN } from '../helpers/platform'
 
 const TEST_DIR = path.join(os.tmpdir(), `.mirehub-ssh-ipc-test-${process.pid}-${Date.now()}`)
 const sshDir = path.join(TEST_DIR, '.ssh')
@@ -573,7 +574,7 @@ describe('SSH IPC Handlers', () => {
       expect(fs.readFileSync(privatePath, 'utf-8')).toBe(PRIVATE_KEY_CONTENT)
     })
 
-    it('applique les permissions 0o600 a la cle privee', async () => {
+    it.skipIf(IS_WIN)('applique les permissions 0o600 a la cle privee', async () => {
       fs.mkdirSync(sshDir, { recursive: true })
 
       await mockIpcMain._invoke('ssh:importKey', {
@@ -587,7 +588,7 @@ describe('SSH IPC Handlers', () => {
       expect(privateStat.mode & 0o777).toBe(0o600)
     })
 
-    it('applique les permissions 0o644 a la cle publique', async () => {
+    it.skipIf(IS_WIN)('applique les permissions 0o644 a la cle publique', async () => {
       fs.mkdirSync(sshDir, { recursive: true })
 
       await mockIpcMain._invoke('ssh:importKey', {

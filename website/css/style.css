@@ -217,6 +217,10 @@ a:hover { color: var(--accent-hover); }
   color: var(--accent);
 }
 
+.hero h1 em.hero-claudez {
+  color: var(--warning);
+}
+
 .hero-subtitle {
   font-size: 20px;
   color: var(--accent);
@@ -572,6 +576,40 @@ a:hover { color: var(--accent-hover); }
   justify-content: center;
   flex-wrap: wrap;
 }
+
+/* OS-aware download buttons — swap primary/secondary based on detected OS */
+body.os-win #download-mac { order: 2; }
+body.os-win #download-win {
+  order: 1;
+  background: var(--accent);
+  color: var(--bg-primary);
+  border: none;
+}
+body.os-win #download-win:hover {
+  background: var(--accent-hover);
+  box-shadow: 0 8px 24px rgba(137, 180, 250, 0.25);
+}
+body.os-win #download-mac {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+body.os-win #download-mac:hover {
+  border-color: var(--text-muted);
+}
+
+/* Download meta — show both OS infos */
+.download-meta-mac,
+.download-meta-win {
+  display: inline;
+}
+.download-meta-mac::after {
+  content: ' \00B7 ';
+  color: var(--border);
+}
+body.os-win .download-meta-win { font-weight: 600; }
+body.os-mac .download-meta-mac { font-weight: 600; }
+body:not(.os-win):not(.os-mac) .download-meta-mac { font-weight: 600; }
 .download-version {
   font-size: 13px;
   opacity: 0.8;

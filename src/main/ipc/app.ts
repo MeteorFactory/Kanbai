@@ -3,6 +3,7 @@ import { IPC_CHANNELS, AppSettings } from '../../shared/types'
 import { StorageService } from '../services/storage'
 import { sendNotification } from '../services/notificationService'
 import { ensureAutoApproveScript } from '../services/activityHooks'
+import { isElevated } from '../../shared/platform'
 
 const storage = new StorageService()
 
@@ -30,6 +31,6 @@ export function registerAppHandlers(ipcMain: IpcMain): void {
   )
 
   ipcMain.handle(IPC_CHANNELS.APP_VERSION, () => {
-    return { version: app.getVersion(), name: app.getName() }
+    return { version: app.getVersion(), name: app.getName(), isElevated: isElevated() }
   })
 }

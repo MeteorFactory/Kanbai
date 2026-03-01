@@ -6,22 +6,16 @@ import { createMockIpcMain } from '../mocks/electron'
 
 const TEST_DIR = path.join(os.tmpdir(), `.mirehub-packages-ipc-test-${process.pid}-${Date.now()}`)
 
-// Mock child_process for list/update/search handlers that shell out
+// Mock crossExecFile from platform (instead of child_process directly)
 const mockExecFile = vi.fn()
 const mockAskPackageQuestion = vi.fn()
 const mockCancelPackageQuery = vi.fn()
 
-vi.mock('child_process', () => ({
-  execFile: mockExecFile,
-}))
-
-vi.mock('util', async () => {
-  const actual = await vi.importActual<typeof import('util')>('util')
+vi.mock('../../src/shared/platform', async () => {
+  const actual = await vi.importActual<typeof import('../../src/shared/platform')>('../../src/shared/platform')
   return {
     ...actual,
-    promisify: () => async (command: string, args: string[], options?: unknown) => {
-      return mockExecFile(command, args, options)
-    },
+    crossExecFile: mockExecFile,
   }
 })
 

@@ -72,7 +72,7 @@ export function useRulesDragDrop(
       return
     }
 
-    const sourceFilename = sourcePath.split('/').pop()!
+    const sourceFilename = sourcePath.split(/[\\/]/).pop()!
     let newPath: string
 
     if (dropTarget.position === 'inside' && dropTarget.type === 'directory') {

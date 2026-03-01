@@ -102,7 +102,7 @@ export function registerClaudeMemoryHandlers(ipcMain: IpcMain): void {
         let content = ''
         try { content = fs.readFileSync(fullPath, 'utf-8') } catch { /* broken symlink */ }
         const fm = parseFrontmatter(content)
-        const relativePath = path.relative(baseDir, fullPath)
+        const relativePath = path.relative(baseDir, fullPath).split(path.sep).join('/')
         entries.push({
           relativePath,
           filename: entry.name,

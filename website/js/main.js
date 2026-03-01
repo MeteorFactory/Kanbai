@@ -32,6 +32,21 @@
     setLang(current === 'fr' ? 'en' : 'fr');
   });
 
+  // --- OS Detection ---
+  var userOS = 'other';
+  (function detectOS() {
+    var ua = navigator.userAgent || '';
+    var platform = navigator.platform || '';
+    if (/Win/.test(platform) || /Windows/.test(ua)) {
+      userOS = 'win';
+    } else if (/Mac/.test(platform) || /Macintosh/.test(ua)) {
+      userOS = 'mac';
+    }
+    if (userOS !== 'other') {
+      document.body.classList.add('os-' + userOS);
+    }
+  })();
+
   // --- Header Scroll ---
   var header = document.getElementById('header');
   var scrollThreshold = 10;
@@ -188,41 +203,56 @@
     var heroVersion = document.getElementById('hero-version');
     if (heroVersion) heroVersion.textContent = ' \u00B7 v' + displayVersion;
 
-    // Version in download button
-    var downloadVersion = document.getElementById('download-version');
-    if (downloadVersion) downloadVersion.textContent = 'v' + displayVersion;
+    // Version in both download buttons
+    var versionMac = document.getElementById('download-version-mac');
+    if (versionMac) versionMac.textContent = 'v' + displayVersion;
+    var versionWin = document.getElementById('download-version-win');
+    if (versionWin) versionWin.textContent = 'v' + displayVersion;
 
-    // Find the .dmg asset for download (prefer DMG over ZIP for macOS users)
+    // Find assets: .dmg for macOS, .exe (NSIS) for Windows
     var dmgAsset = null;
+    var exeAsset = null;
     var assets = release.assets || [];
     for (var i = 0; i < assets.length; i++) {
       var name = assets[i].name.toLowerCase();
-      if (name.indexOf('.dmg') !== -1 && name.indexOf('blockmap') === -1) {
+      if (!dmgAsset && name.indexOf('.dmg') !== -1 && name.indexOf('blockmap') === -1) {
         dmgAsset = assets[i];
-        break;
+      }
+      if (!exeAsset && name.indexOf('.exe') !== -1 && name.indexOf('blockmap') === -1) {
+        exeAsset = assets[i];
       }
     }
 
+    // Apply macOS download
     if (dmgAsset) {
-      var url = dmgAsset.browser_download_url;
+      var macBtn = document.getElementById('download-mac');
+      if (macBtn) {
+        macBtn.href = dmgAsset.browser_download_url;
+        macBtn.removeAttribute('target');
+      }
+      var sizeMac = document.getElementById('download-size-mac');
+      if (sizeMac) sizeMac.textContent = '~' + formatBytes(dmgAsset.size);
+    }
 
-      // Update hero download link — direct file download, not a webpage
-      var heroDownload = document.getElementById('hero-download');
-      if (heroDownload) {
-        heroDownload.href = url;
+    // Apply Windows download
+    if (exeAsset) {
+      var winBtn = document.getElementById('download-win');
+      if (winBtn) {
+        winBtn.href = exeAsset.browser_download_url;
+        winBtn.removeAttribute('target');
+      }
+      var sizeWin = document.getElementById('download-size-win');
+      if (sizeWin) sizeWin.textContent = '~' + formatBytes(exeAsset.size);
+    }
+
+    // Update hero CTA — point to the asset matching user's OS
+    var heroDownload = document.getElementById('hero-download');
+    if (heroDownload) {
+      var primaryAsset = userOS === 'win' ? exeAsset : dmgAsset;
+      if (primaryAsset) {
+        heroDownload.href = primaryAsset.browser_download_url;
         heroDownload.removeAttribute('target');
       }
-
-      // Update main download link
-      var downloadBtn = document.getElementById('download-dmg');
-      if (downloadBtn) {
-        downloadBtn.href = url;
-        downloadBtn.removeAttribute('target');
-      }
-
-      // Update size
-      var downloadSize = document.getElementById('download-size');
-      if (downloadSize) downloadSize.textContent = '~' + formatBytes(dmgAsset.size);
     }
   }
 

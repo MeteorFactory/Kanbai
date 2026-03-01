@@ -1,9 +1,22 @@
 import { IpcMain, BrowserWindow } from 'electron'
-import { execFile } from 'child_process'
-import { promisify } from 'util'
 import { IPC_CHANNELS, UpdateInfo } from '../../shared/types'
+import { IS_WIN, getWhichCommand, getExtendedToolPaths, PATH_SEP, crossExecFile } from '../../shared/platform'
 
-const execFileAsync = promisify(execFile)
+function enrichedEnv(): NodeJS.ProcessEnv {
+  const extraPaths = getExtendedToolPaths()
+  return {
+    ...process.env,
+    PATH: `${process.env.PATH || ''}${PATH_SEP}${extraPaths.join(PATH_SEP)}`,
+  }
+}
+
+function enrichedExecFile(
+  command: string,
+  args: string[],
+  timeout = 10000,
+): Promise<{ stdout: string; stderr: string }> {
+  return crossExecFile(command, args, { timeout, env: enrichedEnv() })
+}
 
 interface ToolCheck {
   name: string
@@ -34,21 +47,33 @@ const TOOLS_TO_CHECK: ToolCheck[] = [
     checkCommand: 'git',
     checkArgs: ['--version'],
   },
-  {
-    name: 'rtk',
-    checkCommand: 'rtk',
-    checkArgs: ['--version'],
-  },
+  // cargo & rtk — Windows only
+  ...(IS_WIN
+    ? [
+        {
+          name: 'cargo',
+          checkCommand: 'cargo',
+          checkArgs: ['--version'],
+        },
+        {
+          name: 'rtk',
+          checkCommand: 'rtk',
+          checkArgs: ['--version'],
+        },
+      ]
+    : []),
 ]
 
 async function getVersion(command: string, args: string[]): Promise<string | null> {
   try {
-    const { stdout } = await execFileAsync(command, args, { timeout: 10000 })
+    const { stdout } = await enrichedExecFile(command, args, 10000)
     const version = stdout
       .trim()
       .replace(/^v/, '')
       .replace(/^git version /, '')
       .replace(/^Claude Code /, '')
+      .replace(/^cargo /, '')
+      .replace(/ \(.+\)$/, '')
     return version
   } catch {
     return null
@@ -74,8 +99,9 @@ function compareVersions(current: string, latest: string): boolean {
 }
 
 async function isBrewManaged(command: string): Promise<boolean> {
+  if (IS_WIN) return false
   try {
-    const { stdout } = await execFileAsync('which', [command], { timeout: 5000 })
+    const { stdout } = await enrichedExecFile(getWhichCommand(), [command], 5000)
     const binPath = stdout.trim()
     return binPath.startsWith('/opt/homebrew/') || binPath.startsWith('/usr/local/Cellar/')
   } catch {
@@ -85,7 +111,7 @@ async function isBrewManaged(command: string): Promise<boolean> {
 
 async function getLatestNpmVersion(pkg: string): Promise<string | null> {
   try {
-    const { stdout } = await execFileAsync('npm', ['view', pkg, 'version'], { timeout: 15000 })
+    const { stdout } = await enrichedExecFile('npm', ['view', pkg, 'version'], 15000)
     return stdout.trim()
   } catch {
     return null
@@ -94,9 +120,7 @@ async function getLatestNpmVersion(pkg: string): Promise<string | null> {
 
 async function getLatestBrewVersion(formula: string): Promise<string | null> {
   try {
-    const { stdout } = await execFileAsync('brew', ['info', '--json=v2', formula], {
-      timeout: 15000,
-    })
+    const { stdout } = await enrichedExecFile('brew', ['info', '--json=v2', formula], 15000)
     const data = JSON.parse(stdout)
     return data.formulae?.[0]?.versions?.stable || null
   } catch {
@@ -127,7 +151,11 @@ async function checkToolUpdates(): Promise<UpdateInfo[]> {
 
     // Try to get latest version based on tool
     if (tool.name === 'node') {
-      latestVersion = await getLatestBrewVersion('node')
+      if (IS_WIN) {
+        latestVersion = await getLatestNpmVersion('node')
+      } else {
+        latestVersion = await getLatestBrewVersion('node')
+      }
     } else if (tool.name === 'npm') {
       if (await isBrewManaged('npm')) {
         // npm is bundled with Homebrew's node — don't check npm registry
@@ -138,6 +166,9 @@ async function checkToolUpdates(): Promise<UpdateInfo[]> {
       }
     } else if (tool.name === 'claude') {
       latestVersion = await getLatestNpmVersion('@anthropic-ai/claude-code')
+    } else if (tool.name === 'cargo') {
+      // cargo version is managed by rustup — no easy remote version check
+      latestVersion = null
     } else if (tool.name === 'rtk') {
       // rtk is a cargo crate — no easy remote version check, skip
       latestVersion = null
@@ -189,11 +220,19 @@ export function registerUpdateHandlers(ipcMain: IpcMain): void {
 
         switch (tool) {
           case 'node':
-            command = 'brew'
-            args = ['upgrade', 'node']
+            if (IS_WIN) {
+              command = 'winget'
+              args = ['upgrade', '--id', 'OpenJS.NodeJS.LTS', '--silent', '--accept-source-agreements', '--accept-package-agreements']
+            } else {
+              command = 'brew'
+              args = ['upgrade', 'node']
+            }
             break
           case 'npm':
-            if (npmIsBrewManaged) {
+            if (IS_WIN) {
+              command = 'npm'
+              args = ['install', '-g', 'npm@latest']
+            } else if (npmIsBrewManaged) {
               command = 'brew'
               args = ['upgrade', 'node']
             } else {
@@ -205,16 +244,50 @@ export function registerUpdateHandlers(ipcMain: IpcMain): void {
             command = 'npm'
             args = ['install', '-g', '@anthropic-ai/claude-code@latest']
             break
-          case 'rtk':
-            command = 'cargo'
-            args = ['install', 'rtk-token-killer']
+          case 'git':
+            if (IS_WIN) {
+              command = 'winget'
+              args = ['upgrade', '--id', 'Git.Git', '--silent', '--accept-source-agreements', '--accept-package-agreements']
+            } else {
+              throw new Error(`Cannot upgrade git automatically on macOS`)
+            }
             break
+          case 'cargo': {
+            // Check if cargo is already installed — if so, update via rustup
+            let cargoExists = false
+            try {
+              await enrichedExecFile(getWhichCommand(), ['cargo'], 5000)
+              cargoExists = true
+            } catch { /* not installed */ }
+            if (cargoExists) {
+              command = 'rustup'
+              args = ['update']
+            } else if (IS_WIN) {
+              command = 'winget'
+              args = ['install', '--id', 'Rustlang.Rustup', '--silent', '--accept-source-agreements', '--accept-package-agreements']
+            } else {
+              command = 'brew'
+              args = ['install', 'rustup']
+            }
+            break
+          }
+          case 'rtk': {
+            // Verify cargo is installed before attempting
+            try {
+              await enrichedExecFile(getWhichCommand(), ['cargo'], 5000)
+            } catch {
+              throw new Error('Cargo is not installed. Install Rust from https://rustup.rs first.')
+            }
+            command = 'cargo'
+            args = ['install', '--git', 'https://github.com/rtk-ai/rtk']
+            break
+          }
           default:
             throw new Error(`Unknown tool: ${tool}`)
         }
 
         sendStatus('installing', 50)
-        await execFileAsync(command, args, { timeout: 120000 })
+        await enrichedExecFile(command, args, 120000)
         sendStatus('completed', 100)
 
         return { success: true }
@@ -248,15 +321,21 @@ export function registerUpdateHandlers(ipcMain: IpcMain): void {
         let args: string[]
 
         switch (tool) {
-          case 'rtk':
+          case 'rtk': {
+            try {
+              await enrichedExecFile(getWhichCommand(), ['cargo'], 5000)
+            } catch {
+              throw new Error('Cargo is not installed. Install Rust from https://rustup.rs first.')
+            }
             command = 'cargo'
-            args = ['uninstall', 'rtk-token-killer']
+            args = ['uninstall', 'rtk']
             break
+          }
           default:
             throw new Error(`Cannot uninstall core tool: ${tool}`)
         }
 
-        await execFileAsync(command, args, { timeout: 120000 })
+        await enrichedExecFile(command, args, 120000)
         sendStatus('completed')
 
         return { success: true }

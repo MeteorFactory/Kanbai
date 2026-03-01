@@ -29,15 +29,15 @@ import { clearDockBadge } from './services/notificationService'
 import { databaseService } from './services/database'
 import { StorageService } from './services/storage'
 import { IPC_CHANNELS } from '../shared/types'
+import { IS_MAC, IS_WIN, getExtendedToolPaths } from '../shared/platform'
 
-// Fix PATH for packaged .app on macOS — Electron .app bundles inherit a
-// minimal PATH (/usr/bin:/bin:/usr/sbin:/sbin) which prevents finding
-// user-installed tools (node, npm, claude, brew, cargo, etc.).
-// Resolve the real PATH by asking the user's login shell.
+// Fix PATH for packaged app — Electron bundles inherit a minimal PATH which
+// prevents finding user-installed tools (node, npm, claude, brew, cargo, etc.).
 if (process.platform === 'darwin') {
+  // macOS: resolve the real PATH by asking the user's login shell.
   try {
-    const shell = process.env.SHELL || '/bin/zsh'
-    const shellPath = execSync(`${shell} -ilc 'printf "%s" "$PATH"'`, {
+    const userShell = process.env.SHELL || '/bin/zsh'
+    const shellPath = execSync(`${userShell} -ilc 'printf "%s" "$PATH"'`, {
       encoding: 'utf-8',
       timeout: 5000,
     })
@@ -46,16 +46,13 @@ if (process.platform === 'darwin') {
     }
   } catch {
     // Fallback: extend with common macOS binary locations
-    const extra = [
-      '/opt/homebrew/bin',
-      '/opt/homebrew/sbin',
-      '/usr/local/bin',
-      '/usr/local/sbin',
-      `${process.env.HOME}/.cargo/bin`,
-      `${process.env.HOME}/.nvm/versions/node`,
-    ].join(':')
-    process.env.PATH = `${extra}:${process.env.PATH ?? ''}`
+    const extra = getExtendedToolPaths()
+    process.env.PATH = `${extra.join(':')}:${process.env.PATH ?? ''}`
   }
+} else if (process.platform === 'win32') {
+  // Windows: prepend common tool locations so packaged builds can find them
+  const extra = getExtendedToolPaths()
+  process.env.PATH = `${extra.join(';')};${process.env.PATH ?? ''}`
 }
 
 // Set the app name for macOS menu bar (overrides default "Electron" in dev mode)
@@ -72,11 +69,15 @@ function createMainWindow(): BrowserWindow {
     height: 900,
     minWidth: 800,
     minHeight: 600,
-    titleBarStyle: 'hiddenInset',
-    trafficLightPosition: { x: 15, y: 15 },
-    vibrancy: 'under-window',
-    visualEffectState: 'active',
-    backgroundColor: '#00000000',
+    titleBarStyle: IS_MAC ? 'hiddenInset' : 'default',
+    ...(IS_MAC
+      ? {
+          trafficLightPosition: { x: 15, y: 15 },
+          vibrancy: 'under-window' as const,
+          visualEffectState: 'active' as const,
+        }
+      : {}),
+    backgroundColor: IS_WIN ? '#1e1e1e' : '#00000000',
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.js'),
       contextIsolation: true,
@@ -119,25 +120,29 @@ function buildApplicationMenu(): void {
   const isFr = locale === 'fr'
 
   const template: Electron.MenuItemConstructorOptions[] = [
-    // App menu
-    {
-      label: 'Mirehub',
-      submenu: [
-        { role: 'about', label: isFr ? 'A propos de Mirehub' : 'About Mirehub' },
-        { type: 'separator' },
-        {
-          label: isFr ? 'Preferences...' : 'Preferences...',
-          accelerator: 'CmdOrCtrl+,',
-          click: () => sendMenuAction('view:settings'),
-        },
-        { type: 'separator' },
-        { role: 'hide', label: isFr ? 'Masquer Mirehub' : 'Hide Mirehub' },
-        { role: 'hideOthers', label: isFr ? 'Masquer les autres' : 'Hide Others' },
-        { role: 'unhide', label: isFr ? 'Tout afficher' : 'Show All' },
-        { type: 'separator' },
-        { role: 'quit', label: isFr ? 'Quitter Mirehub' : 'Quit Mirehub' },
-      ],
-    },
+    // App menu (macOS only — on Windows, Preferences is folded into File menu)
+    ...(IS_MAC
+      ? [
+          {
+            label: 'Mirehub',
+            submenu: [
+              { role: 'about' as const, label: isFr ? 'A propos de Mirehub' : 'About Mirehub' },
+              { type: 'separator' as const },
+              {
+                label: isFr ? 'Preferences...' : 'Preferences...',
+                accelerator: 'CmdOrCtrl+,',
+                click: () => sendMenuAction('view:settings'),
+              },
+              { type: 'separator' as const },
+              { role: 'hide' as const, label: isFr ? 'Masquer Mirehub' : 'Hide Mirehub' },
+              { role: 'hideOthers' as const, label: isFr ? 'Masquer les autres' : 'Hide Others' },
+              { role: 'unhide' as const, label: isFr ? 'Tout afficher' : 'Show All' },
+              { type: 'separator' as const },
+              { role: 'quit' as const, label: isFr ? 'Quitter Mirehub' : 'Quit Mirehub' },
+            ],
+          } satisfies Electron.MenuItemConstructorOptions,
+        ]
+      : []),
     // File menu
     {
       label: isFr ? 'Fichier' : 'File',
@@ -162,7 +167,25 @@ function buildApplicationMenu(): void {
           click: () => sendMenuAction('workspace:export'),
         },
         { type: 'separator' },
+        // On Windows, Preferences goes in File menu (no macOS app menu)
+        ...(!IS_MAC
+          ? [
+              {
+                label: isFr ? 'Preferences...' : 'Preferences...',
+                accelerator: 'CmdOrCtrl+,',
+                click: () => sendMenuAction('view:settings'),
+              },
+              { type: 'separator' as const },
+            ]
+          : []),
         { role: 'close', label: isFr ? 'Fermer la fenetre' : 'Close Window' },
+        // On Windows, add Quit at the end of File menu
+        ...(!IS_MAC
+          ? [
+              { type: 'separator' as const },
+              { role: 'quit' as const, label: isFr ? 'Quitter Mirehub' : 'Quit Mirehub' },
+            ]
+          : []),
       ],
     },
     // Edit menu
@@ -246,8 +269,12 @@ function buildApplicationMenu(): void {
       submenu: [
         { role: 'minimize', label: isFr ? 'Reduire' : 'Minimize' },
         { role: 'zoom', label: 'Zoom' },
-        { type: 'separator' },
-        { role: 'front', label: isFr ? 'Tout ramener au premier plan' : 'Bring All to Front' },
+        ...(IS_MAC
+          ? [
+              { type: 'separator' as const },
+              { role: 'front' as const, label: isFr ? 'Tout ramener au premier plan' : 'Bring All to Front' },
+            ]
+          : []),
       ],
     },
     // Help menu
@@ -275,7 +302,7 @@ function buildApplicationMenu(): void {
 app.whenReady().then(() => {
   mainWindow = createMainWindow()
 
-  // Build macOS application menu
+  // Build application menu (cross-platform)
   buildApplicationMenu()
 
   // Register IPC handlers

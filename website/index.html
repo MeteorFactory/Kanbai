@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mirehub — L'IDE macOS natif propulse par Claude AI</title>
-  <meta name="description" content="Mirehub remplace 11 outils par une seule app macOS native. Terminal, Kanban, Git, NPM, Claude AI, Database, API Tester, Code Analysis — tout unifie, zero configuration. Telechargez gratuitement.">
+  <title>Mirehub — L'IDE natif propulse par Claude AI</title>
+  <meta name="description" content="Mirehub remplace 11 outils par une seule app native (macOS & Windows). Terminal, Kanban, Git, NPM, Claude AI, Database, API Tester, Code Analysis — tout unifie, zero configuration. Telechargez gratuitement.">
   <meta property="og:title" content="Mirehub — Arretez de jongler entre vos outils. Codez.">
-  <meta property="og:description" content="11 outils de dev dans une seule app macOS native avec Claude AI integre. Terminal, Git, Kanban, API Tester, Code Analysis et plus. Gratuit et open source.">
+  <meta property="og:description" content="11 outils de dev dans une seule app native (macOS & Windows) avec Claude AI integre. Terminal, Git, Kanban, API Tester, Code Analysis et plus. Gratuit et open source.">
   <meta property="og:type" content="website">
   <link rel="icon" type="image/png" href="assets/favicon.png">
   <link rel="stylesheet" href="css/style.css">
@@ -65,21 +65,21 @@
       <div class="container">
         <div class="hero-content animate-in">
           <span class="badge">
-            <span data-lang="fr">Open source &middot; macOS natif</span>
-            <span data-lang="en">Open source &middot; Native macOS</span>
+            <span data-lang="fr">Open source &middot; macOS &amp; Windows</span>
+            <span data-lang="en">Open source &middot; macOS &amp; Windows</span>
             <span class="badge-version" id="hero-version"></span>
           </span>
           <h1>
-            <span data-lang="fr">Arretez de jongler<br>entre vos outils. <em>Codez.</em></span>
-            <span data-lang="en">Stop juggling<br>your tools. <em>Code.</em></span>
+            <span data-lang="fr">Arretez de jongler<br>entre vos outils. <em class="hero-claudez">Claudez.</em></span>
+            <span data-lang="en">Stop juggling<br>your tools. <em class="hero-claudez">Claudez.</em></span>
           </h1>
           <p class="hero-subtitle">
             <span data-lang="fr">Ecrivez un ticket. Claude le resout. Vous reviewez. C'est tout.</span>
             <span data-lang="en">Write a ticket. Claude solves it. You review. That's it.</span>
           </p>
           <p class="hero-description">
-            <span data-lang="fr">Le Kanban de Mirehub transforme chaque tache en action concrete pour Claude AI. Il code, il met a jour le ticket en temps reel, vous gardez le controle. Plus Terminal, Git et 8 autres outils — dans une seule fenetre macOS.</span>
-            <span data-lang="en">Mirehub's Kanban turns every task into a concrete action for Claude AI. It codes, it updates the ticket in real time, you stay in control. Plus Terminal, Git and 8 more tools — in a single macOS window.</span>
+            <span data-lang="fr">Le Kanban de Mirehub transforme chaque tache en action concrete pour Claude AI. Il code, il met a jour le ticket en temps reel, vous gardez le controle. Plus Terminal, Git et 8 autres outils — dans une seule fenetre.</span>
+            <span data-lang="en">Mirehub's Kanban turns every task into a concrete action for Claude AI. It codes, it updates the ticket in real time, you stay in control. Plus Terminal, Git and 8 more tools — in a single window.</span>
           </p>
           <div class="hero-actions">
             <a href="https://github.com/AntonyCanut/Mirehub/releases/latest" class="btn btn-primary" id="hero-download" target="_blank" rel="noopener">
@@ -88,8 +88,10 @@
                 <polyline points="7 10 12 15 17 10"/>
                 <line x1="12" y1="15" x2="12" y2="3"/>
               </svg>
-              <span data-lang="fr">Telecharger gratuitement</span>
-              <span data-lang="en">Download for free</span>
+              <span id="hero-download-label">
+                <span data-lang="fr">Telecharger gratuitement</span>
+                <span data-lang="en">Download for free</span>
+              </span>
             </a>
             <a href="https://github.com/AntonyCanut/Mirehub" class="btn btn-secondary" target="_blank" rel="noopener">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -530,8 +532,8 @@
             <span data-lang="en">Built by a dev, for devs</span>
           </h2>
           <p>
-            <span data-lang="fr">Mirehub est ne d'une frustration simple : pourquoi faut-il 11 apps pour faire le travail d'une seule ? Terminal, gestionnaire Git, Kanban, client NPM, scanner TODO, statistiques, editeur de prompts, panneau Claude AI avec MCP et workflows, explorateur de bases de donnees, testeur d'API, analyse de code — tout est la, dans une app macOS native, rapide et elegante. Mises a jour automatiques, open source, gratuit, sans tracking.</span>
-            <span data-lang="en">Mirehub was born from a simple frustration: why do we need 11 apps to do the job of one? Terminal, Git manager, Kanban, NPM client, TODO scanner, statistics, prompt editor, Claude AI panel with MCP and workflows, database explorer, API tester, code analysis — it's all here, in a fast and elegant native macOS app. Auto-updates, open source, free, no tracking.</span>
+            <span data-lang="fr">Mirehub est ne d'une frustration simple : pourquoi faut-il 11 apps pour faire le travail d'une seule ? Terminal, gestionnaire Git, Kanban, client NPM, scanner TODO, statistiques, editeur de prompts, panneau Claude AI avec MCP et workflows, explorateur de bases de donnees, testeur d'API, analyse de code — tout est la, dans une app native rapide et elegante, sur macOS et Windows. Mises a jour automatiques, open source, gratuit, sans tracking.</span>
+            <span data-lang="en">Mirehub was born from a simple frustration: why do we need 11 apps to do the job of one? Terminal, Git manager, Kanban, NPM client, TODO scanner, statistics, prompt editor, Claude AI panel with MCP and workflows, database explorer, API tester, code analysis — it's all here, in a fast and elegant native app on macOS and Windows. Auto-updates, open source, free, no tracking.</span>
           </p>
           <div class="dev-features">
             <div class="dev-feature">
@@ -540,12 +542,12 @@
               </svg>
               <div>
                 <strong>
-                  <span data-lang="fr">macOS natif</span>
-                  <span data-lang="en">Native macOS</span>
+                  <span data-lang="fr">macOS &amp; Windows</span>
+                  <span data-lang="en">macOS &amp; Windows</span>
                 </strong>
                 <span>
-                  <span data-lang="fr">Electron optimise, look &amp; feel macOS, raccourcis systeme</span>
-                  <span data-lang="en">Optimized Electron, macOS look &amp; feel, system shortcuts</span>
+                  <span data-lang="fr">Electron optimise, natif sur chaque plateforme, raccourcis systeme</span>
+                  <span data-lang="en">Optimized Electron, native on each platform, system shortcuts</span>
                 </span>
               </div>
             </div>
@@ -616,25 +618,28 @@
             <span data-lang="en">Download Mirehub, open it, point to your project. That's it. No account to create, no configuration, no 30-minute tutorial.</span>
           </p>
           <div class="download-buttons" id="download-buttons">
-            <a href="https://github.com/AntonyCanut/Mirehub/releases/latest" class="btn btn-primary btn-lg" id="download-dmg" target="_blank" rel="noopener">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="7 10 12 15 17 10"/>
-                <line x1="12" y1="15" x2="12" y2="3"/>
-              </svg>
+            <a href="https://github.com/AntonyCanut/Mirehub/releases/latest" class="btn btn-primary btn-lg download-btn-os" id="download-mac" data-os="mac" target="_blank" rel="noopener">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
               <span>
                 <span data-lang="fr">Telecharger pour macOS</span>
                 <span data-lang="en">Download for macOS</span>
               </span>
-              <span class="download-version" id="download-version"></span>
+              <span class="download-version" id="download-version-mac"></span>
+            </a>
+            <a href="https://github.com/AntonyCanut/Mirehub/releases/latest" class="btn btn-secondary btn-lg download-btn-os" id="download-win" data-os="win" target="_blank" rel="noopener">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/></svg>
+              <span>
+                <span data-lang="fr">Telecharger pour Windows</span>
+                <span data-lang="en">Download for Windows</span>
+              </span>
+              <span class="download-version" id="download-version-win"></span>
             </a>
           </div>
           <div class="download-meta" id="download-meta">
-            <span>macOS 12+ (Monterey)</span>
-            <span class="sep">&middot;</span>
-            <span>Apple Silicon &amp; Intel</span>
-            <span class="sep">&middot;</span>
-            <span id="download-size">~150 MB</span>
+            <span id="download-meta-info">
+              <span class="download-meta-mac">macOS 12+ &middot; Apple Silicon &amp; Intel &middot; <span id="download-size-mac">~150 MB</span></span>
+              <span class="download-meta-win">Windows 10+ &middot; x64 &middot; <span id="download-size-win">~120 MB</span></span>
+            </span>
             <span class="sep">&middot;</span>
             <span data-lang="fr">Gratuit — pour toujours</span>
             <span data-lang="en">Free — forever</span>

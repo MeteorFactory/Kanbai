@@ -51,7 +51,7 @@ export function AutoMemoryViewer({ projectPath }: Props) {
           </div>
           {selectedTopic && topicContent && (
             <div style={{ marginTop: 6 }}>
-              <MemoryEditor title={selectedTopic.split('/').pop() ?? ''} content={topicContent} readOnly />
+              <MemoryEditor title={selectedTopic.split(/[\\/]/).pop() ?? ''} content={topicContent} readOnly />
             </div>
           )}
         </div>

@@ -168,7 +168,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
 
   createWorkspaceFromPath: async (dirPath: string) => {
     try {
-      const folderName = dirPath.split('/').pop() || dirPath
+      const folderName = dirPath.split(/[\\/]/).pop() || dirPath
       const workspace = await window.mirehub.workspace.create({
         name: folderName,
         color: '#89b4fa',

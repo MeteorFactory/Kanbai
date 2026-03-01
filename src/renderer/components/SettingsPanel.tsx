@@ -12,16 +12,25 @@ const FONT_FAMILIES = [
   'Courier New',
 ]
 
-const SHELLS = [
-  { value: '/bin/zsh', label: 'zsh' },
-  { value: '/bin/bash', label: 'bash' },
-  { value: '/usr/local/bin/fish', label: 'fish' },
-]
+const IS_WIN_RENDERER = navigator.platform.startsWith('Win')
+
+const SHELLS = IS_WIN_RENDERER
+  ? [
+      { value: 'powershell.exe', label: 'PowerShell' },
+      { value: 'cmd.exe', label: 'Command Prompt' },
+      { value: 'C:\\Program Files\\Git\\bin\\bash.exe', label: 'Git Bash' },
+      { value: 'pwsh.exe', label: 'PowerShell 7' },
+    ]
+  : [
+      { value: '/bin/zsh', label: 'zsh' },
+      { value: '/bin/bash', label: 'bash' },
+      { value: '/usr/local/bin/fish', label: 'fish' },
+    ]
 
 const DEFAULT_SETTINGS: AppSettings = {
   theme: 'dark',
   locale: 'fr',
-  defaultShell: '/bin/zsh',
+  defaultShell: IS_WIN_RENDERER ? 'powershell.exe' : '/bin/zsh',
   fontSize: 13,
   fontFamily: 'Menlo',
   scrollbackLines: 5000,
@@ -54,7 +63,7 @@ export function SettingsPanel() {
   const { status: updateStatus, checkForUpdate } = useAppUpdateStore()
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS)
   const [loading, setLoading] = useState(true)
-  const [appVersion, setAppVersion] = useState<{ version: string; name: string } | null>(null)
+  const [appVersion, setAppVersion] = useState<{ version: string; name: string; isElevated?: boolean } | null>(null)
   const [activeSection, setActiveSection] = useState<SettingsSection>('general')
 
   // Git config state
@@ -830,6 +839,12 @@ export function SettingsPanel() {
                     <div className="settings-about-version">v{appVersion?.version ?? '—'}</div>
                   </div>
                 </div>
+                {appVersion?.isElevated && (
+                  <div className="settings-elevated-badge">
+                    <span className="settings-elevated-icon">⚠</span>
+                    <span>{t('settings.elevatedMode')}</span>
+                  </div>
+                )}
               </div>
               <div className="settings-card">
                 <div className="settings-row">

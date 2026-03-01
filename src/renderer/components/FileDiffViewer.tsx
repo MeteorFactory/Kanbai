@@ -56,8 +56,8 @@ export function FileDiffViewer() {
     return <div className="file-viewer-empty">{t('diff.noFiles')}</div>
   }
 
-  const leftName = diffFiles[0].split('/').pop() ?? diffFiles[0]
-  const rightName = diffFiles[1].split('/').pop() ?? diffFiles[1]
+  const leftName = diffFiles[0].split(/[\\/]/).pop() ?? diffFiles[0]
+  const rightName = diffFiles[1].split(/[\\/]/).pop() ?? diffFiles[1]
   const language = getLanguage(diffFiles[0])
 
   return (

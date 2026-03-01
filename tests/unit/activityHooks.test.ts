@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterAll, vi } from 'vitest'
 import fs from 'fs'
 import path from 'path'
 import os from 'os'
+import { IS_WIN, IS_MAC } from '../helpers/platform'
 
 const TEST_DIR = path.join(os.tmpdir(), `.mirehub-hooks-test-${process.pid}-${Date.now()}`)
 
@@ -44,6 +45,8 @@ const {
   syncAllWorkspaceEnvHooks,
 } = await import('../../src/main/services/activityHooks')
 
+const SCRIPT_EXT = IS_WIN ? '.ps1' : '.sh'
+
 describe('activityHooks', () => {
   const hooksDir = path.join(TEST_DIR, '.mirehub', 'hooks')
   const activityDir = path.join(TEST_DIR, '.mirehub', 'activity')
@@ -70,7 +73,7 @@ describe('activityHooks', () => {
     it('cree le script dans ~/.mirehub/hooks/', () => {
       ensureActivityHookScript()
 
-      const scriptPath = path.join(hooksDir, 'mirehub-activity.sh')
+      const scriptPath = path.join(hooksDir, `mirehub-activity${SCRIPT_EXT}`)
       expect(fs.existsSync(scriptPath)).toBe(true)
     })
 
@@ -80,10 +83,10 @@ describe('activityHooks', () => {
       expect(fs.existsSync(activityDir)).toBe(true)
     })
 
-    it('le script est executable (mode 0o755)', () => {
+    it.skipIf(IS_WIN)('le script est executable (mode 0o755)', () => {
       ensureActivityHookScript()
 
-      const scriptPath = path.join(hooksDir, 'mirehub-activity.sh')
+      const scriptPath = path.join(hooksDir, `mirehub-activity${SCRIPT_EXT}`)
       const stat = fs.statSync(scriptPath)
       // Check owner executable bit (0o100) is set
       const mode = stat.mode & 0o777
@@ -93,29 +96,35 @@ describe('activityHooks', () => {
     it('le script contient les bonnes variables et la logique de hash', () => {
       ensureActivityHookScript()
 
-      const scriptPath = path.join(hooksDir, 'mirehub-activity.sh')
+      const scriptPath = path.join(hooksDir, `mirehub-activity${SCRIPT_EXT}`)
       const content = fs.readFileSync(scriptPath, 'utf-8')
 
-      expect(content).toContain('#!/bin/bash')
-      expect(content).toContain('STATUS_DIR="$HOME/.mirehub/activity"')
       expect(content).toContain('MIREHUB_NL_QUERY')
-      expect(content).toContain('md5')
-      expect(content).toContain('STATUS="${1:-working}"')
+      if (IS_MAC) {
+        expect(content).toContain('#!/bin/bash')
+        expect(content).toContain('STATUS_DIR="$HOME/.mirehub/activity"')
+        expect(content).toContain('md5')
+        expect(content).toContain('STATUS="${1:-working}"')
+      }
+      if (IS_WIN) {
+        expect(content).toContain('$args[0]')
+        expect(content).toContain('MD5')
+      }
     })
 
     it('le script contient la logique de throttle pour le status working', () => {
       ensureActivityHookScript()
 
-      const scriptPath = path.join(hooksDir, 'mirehub-activity.sh')
+      const scriptPath = path.join(hooksDir, `mirehub-activity${SCRIPT_EXT}`)
       const content = fs.readFileSync(scriptPath, 'utf-8')
 
-      expect(content).toContain('"working"')
-      expect(content).toContain('-lt 30')
+      expect(content.toLowerCase()).toContain('working')
+      expect(content).toContain('30')
     })
 
     it('est idempotent (peut etre appele plusieurs fois)', () => {
       ensureActivityHookScript()
-      const scriptPath = path.join(hooksDir, 'mirehub-activity.sh')
+      const scriptPath = path.join(hooksDir, `mirehub-activity${SCRIPT_EXT}`)
       const firstContent = fs.readFileSync(scriptPath, 'utf-8')
 
       ensureActivityHookScript()
@@ -129,7 +138,7 @@ describe('activityHooks', () => {
     it('en mode kanban seulement, contient le check MIREHUB_KANBAN_TASK_ID', () => {
       ensureAutoApproveScript(false)
 
-      const scriptPath = path.join(hooksDir, 'mirehub-autoapprove.sh')
+      const scriptPath = path.join(hooksDir, `mirehub-autoapprove${SCRIPT_EXT}`)
       const content = fs.readFileSync(scriptPath, 'utf-8')
 
       expect(content).toContain('MIREHUB_KANBAN_TASK_ID')
@@ -141,7 +150,7 @@ describe('activityHooks', () => {
     it('en mode global, ne contient pas le check kanban', () => {
       ensureAutoApproveScript(true)
 
-      const scriptPath = path.join(hooksDir, 'mirehub-autoapprove.sh')
+      const scriptPath = path.join(hooksDir, `mirehub-autoapprove${SCRIPT_EXT}`)
       const content = fs.readFileSync(scriptPath, 'utf-8')
 
       expect(content).not.toContain('[ -z "$MIREHUB_KANBAN_TASK_ID" ] && exit 0')
@@ -149,10 +158,10 @@ describe('activityHooks', () => {
       expect(content).toContain('permissionDecision')
     })
 
-    it('le script est executable', () => {
+    it.skipIf(IS_WIN)('le script est executable', () => {
       ensureAutoApproveScript()
 
-      const scriptPath = path.join(hooksDir, 'mirehub-autoapprove.sh')
+      const scriptPath = path.join(hooksDir, `mirehub-autoapprove${SCRIPT_EXT}`)
       const stat = fs.statSync(scriptPath)
       const mode = stat.mode & 0o777
       expect(mode & 0o111).toBeGreaterThan(0)
@@ -171,14 +180,14 @@ describe('activityHooks', () => {
     it('cree le script de completion kanban', () => {
       ensureKanbanDoneScript()
 
-      const scriptPath = path.join(hooksDir, 'kanban-done.sh')
+      const scriptPath = path.join(hooksDir, `kanban-done${SCRIPT_EXT}`)
       expect(fs.existsSync(scriptPath)).toBe(true)
     })
 
-    it('le script est executable', () => {
+    it.skipIf(IS_WIN)('le script est executable', () => {
       ensureKanbanDoneScript()
 
-      const scriptPath = path.join(hooksDir, 'kanban-done.sh')
+      const scriptPath = path.join(hooksDir, `kanban-done${SCRIPT_EXT}`)
       const stat = fs.statSync(scriptPath)
       const mode = stat.mode & 0o777
       expect(mode & 0o111).toBeGreaterThan(0)
@@ -187,11 +196,17 @@ describe('activityHooks', () => {
     it('contient la logique de blocage pour le status WORKING', () => {
       ensureKanbanDoneScript()
 
-      const scriptPath = path.join(hooksDir, 'kanban-done.sh')
+      const scriptPath = path.join(hooksDir, `kanban-done${SCRIPT_EXT}`)
       const content = fs.readFileSync(scriptPath, 'utf-8')
 
       expect(content).toContain('WORKING')
-      expect(content).toContain("decision: 'block'")
+      // Bash uses node JSON.stringify({ decision: 'block', ... })
+      // PowerShell uses inline JSON string '{"decision":"block",...}'
+      if (IS_WIN) {
+        expect(content).toContain('"decision":"block"')
+      } else {
+        expect(content).toContain("decision: 'block'")
+      }
       expect(content).toContain('MIREHUB_KANBAN_TASK_ID')
       expect(content).toContain('MIREHUB_KANBAN_FILE')
     })
@@ -199,22 +214,27 @@ describe('activityHooks', () => {
     it('contient la logique PENDING pour CTO et non-CTO', () => {
       ensureKanbanDoneScript()
 
-      const scriptPath = path.join(hooksDir, 'kanban-done.sh')
+      const scriptPath = path.join(hooksDir, `kanban-done${SCRIPT_EXT}`)
       const content = fs.readFileSync(scriptPath, 'utf-8')
 
       expect(content).toContain('PENDING')
-      expect(content).toContain('IS_CTO')
+      // Bash uses IS_CTO variable, PowerShell uses $isCto
+      if (IS_WIN) {
+        expect(content).toContain('$isCto')
+      } else {
+        expect(content).toContain('IS_CTO')
+      }
       expect(content).toContain('TODO')
     })
 
     it('contient la gestion du status FAILED', () => {
       ensureKanbanDoneScript()
 
-      const scriptPath = path.join(hooksDir, 'kanban-done.sh')
+      const scriptPath = path.join(hooksDir, `kanban-done${SCRIPT_EXT}`)
       const content = fs.readFileSync(scriptPath, 'utf-8')
 
       expect(content).toContain('FAILED')
-      expect(content).toContain('mirehub-activity.sh')
+      expect(content).toContain(`mirehub-activity${SCRIPT_EXT}`)
     })
   })
 
@@ -256,8 +276,8 @@ describe('activityHooks', () => {
       const preToolHooks = settings.hooks.PreToolUse as Array<{ hooks: Array<{ command: string }> }>
 
       const commands = preToolHooks.flatMap((h) => h.hooks.map((hk) => hk.command))
-      expect(commands.some((cmd: string) => cmd.includes('mirehub-activity.sh') && cmd.includes('working'))).toBe(true)
-      expect(commands.some((cmd: string) => cmd.includes('mirehub-autoapprove.sh'))).toBe(true)
+      expect(commands.some((cmd: string) => cmd.includes(`mirehub-activity${SCRIPT_EXT}`) && cmd.includes('working'))).toBe(true)
+      expect(commands.some((cmd: string) => cmd.includes(`mirehub-autoapprove${SCRIPT_EXT}`))).toBe(true)
     })
 
     it('PermissionRequest contient le hook activity "ask"', () => {
@@ -271,7 +291,7 @@ describe('activityHooks', () => {
       const permHooks = settings.hooks.PermissionRequest as Array<{ hooks: Array<{ command: string }> }>
 
       const commands = permHooks.flatMap((h) => h.hooks.map((hk) => hk.command))
-      expect(commands.some((cmd: string) => cmd.includes('mirehub-activity.sh') && cmd.includes('ask'))).toBe(true)
+      expect(commands.some((cmd: string) => cmd.includes(`mirehub-activity${SCRIPT_EXT}`) && cmd.includes('ask'))).toBe(true)
     })
 
     it('Stop contient kanban-done et activity done', () => {
@@ -285,8 +305,8 @@ describe('activityHooks', () => {
       const stopHooks = settings.hooks.Stop as Array<{ hooks: Array<{ command: string }> }>
 
       const commands = stopHooks.flatMap((h) => h.hooks.map((hk) => hk.command))
-      expect(commands.some((cmd: string) => cmd.includes('kanban-done.sh'))).toBe(true)
-      expect(commands.some((cmd: string) => cmd.includes('mirehub-activity.sh') && cmd.includes('done'))).toBe(true)
+      expect(commands.some((cmd: string) => cmd.includes(`kanban-done${SCRIPT_EXT}`))).toBe(true)
+      expect(commands.some((cmd: string) => cmd.includes(`mirehub-activity${SCRIPT_EXT}`) && cmd.includes('done'))).toBe(true)
     })
 
     it('kanban-done est en premier dans Stop (avant activity done)', () => {
@@ -301,7 +321,7 @@ describe('activityHooks', () => {
 
       // kanban-done should be at index 0 (unshift)
       const firstCommand = stopHooks[0]!.hooks[0]!.command
-      expect(firstCommand).toContain('kanban-done.sh')
+      expect(firstCommand).toContain(`kanban-done${SCRIPT_EXT}`)
     })
 
     it('merge avec des hooks existants sans les ecraser', () => {
@@ -338,7 +358,7 @@ describe('activityHooks', () => {
 
       // Mirehub hooks were added
       const commands = preToolHooks.flatMap((h) => h.hooks.map((hk) => hk.command))
-      expect(commands.some((cmd: string) => cmd.includes('mirehub-activity.sh'))).toBe(true)
+      expect(commands.some((cmd: string) => cmd.includes(`mirehub-activity${SCRIPT_EXT}`))).toBe(true)
 
       // Other settings are preserved
       expect(settings.otherSetting).toBe('preserved')
@@ -358,18 +378,18 @@ describe('activityHooks', () => {
       // Each hook type should have the exact number of entries, not duplicates
       const preToolHooks = settings.hooks.PreToolUse as Array<{ hooks: Array<{ command: string }> }>
       const activityWorkingCount = preToolHooks.filter((h) =>
-        h.hooks.some((hk) => hk.command.includes('mirehub-activity.sh')),
+        h.hooks.some((hk) => hk.command.includes(`mirehub-activity${SCRIPT_EXT}`)),
       ).length
       expect(activityWorkingCount).toBe(1)
 
       const autoApproveCount = preToolHooks.filter((h) =>
-        h.hooks.some((hk) => hk.command.includes('mirehub-autoapprove.sh')),
+        h.hooks.some((hk) => hk.command.includes(`mirehub-autoapprove${SCRIPT_EXT}`)),
       ).length
       expect(autoApproveCount).toBe(1)
 
       const stopHooks = settings.hooks.Stop as Array<{ hooks: Array<{ command: string }> }>
       const kanbanDoneCount = stopHooks.filter((h) =>
-        h.hooks.some((hk) => hk.command.includes('kanban-done.sh')),
+        h.hooks.some((hk) => hk.command.includes(`kanban-done${SCRIPT_EXT}`)),
       ).length
       expect(kanbanDoneCount).toBe(1)
     })
@@ -392,9 +412,9 @@ describe('activityHooks', () => {
 
       installActivityHooks(projectPath)
 
-      expect(fs.existsSync(path.join(hooksDir, 'mirehub-activity.sh'))).toBe(true)
-      expect(fs.existsSync(path.join(hooksDir, 'mirehub-autoapprove.sh'))).toBe(true)
-      expect(fs.existsSync(path.join(hooksDir, 'kanban-done.sh'))).toBe(true)
+      expect(fs.existsSync(path.join(hooksDir, `mirehub-activity${SCRIPT_EXT}`))).toBe(true)
+      expect(fs.existsSync(path.join(hooksDir, `mirehub-autoapprove${SCRIPT_EXT}`))).toBe(true)
+      expect(fs.existsSync(path.join(hooksDir, `kanban-done${SCRIPT_EXT}`))).toBe(true)
     })
   })
 

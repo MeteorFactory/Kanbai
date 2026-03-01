@@ -15,7 +15,7 @@ vi.mock('os', async () => {
   }
 })
 
-// Mock child_process.exec to capture afplay calls
+// Mock child_process.exec to capture sound playback calls
 const mockExec = vi.fn()
 vi.mock('child_process', () => ({
   exec: (...args: unknown[]) => mockExec(...args),
@@ -23,7 +23,11 @@ vi.mock('child_process', () => ({
 
 // Mock electron APIs
 const mockNotificationInstance = { show: vi.fn(), on: vi.fn() }
-const mockBrowserWindow = { getFocusedWindow: vi.fn() }
+const mockWindow = { isDestroyed: () => false, flashFrame: vi.fn() }
+const mockBrowserWindow = {
+  getFocusedWindow: vi.fn(),
+  getAllWindows: vi.fn(() => [mockWindow]),
+}
 const mockApp = { dock: { setBadge: vi.fn() } }
 vi.mock('electron', () => ({
   Notification: vi.fn(() => mockNotificationInstance),
@@ -101,13 +105,12 @@ describe('notificationService', () => {
       expect(header).toBe('RIFF')
     })
 
-    it('appelle exec/afplay N fois via setTimeout', () => {
+    it('appelle exec N fois via setTimeout pour jouer le son', () => {
       playBellRepeat(3, 200)
 
       // At t=0, first setTimeout fires
       vi.advanceTimersByTime(0)
       expect(mockExec).toHaveBeenCalledTimes(1)
-      expect(mockExec.mock.calls[0]![0]).toContain('afplay')
       expect(mockExec.mock.calls[0]![0]).toContain('bell.wav')
 
       // At t=200, second setTimeout fires
@@ -243,12 +246,11 @@ describe('notificationService', () => {
       expect(mockApp.dock.setBadge).toHaveBeenCalledWith('!')
     })
 
-    it('joue le son de cloche via playBellSound', () => {
+    it('joue le son via playBellSound', () => {
       sendNotification('Titre', 'Corps')
 
-      // playBellSound calls exec with afplay
+      // playBellSound calls exec to play the sound
       expect(mockExec).toHaveBeenCalledTimes(1)
-      expect(mockExec.mock.calls[0]![0]).toContain('afplay')
       expect(mockExec.mock.calls[0]![0]).toContain('bell.wav')
     })
 

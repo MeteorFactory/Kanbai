@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { IS_WIN } from '../helpers/platform'
 
 // Mock all Electron dependencies before importing the main module
 
@@ -66,7 +67,9 @@ vi.mock('electron', () => ({
 }))
 
 vi.mock('child_process', () => ({
-  execSync: vi.fn(() => '/usr/bin:/usr/local/bin:/opt/homebrew/bin'),
+  execSync: vi.fn(() => process.platform === 'win32'
+    ? 'C:\\Windows\\system32;C:\\Program Files\\nodejs'
+    : '/usr/bin:/usr/local/bin:/opt/homebrew/bin'),
 }))
 
 // Mock all IPC registration functions to avoid side effects
@@ -219,6 +222,34 @@ describe('Electron Lifecycle (pre-upgrade baseline)', () => {
 
       expect(mockOnce).toHaveBeenCalledWith('ready-to-show', expect.any(Function))
     })
+  })
+
+  describe('BrowserWindow platform-specific options', () => {
+    if (IS_WIN) {
+      it('ne contient pas vibrancy sur Windows', async () => {
+        await import('../../src/main/index')
+        await new Promise((r) => setTimeout(r, 0))
+
+        const options = mockBrowserWindowConstructor.mock.calls[0][0]
+        expect(options.vibrancy).toBeUndefined()
+      })
+
+      it('ne contient pas trafficLightPosition sur Windows', async () => {
+        await import('../../src/main/index')
+        await new Promise((r) => setTimeout(r, 0))
+
+        const options = mockBrowserWindowConstructor.mock.calls[0][0]
+        expect(options.trafficLightPosition).toBeUndefined()
+      })
+
+      it('utilise titleBarStyle default sur Windows', async () => {
+        await import('../../src/main/index')
+        await new Promise((r) => setTimeout(r, 0))
+
+        const options = mockBrowserWindowConstructor.mock.calls[0][0]
+        expect(options.titleBarStyle).toBe('default')
+      })
+    }
   })
 
   describe('App lifecycle handlers', () => {

@@ -20,13 +20,18 @@ vi.mock('os', async () => {
   }
 })
 
-// Mock Electron's Notification
+// Mock Electron's Notification and BrowserWindow (used by notificationService)
 vi.mock('electron', () => {
   class MockNotification {
     show() {}
   }
   return {
     Notification: MockNotification,
+    BrowserWindow: {
+      getFocusedWindow: () => null,
+      getAllWindows: () => [],
+    },
+    app: { dock: { setBadge: vi.fn() } },
     IpcMain: vi.fn(),
   }
 })

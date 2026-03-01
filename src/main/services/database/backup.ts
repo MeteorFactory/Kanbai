@@ -16,6 +16,7 @@ import {
   DbBackupLogEntry,
   IPC_CHANNELS,
 } from '../../../shared/types'
+import { IS_WIN, getDbToolPaths, PATH_SEP, shellEscape as platformShellEscape } from '../../../shared/platform'
 
 const execAsync = promisify(exec)
 
@@ -27,29 +28,9 @@ const BACKUPS_DIR = path.join(os.homedir(), '.mirehub', 'databases', 'backups')
  * pg_dump, mysqldump, mongodump, sqlite3 may not be found.
  */
 function getExtendedPath(): string {
-  const extraPaths = [
-    '/opt/homebrew/bin',
-    '/opt/homebrew/opt/postgresql@17/bin',
-    '/opt/homebrew/opt/postgresql@16/bin',
-    '/opt/homebrew/opt/postgresql@15/bin',
-    '/opt/homebrew/opt/postgresql@14/bin',
-    '/opt/homebrew/opt/libpq/bin',
-    '/opt/homebrew/opt/mysql/bin',
-    '/opt/homebrew/opt/mysql-client/bin',
-    '/opt/homebrew/opt/mongodb-database-tools/bin',
-    '/opt/homebrew/opt/sqlite/bin',
-    '/usr/local/bin',
-    '/usr/local/opt/postgresql@17/bin',
-    '/usr/local/opt/postgresql@16/bin',
-    '/usr/local/opt/postgresql@15/bin',
-    '/usr/local/opt/postgresql@14/bin',
-    '/usr/local/opt/libpq/bin',
-    '/usr/local/opt/mysql/bin',
-    '/usr/local/opt/mysql-client/bin',
-    '/usr/bin',
-  ]
+  const extraPaths = getDbToolPaths()
   const currentPath = process.env.PATH || ''
-  return [...extraPaths, currentPath].join(':')
+  return [...extraPaths, currentPath].join(PATH_SEP)
 }
 
 /**
@@ -60,6 +41,7 @@ function execWithPath(cmd: string): Promise<{ stdout: string; stderr: string }> 
     maxBuffer: 1024 * 1024 * 100,
     encoding: 'utf-8',
     env: { ...process.env, PATH: getExtendedPath() },
+    ...(IS_WIN ? { shell: 'cmd.exe' } : {}),
   })
 }
 
@@ -97,7 +79,7 @@ function writeManifest(connectionId: string, manifest: DbBackupManifest): void {
  * Shell-escape a string value for use in shell commands.
  */
 function shellEscape(val: string): string {
-  return `'${val.replace(/'/g, "'\\''")}'`
+  return platformShellEscape(val)
 }
 
 /**

@@ -41,7 +41,7 @@ export function SessionModal({ session, onResume, onClear, onDismiss }: SessionM
                 </span>
                 <span className="session-modal-tab-label">{tab.label}</span>
                 <span className="session-modal-tab-path">
-                  {tab.cwd.split('/').pop()}
+                  {tab.cwd.split(/[\\/]/).pop()}
                 </span>
               </div>
             ))}

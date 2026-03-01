@@ -617,7 +617,7 @@ export function KanbanBoard() {
                 <div className="kanban-create-attachments">
                   {pendingAttachments.map((fp, i) => (
                     <span key={`file-${i}`} className="kanban-attachment-chip">
-                      {fp.split('/').pop()}
+                      {fp.split(/[\\/]/).pop()}
                       <button
                         className="kanban-attachment-chip-remove"
                         onClick={() => setPendingAttachments((prev) => prev.filter((_, idx) => idx !== i))}
@@ -1277,7 +1277,7 @@ function TaskDetailPanel({
           <span className="kanban-detail-section-title">{t('kanban.conversationHistory')}</span>
           <div className="kanban-detail-conversation">
             <span className="kanban-detail-conversation-path" title={task.conversationHistoryPath}>
-              {task.conversationHistoryPath.split('/').pop()}
+              {task.conversationHistoryPath.split(/[\\/]/).pop()}
             </span>
           </div>
         </div>

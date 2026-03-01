@@ -3,6 +3,7 @@ import fs from 'fs'
 import path from 'path'
 import os from 'os'
 import { createMockIpcMain } from '../mocks/electron'
+import { IS_WIN } from '../helpers/platform'
 
 const TEST_DIR = path.join(os.tmpdir(), `.mirehub-fs-ipc-test-${process.pid}-${Date.now()}`)
 const testFilesDir = path.join(TEST_DIR, 'test-files')
@@ -77,7 +78,7 @@ describe('Filesystem IPC Handlers', () => {
       expect(result).toEqual([])
     })
 
-    it('inclut les informations de symlink', async () => {
+    it.skipIf(IS_WIN)('inclut les informations de symlink', async () => {
       const targetDir = path.join(testFilesDir, 'target')
       fs.mkdirSync(targetDir)
       const symlinkPath = path.join(testFilesDir, 'link')

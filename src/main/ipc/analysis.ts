@@ -1,6 +1,6 @@
 import { IpcMain, BrowserWindow } from 'electron'
 import { v4 as uuid } from 'uuid'
-import { execFile, spawn, ChildProcess } from 'child_process'
+import { spawn, ChildProcess } from 'child_process'
 import * as crypto from 'crypto'
 import * as fs from 'fs'
 import * as path from 'path'
@@ -17,6 +17,7 @@ import {
   AnalysisSeverity,
   KanbanTask,
 } from '../../shared/types'
+import { getWhichCommand, getAnalysisToolPaths, getInstallCommands, getInstallShell, killChildProcess, PATH_SEP, crossExecFile, crossSpawn } from '../../shared/platform'
 import {
   readKanbanTasks as readKanbanTasksShared,
   writeKanbanTasks as writeKanbanTasksShared,
@@ -217,23 +218,14 @@ function mapPylintSeverity(type: string): AnalysisSeverity {
   return 'info'
 }
 
-/** Build an enriched env with common macOS tool paths (Homebrew, pip, etc.) */
+/** Build an enriched env with common tool paths (Homebrew, pip, Chocolatey, etc.) */
 function enrichedEnv(): NodeJS.ProcessEnv {
   const home = os.homedir()
-  const extraPaths = [
-    '/usr/local/bin',
-    '/opt/homebrew/bin',
-    '/opt/homebrew/sbin',
-    `${home}/.local/bin`,
-    `${home}/Library/Python/3.11/bin`,
-    `${home}/Library/Python/3.12/bin`,
-    `${home}/Library/Python/3.13/bin`,
-    `${home}/.graudit`,
-  ]
+  const extraPaths = getAnalysisToolPaths()
   return {
     ...process.env,
     HOME: home,
-    PATH: `${process.env.PATH || ''}:${extraPaths.join(':')}`,
+    PATH: `${process.env.PATH || ''}${PATH_SEP}${extraPaths.join(PATH_SEP)}`,
   }
 }
 
@@ -712,11 +704,12 @@ function getToolDef(entry: ToolCatalogEntry, installed: boolean): AnalysisToolDe
 }
 
 async function isCommandAvailable(command: string): Promise<boolean> {
-  return new Promise((resolve) => {
-    execFile('which', [command], { env: enrichedEnv() }, (err, stdout) => {
-      resolve(!err && stdout.trim().length > 0)
-    })
-  })
+  try {
+    const { stdout } = await crossExecFile(getWhichCommand(), [command], { env: enrichedEnv() })
+    return stdout.trim().length > 0
+  } catch {
+    return false
+  }
 }
 
 async function isGrauditAvailable(): Promise<boolean> {
@@ -807,7 +800,7 @@ async function runTool(
     const timeoutMs = TOOL_TIMEOUT[toolEntry.id] ?? DEFAULT_TIMEOUT_MS
 
     // Use spawn to capture both stdout and stderr
-    const child = spawn(resolvedCommand, args, {
+    const child = crossSpawn(resolvedCommand, args, {
       cwd: projectPath,
       env: enrichedEnv(),
     })
@@ -816,10 +809,10 @@ async function runTool(
     let timedOut = false
     const timer = setTimeout(() => {
       timedOut = true
-      child.kill('SIGTERM')
-      // SIGKILL fallback for Docker/stubborn processes
+      killChildProcess(child, 'SIGTERM')
+      // Force kill fallback for Docker/stubborn processes
       setTimeout(() => {
-        try { child.kill('SIGKILL') } catch { /* already dead */ }
+        killChildProcess(child, 'SIGKILL')
       }, 5000)
     }, timeoutMs)
 
@@ -829,11 +822,11 @@ async function runTool(
     let stdout = ''
     let stderr = ''
 
-    child.stdout.on('data', (chunk: Buffer) => {
+    child.stdout?.on('data', (chunk: Buffer) => {
       stdout += chunk.toString()
     })
 
-    child.stderr.on('data', (chunk: Buffer) => {
+    child.stderr?.on('data', (chunk: Buffer) => {
       stderr += chunk.toString()
     })
 
@@ -934,19 +927,7 @@ const readKanbanTasks = readKanbanTasksShared
 const writeKanbanTasks = writeKanbanTasksShared
 
 // Install commands per tool
-const INSTALL_COMMANDS: Record<string, string> = {
-  semgrep: 'brew install semgrep',
-  bandit: '(command -v pipx >/dev/null 2>&1 || brew install pipx) && pipx install bandit',
-  bearer: 'brew install bearer/tap/bearer',
-  trivy: 'brew install trivy',
-  'osv-scanner': 'brew install osv-scanner',
-  eslint: 'npm install -g eslint',
-  graudit: 'git clone https://github.com/wireghoul/graudit.git "$HOME/.graudit" 2>/dev/null || git -C "$HOME/.graudit" pull && chmod +x "$HOME/.graudit/graudit"',
-  checkov: '(command -v pipx >/dev/null 2>&1 || brew install pipx) && pipx install checkov',
-  pylint: '(command -v pipx >/dev/null 2>&1 || brew install pipx) && pipx install pylint',
-  cppcheck: 'brew install cppcheck',
-  megalinter: 'npm install -g mega-linter-runner',
-}
+const INSTALL_COMMANDS: Record<string, string> = getInstallCommands()
 
 // Track running child processes for cancellation
 const runningProcesses = new Map<string, ChildProcess>()
@@ -1144,10 +1125,10 @@ export function registerAnalysisHandlers(
     async (_event, args: { toolId: string }) => {
       const child = runningProcesses.get(args.toolId)
       if (child) {
-        child.kill('SIGTERM')
-        // SIGKILL fallback for stubborn/Docker processes
+        killChildProcess(child, 'SIGTERM')
+        // Force kill fallback for stubborn/Docker processes
         setTimeout(() => {
-          try { child.kill('SIGKILL') } catch { /* already dead */ }
+          killChildProcess(child, 'SIGKILL')
         }, 3000)
         runningProcesses.delete(args.toolId)
         return { success: true }
@@ -1246,9 +1227,10 @@ export function registerAnalysisHandlers(
       }
 
       return new Promise((resolve) => {
-        // Use sh -c to execute the hardcoded install command safely.
+        // Execute the hardcoded install command safely via platform shell.
         // installCmd is from a fixed dictionary (INSTALL_COMMANDS), never from user input.
-        const child = spawn('sh', ['-c', installCmd], {
+        const installShell = getInstallShell()
+        const child = spawn(installShell.command, installShell.buildArgs(installCmd), {
           env: enrichedEnv(),
         })
 

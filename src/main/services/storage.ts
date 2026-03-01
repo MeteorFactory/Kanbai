@@ -3,7 +3,8 @@ import path from 'path'
 import os from 'os'
 import { v4 as uuid } from 'uuid'
 import { Workspace, Project, AppSettings, KanbanTask, AutoClauderTemplate, SessionData, Namespace, GitProfile } from '../../shared/types'
-import { DEFAULT_SETTINGS } from '../../shared/constants/defaults'
+import { createDefaultSettings } from '../../shared/constants/defaults'
+import { getDefaultShell } from '../../shared/platform'
 
 const DATA_DIR = path.join(os.homedir(), '.mirehub')
 
@@ -55,9 +56,18 @@ export class StorageService {
     if (fs.existsSync(this.dataPath)) {
       const raw = fs.readFileSync(this.dataPath, 'utf-8')
       const data = JSON.parse(raw) as AppData
+      let needsSave = false
       // Migration: ensure gitProfiles array exists
       if (!data.gitProfiles) {
         data.gitProfiles = []
+      }
+      // Migration: reset defaultShell if it doesn't exist on the current platform
+      // (handles cross-platform scenarios, e.g. /bin/zsh saved on macOS used on Windows)
+      // Call getDefaultShell() directly — DEFAULT_SETTINGS.defaultShell may be
+      // incorrectly inlined by rollup (picking the wrong platform branch).
+      if (data.settings?.defaultShell && !fs.existsSync(data.settings.defaultShell)) {
+        data.settings.defaultShell = getDefaultShell()
+        needsSave = true
       }
       // Migration: ensure namespaces array exists and assign Default namespace
       if (!data.namespaces || data.namespaces.length === 0) {
@@ -75,6 +85,9 @@ export class StorageService {
             ws.namespaceId = defaultNs.id
           }
         }
+        needsSave = true
+      }
+      if (needsSave) {
         fs.writeFileSync(this.dataPath, JSON.stringify(data, null, 2), 'utf-8')
       }
       return data
@@ -91,7 +104,7 @@ export class StorageService {
       projects: [],
       namespaces: [defaultNs],
       gitProfiles: [],
-      settings: { ...DEFAULT_SETTINGS },
+      settings: createDefaultSettings(),
       kanbanTasks: [],
       autoClauderTemplates: [],
     }

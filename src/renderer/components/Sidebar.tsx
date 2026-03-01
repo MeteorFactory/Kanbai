@@ -37,7 +37,7 @@ export function Sidebar() {
     const dirPath = await window.mirehub.project.selectDir()
     if (!dirPath) return
 
-    const folderName = dirPath.split('/').pop() || dirPath
+    const folderName = dirPath.split(/[\\/]/).pop() || dirPath
     const deleted = await checkDeletedWorkspace(folderName)
     if (deleted) {
       setDeletedWorkspace(deleted)
@@ -474,7 +474,7 @@ export function Sidebar() {
                   onClick={() => openFile(filePath)}
                   title={filePath}
                 >
-                  {filePath.split('/').pop()}
+                  {filePath.split(/[\\/]/).pop()}
                 </button>
               ))}
             </div>
@@ -502,7 +502,7 @@ export function Sidebar() {
                   onClick={() => openFile(filePath)}
                   title={filePath}
                 >
-                  {filePath.split('/').pop()}
+                  {filePath.split(/[\\/]/).pop()}
                 </button>
               ))}
             </div>

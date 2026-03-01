@@ -1,0 +1,14 @@
+[
+  ".claude/rules/_shared/rules/conventions/documentation.md:20:TODO",
+  ".claude/rules/_shared/rules/conventions/documentation.md:22:FIXME",
+  "ARCHITECTURE.md:327:TODO",
+  "ARCHITECTURE.md:103:TODO",
+  "docs/CTO-MODE.md:12:TODO",
+  "docs/CTO-MODE.md:29:TODO",
+  "docs/CTO-MODE.md:52:TODO",
+  "docs/IPC-API.md:253:TODO",
+  "docs/MCP-ENDPOINT.md:30:TODO",
+  "docs/MCP-ENDPOINT.md:82:TODO",
+  "docs/MCP-ENDPOINT.md:83:TODO",
+  "docs/STORES.md:166:TODO"
+]

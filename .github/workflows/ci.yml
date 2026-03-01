@@ -11,7 +11,10 @@ permissions:
 
 jobs:
   lint:
-    runs-on: macos-latest
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -22,7 +25,10 @@ jobs:
       - run: npm run lint
 
   typecheck:
-    runs-on: macos-latest
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -33,7 +39,10 @@ jobs:
       - run: npm run typecheck
 
   test:
-    runs-on: macos-latest
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -44,7 +53,10 @@ jobs:
       - run: npm run test
 
   build:
-    runs-on: macos-latest
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     env:
       NODE_OPTIONS: --max-old-space-size=4096
     steps:
@@ -56,7 +68,7 @@ jobs:
       - run: npm ci
       - run: npm run build
 
-  release:
+  release-mac:
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     needs: [lint, typecheck, test, build]
     runs-on: macos-latest
@@ -138,5 +150,58 @@ jobs:
 
       - name: Publish release (draft → public)
         run: gh release edit ${{ steps.version.outputs.tag }} --draft=false
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  release-win:
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    needs: [lint, typecheck, test, build, release-mac]
+    runs-on: windows-latest
+    env:
+      NODE_OPTIONS: --max-old-space-size=4096
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Get latest tag
+        id: version
+        shell: bash
+        run: |
+          LATEST=$(git tag -l 'v*' --sort=-v:refname | head -n1)
+          echo "tag=$LATEST" >> "$GITHUB_OUTPUT"
+          echo "Latest tag: $LATEST"
+
+      - name: Set version in package.json
+        shell: bash
+        run: |
+          VERSION="${{ steps.version.outputs.tag }}"
+          VERSION="${VERSION#v}"
+          npm version "$VERSION" --no-git-tag-version --allow-same-version
+
+      - run: npm ci
+
+      - name: Build renderer + main
+        run: npm run build
+
+      - name: Build Electron app and publish (Windows x64)
+        shell: bash
+        run: npx electron-builder --win --x64 --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Clean up release assets (remove exe blockmap)
+        shell: bash
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+          for asset in $(gh release view "$TAG" --json assets -q '.assets[].name' | grep '\.blockmap$'); do
+            echo "Removing $asset"
+            gh release delete-asset "$TAG" "$asset" --yes
+          done
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

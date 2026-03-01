@@ -145,6 +145,7 @@ export const fr = {
   'settings.appName': 'Nom',
   'settings.version': 'Version',
   'settings.developer': 'Developpeur',
+  'settings.elevatedMode': 'Mode Administrateur',
 
   // SSH Keys
   'settings.ssh': 'Git / SSH',
@@ -826,6 +827,7 @@ export const fr = {
   'updates.uninstalled': '{tool} desinstalle',
   'updates.failedUninstall': 'Echec desinstallation {tool}: {error}',
   'updates.installViaClaude': 'Installer via Claude',
+  'updates.copyError': 'Copier l\'erreur',
 
   // About
   'about.version': 'Version',

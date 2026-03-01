@@ -5,13 +5,14 @@ import { BrowserWindow } from 'electron'
 import { IPC_CHANNELS } from '../../shared/types'
 import { sendNotification, sendSilentNotification, playBellRepeat } from './notificationService'
 import { StorageService } from './storage'
+import { IS_WIN } from '../../shared/platform'
 
 const ACTIVITY_DIR = path.join(os.homedir(), '.mirehub', 'activity')
 const HOOKS_DIR = path.join(os.homedir(), '.mirehub', 'hooks')
 const ENVS_DIR = path.join(os.homedir(), '.mirehub', 'envs')
-const HOOK_SCRIPT_NAME = 'mirehub-activity.sh'
-const AUTOAPPROVE_SCRIPT_NAME = 'mirehub-autoapprove.sh'
-const KANBAN_DONE_SCRIPT_NAME = 'kanban-done.sh'
+const HOOK_SCRIPT_NAME = IS_WIN ? 'mirehub-activity.ps1' : 'mirehub-activity.sh'
+const AUTOAPPROVE_SCRIPT_NAME = IS_WIN ? 'mirehub-autoapprove.ps1' : 'mirehub-autoapprove.sh'
+const KANBAN_DONE_SCRIPT_NAME = IS_WIN ? 'kanban-done.ps1' : 'kanban-done.sh'
 
 /**
  * Ensures the global activity hook script exists at ~/.mirehub/hooks/mirehub-activity.sh
@@ -25,7 +26,43 @@ export function ensureActivityHookScript(): void {
   }
 
   const scriptPath = path.join(HOOKS_DIR, HOOK_SCRIPT_NAME)
-  const script = `#!/bin/bash
+
+  if (IS_WIN) {
+    const script = `# Mirehub Claude Activity Hook (auto-generated)
+# Signals Claude activity status to Mirehub via status files
+
+# Skip activity tracking for NL database queries
+if ($env:MIREHUB_NL_QUERY) { exit 0 }
+
+$StatusDir = "$env:USERPROFILE\\.mirehub\\activity"
+if (!(Test-Path $StatusDir)) { New-Item -ItemType Directory -Path $StatusDir -Force | Out-Null }
+
+$Hash = [System.BitConverter]::ToString(
+  [System.Security.Cryptography.MD5]::Create().ComputeHash(
+    [System.Text.Encoding]::UTF8.GetBytes($PWD.Path)
+  )
+).Replace("-","").Substring(0,16).ToLower()
+$File = "$StatusDir\\$Hash.json"
+
+$Status = if ($args[0]) { $args[0] } else { "working" }
+
+# Throttle working->working writes (max once per 30s)
+if ($Status -eq "working" -and (Test-Path $File)) {
+  $content = Get-Content $File -Raw -ErrorAction SilentlyContinue
+  if ($content -match '"status":"working"') {
+    $mtime = (Get-Item $File).LastWriteTime
+    $age = ((Get-Date) - $mtime).TotalSeconds
+    if ($age -lt 30) { exit 0 }
+  }
+}
+
+$timestamp = [Math]::Floor(([DateTimeOffset]::UtcNow).ToUnixTimeSeconds())
+$json = '{"status":"' + $Status + '","path":"' + ($PWD.Path -replace '\\\\','/') + '","timestamp":' + $timestamp + '}'
+Set-Content -Path $File -Value $json -NoNewline
+`
+    fs.writeFileSync(scriptPath, script)
+  } else {
+    const script = `#!/bin/bash
 # Mirehub Claude Activity Hook (auto-generated)
 # Signals Claude activity status to Mirehub via status files
 
@@ -63,7 +100,8 @@ fi
 
 printf '{"status":"%s","path":"%s","timestamp":%s}\\n' "$STATUS" "$PWD" "$(date +%s)" > "$FILE"
 `
-  fs.writeFileSync(scriptPath, script, { mode: 0o755 })
+    fs.writeFileSync(scriptPath, script, { mode: 0o755 })
+  }
 }
 
 /**
@@ -77,14 +115,25 @@ export function ensureAutoApproveScript(globalAutoApprove = false): void {
   }
 
   const scriptPath = path.join(HOOKS_DIR, AUTOAPPROVE_SCRIPT_NAME)
-  const kanbanOnlyCheck = '[ -z "$MIREHUB_KANBAN_TASK_ID" ] && exit 0'
-  const script = `#!/bin/bash
+
+  if (IS_WIN) {
+    const kanbanCheck = globalAutoApprove ? '# Global auto-approve enabled' : 'if (-not $env:MIREHUB_KANBAN_TASK_ID) { exit 0 }'
+    const script = `# Mirehub - Auto-approve hook (auto-generated)
+${kanbanCheck}
+$null = $input | Out-Null
+Write-Output '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow","permissionDecisionReason":"Mirehub auto-approve"}}'
+`
+    fs.writeFileSync(scriptPath, script)
+  } else {
+    const kanbanOnlyCheck = '[ -z "$MIREHUB_KANBAN_TASK_ID" ] && exit 0'
+    const script = `#!/bin/bash
 # Mirehub - Auto-approve hook (auto-generated)
 ${globalAutoApprove ? '# Global auto-approve enabled' : kanbanOnlyCheck}
 cat > /dev/null
 printf '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow","permissionDecisionReason":"Mirehub auto-approve"}}'
 `
-  fs.writeFileSync(scriptPath, script, { mode: 0o755 })
+    fs.writeFileSync(scriptPath, script, { mode: 0o755 })
+  }
 }
 
 /**
@@ -97,7 +146,71 @@ export function ensureKanbanDoneScript(): void {
   }
 
   const scriptPath = path.join(HOOKS_DIR, KANBAN_DONE_SCRIPT_NAME)
-  const script = `#!/bin/bash
+
+  if (IS_WIN) {
+    const script = `# Mirehub - Kanban task completion hook (auto-generated)
+if (-not $env:MIREHUB_KANBAN_TASK_ID) { exit 0 }
+if (-not $env:MIREHUB_KANBAN_FILE) { exit 0 }
+
+$ActivityScript = "$env:USERPROFILE\\.mirehub\\hooks\\${HOOK_SCRIPT_NAME}"
+
+$result = node -e @"
+const fs = require('fs');
+const file = process.env.MIREHUB_KANBAN_FILE;
+const taskId = process.env.MIREHUB_KANBAN_TASK_ID;
+try {
+  const tasks = JSON.parse(fs.readFileSync(file, 'utf-8'));
+  const task = tasks.find(t => t.id === taskId);
+  if (task) {
+    let isCto = task.isCtoTicket || false;
+    if (!isCto && task.parentTicketId) {
+      const parent = tasks.find(t => t.id === task.parentTicketId);
+      if (parent && parent.isCtoTicket) isCto = true;
+    }
+    process.stdout.write(task.status + '|' + (isCto ? 'true' : 'false'));
+  }
+} catch(e) {}
+"@
+
+if ($result) {
+  $parts = $result -split '\\|'
+  $ticketStatus = $parts[0]
+  $isCto = $parts[1]
+
+  switch ($ticketStatus) {
+    'PENDING' {
+      if ($isCto -eq 'true') {
+        node -e @"
+const fs = require('fs');
+const file = process.env.MIREHUB_KANBAN_FILE;
+const taskId = process.env.MIREHUB_KANBAN_TASK_ID;
+try {
+  const tasks = JSON.parse(fs.readFileSync(file, 'utf-8'));
+  const task = tasks.find(t => t.id === taskId);
+  if (task && task.status === 'PENDING') {
+    task.status = 'TODO';
+    task.updatedAt = Date.now();
+    fs.writeFileSync(file, JSON.stringify(tasks, null, 2), 'utf-8');
+  }
+} catch(e) {}
+"@
+      } else {
+        & powershell -File "$ActivityScript" waiting
+      }
+    }
+    'FAILED' {
+      & powershell -File "$ActivityScript" failed
+    }
+    'WORKING' {
+      $reason = 'RAPPEL: Tu n as pas mis a jour le ticket kanban !'
+      Write-Output ('{"decision":"block","reason":"' + $reason + '"}')
+    }
+  }
+}
+`
+    fs.writeFileSync(scriptPath, script)
+  } else {
+    const script = `#!/bin/bash
 # Mirehub - Kanban task completion hook (auto-generated)
 # Runs on Claude Code Stop event to check if the kanban ticket was updated.
 #
@@ -172,7 +285,8 @@ process.stdout.write(JSON.stringify({ decision: 'block', reason: reason }));
     ;;
 esac
 `
-  fs.writeFileSync(scriptPath, script, { mode: 0o755 })
+    fs.writeFileSync(scriptPath, script, { mode: 0o755 })
+  }
 }
 
 /**
@@ -209,6 +323,14 @@ export function installActivityHooks(projectPath: string): void {
   const autoApproveScriptPath = path.join(HOOKS_DIR, AUTOAPPROVE_SCRIPT_NAME)
   const kanbanDoneScriptPath = path.join(HOOKS_DIR, KANBAN_DONE_SCRIPT_NAME)
 
+  const shellCmd = IS_WIN
+    ? (scriptPath: string, ...scriptArgs: string[]) => `powershell -ExecutionPolicy Bypass -File "${scriptPath}" ${scriptArgs.join(' ')}`
+    : (scriptPath: string, ...scriptArgs: string[]) => `bash "${scriptPath}" ${scriptArgs.join(' ')}`
+
+  const activityScriptIncludes = IS_WIN ? 'mirehub-activity.ps1' : 'mirehub-activity.sh'
+  const autoApproveScriptIncludes = IS_WIN ? 'mirehub-autoapprove.ps1' : 'mirehub-autoapprove.sh'
+  const kanbanDoneScriptIncludes = IS_WIN ? 'kanban-done.ps1' : 'kanban-done.sh'
+
   // === PreToolUse hooks ===
   if (!hooks.PreToolUse) {
     hooks.PreToolUse = []
@@ -216,18 +338,18 @@ export function installActivityHooks(projectPath: string): void {
   const preToolHooks = hooks.PreToolUse as Array<{ matcher: string; hooks: Array<{ type: string; command: string }> }>
 
   // Activity working hook
-  if (!preToolHooks.some((h) => h.hooks?.some((hk) => hk.command?.includes('mirehub-activity.sh')))) {
+  if (!preToolHooks.some((h) => h.hooks?.some((hk) => hk.command?.includes(activityScriptIncludes)))) {
     preToolHooks.push({
       matcher: '',
-      hooks: [{ type: 'command', command: `bash "${activityScriptPath}" working` }],
+      hooks: [{ type: 'command', command: shellCmd(activityScriptPath, 'working') }],
     })
   }
 
   // Auto-approve hook (kanban sessions only)
-  if (!preToolHooks.some((h) => h.hooks?.some((hk) => hk.command?.includes('mirehub-autoapprove.sh')))) {
+  if (!preToolHooks.some((h) => h.hooks?.some((hk) => hk.command?.includes(autoApproveScriptIncludes)))) {
     preToolHooks.push({
       matcher: '',
-      hooks: [{ type: 'command', command: `bash "${autoApproveScriptPath}"` }],
+      hooks: [{ type: 'command', command: shellCmd(autoApproveScriptPath) }],
     })
   }
 
@@ -238,10 +360,10 @@ export function installActivityHooks(projectPath: string): void {
   const permReqHooks = hooks.PermissionRequest as Array<{ matcher: string; hooks: Array<{ type: string; command: string }> }>
 
   // Activity "ask" hook — signals Claude is blocked waiting for permission
-  if (!permReqHooks.some((h) => h.hooks?.some((hk) => hk.command?.includes('mirehub-activity.sh')))) {
+  if (!permReqHooks.some((h) => h.hooks?.some((hk) => hk.command?.includes(activityScriptIncludes)))) {
     permReqHooks.push({
       matcher: '',
-      hooks: [{ type: 'command', command: `bash "${activityScriptPath}" ask` }],
+      hooks: [{ type: 'command', command: shellCmd(activityScriptPath, 'ask') }],
     })
   }
 
@@ -252,10 +374,10 @@ export function installActivityHooks(projectPath: string): void {
   const postToolHooks = hooks.PostToolUse as Array<{ matcher: string; hooks: Array<{ type: string; command: string }> }>
 
   // Restore "working" status after tool executes (permission was granted)
-  if (!postToolHooks.some((h) => h.hooks?.some((hk) => hk.command?.includes('mirehub-activity.sh')))) {
+  if (!postToolHooks.some((h) => h.hooks?.some((hk) => hk.command?.includes(activityScriptIncludes)))) {
     postToolHooks.push({
       matcher: '',
-      hooks: [{ type: 'command', command: `bash "${activityScriptPath}" working` }],
+      hooks: [{ type: 'command', command: shellCmd(activityScriptPath, 'working') }],
     })
   }
 
@@ -266,9 +388,9 @@ export function installActivityHooks(projectPath: string): void {
   const stopHooks = hooks.Stop as Array<{ matcher: string; hooks: Array<{ type: string; command: string }> }>
 
   // Kanban-done hook (ensure global path, update stale paths)
-  const expectedKanbanCmd = `bash "${kanbanDoneScriptPath}"`
+  const expectedKanbanCmd = shellCmd(kanbanDoneScriptPath)
   const kanbanIdx = stopHooks.findIndex((h) =>
-    h.hooks?.some((hk) => hk.command?.includes('kanban-done.sh')),
+    h.hooks?.some((hk) => hk.command?.includes(kanbanDoneScriptIncludes)),
   )
   if (kanbanIdx === -1) {
     // Insert at the beginning so it runs before activity-done
@@ -278,17 +400,17 @@ export function installActivityHooks(projectPath: string): void {
     })
   } else {
     // Update if pointing to old/stale path
-    const hookCmd = stopHooks[kanbanIdx]!.hooks?.find((hk) => hk.command?.includes('kanban-done.sh'))
+    const hookCmd = stopHooks[kanbanIdx]!.hooks?.find((hk) => hk.command?.includes(kanbanDoneScriptIncludes))
     if (hookCmd && hookCmd.command !== expectedKanbanCmd) {
       hookCmd.command = expectedKanbanCmd
     }
   }
 
   // Activity done hook
-  if (!stopHooks.some((h) => h.hooks?.some((hk) => hk.command?.includes('mirehub-activity.sh')))) {
+  if (!stopHooks.some((h) => h.hooks?.some((hk) => hk.command?.includes(activityScriptIncludes)))) {
     stopHooks.push({
       matcher: '',
-      hooks: [{ type: 'command', command: `bash "${activityScriptPath}" done` }],
+      hooks: [{ type: 'command', command: shellCmd(activityScriptPath, 'done') }],
     })
   }
 

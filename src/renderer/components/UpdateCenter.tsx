@@ -1,7 +1,9 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useUpdateStore } from '../lib/stores/updateStore'
 import { useAppUpdateStore } from '../lib/stores/appUpdateStore'
 import { useI18n } from '../lib/i18n'
+
+const IS_WIN_RENDERER = navigator.platform.startsWith('Win')
 
 export function UpdateCenter() {
   const { t } = useI18n()
@@ -26,11 +28,17 @@ export function UpdateCenter() {
     return () => clearInterval(interval)
   }, [checkUpdates])
 
-  // Auto-dismiss install status after 5 seconds
+  const [copied, setCopied] = useState(false)
+  const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Auto-dismiss install status after 5 seconds (success only — errors stay)
   useEffect(() => {
     if (!installStatus) return
-    const timer = setTimeout(() => clearInstallStatus(), 5000)
-    return () => clearTimeout(timer)
+    if (installStatus.success) {
+      const timer = setTimeout(() => clearInstallStatus(), 5000)
+      return () => clearTimeout(timer)
+    }
+    return
   }, [installStatus, clearInstallStatus])
 
   const handleToggle = useCallback(() => {
@@ -107,11 +115,30 @@ export function UpdateCenter() {
           {installStatus && (
             <div
               className={`notification-status ${installStatus.success ? 'notification-status--success' : 'notification-status--error'}`}
-              onClick={clearInstallStatus}
             >
-              {installStatus.success
-                ? `\u2713 ${t('updates.updated', { tool: installStatus.tool })}`
-                : `\u2717 ${t('updates.failedUpdate', { tool: installStatus.tool, error: installStatus.error || '' })}`}
+              {installStatus.success ? (
+                <span onClick={clearInstallStatus} className="notification-status-text">
+                  {'\u2713'} {t('updates.updated', { tool: installStatus.tool })}
+                </span>
+              ) : (
+                <div className="notification-status-error">
+                  <span className="notification-status-text" onClick={clearInstallStatus}>
+                    {'\u2717'} {t('updates.failedUpdate', { tool: installStatus.tool, error: installStatus.error || '' })}
+                  </span>
+                  <button
+                    className="notification-status-copy"
+                    title={t('updates.copyError')}
+                    onClick={() => {
+                      navigator.clipboard.writeText(installStatus.error || '')
+                      setCopied(true)
+                      if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current)
+                      copiedTimerRef.current = setTimeout(() => setCopied(false), 2000)
+                    }}
+                  >
+                    {copied ? '\u2713' : '\u2398'}
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
@@ -197,12 +224,17 @@ export function UpdateCenter() {
                         {installingTool === update.tool ? '...' : t('updates.update')}
                       </button>
                     )}
-                    {!update.installed && update.tool === 'rtk' && (
+                    {IS_WIN_RENDERER && !update.installed && update.tool === 'cargo' && (
                       <button className="notification-item-btn notification-item-btn--install" onClick={() => handleInstall(update.tool, update.scope)} disabled={installingTool === update.tool}>
                         {installingTool === update.tool ? '...' : t('updates.install')}
                       </button>
                     )}
-                    {update.installed && update.tool === 'rtk' && (
+                    {IS_WIN_RENDERER && !update.installed && update.tool === 'rtk' && (
+                      <button className="notification-item-btn notification-item-btn--install" onClick={() => handleInstall(update.tool, update.scope)} disabled={installingTool === update.tool}>
+                        {installingTool === update.tool ? '...' : t('updates.install')}
+                      </button>
+                    )}
+                    {IS_WIN_RENDERER && update.installed && update.tool === 'rtk' && (
                       <button className="notification-item-btn notification-item-btn--uninstall" onClick={() => handleUninstall(update.tool)} disabled={installingTool === update.tool}>
                         {installingTool === update.tool ? '...' : t('updates.uninstall')}
                       </button>

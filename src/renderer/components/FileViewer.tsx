@@ -300,7 +300,7 @@ export function FileViewer() {
     )
   }
 
-  const fileName = selectedFilePath.split('/').pop() ?? selectedFilePath
+  const fileName = selectedFilePath.split(/[\\/]/).pop() ?? selectedFilePath
   const language = getLanguage(selectedFilePath)
 
   return (

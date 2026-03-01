@@ -4,6 +4,7 @@ import os from 'os'
 import { exec } from 'child_process'
 import { app, BrowserWindow, Notification } from 'electron'
 import { StorageService } from './storage'
+import { IS_WIN, getPlaySoundCommand } from '../../shared/platform'
 
 const ASSETS_DIR = path.join(os.homedir(), '.mirehub', 'assets')
 const BELL_WAV_PATH = path.join(ASSETS_DIR, 'bell.wav')
@@ -82,7 +83,7 @@ function playBellSound(): void {
   if (!settings.notificationSound) return
 
   ensureBellSound()
-  exec(`afplay "${BELL_WAV_PATH}"`, () => { /* fire and forget */ })
+  exec(getPlaySoundCommand(BELL_WAV_PATH), () => { /* fire and forget */ })
 }
 
 /**
@@ -96,7 +97,7 @@ export function playBellRepeat(count: number, delayMs = 300): void {
   ensureBellSound()
   for (let i = 0; i < count; i++) {
     setTimeout(() => {
-      exec(`afplay "${BELL_WAV_PATH}"`, () => { /* fire and forget */ })
+      exec(getPlaySoundCommand(BELL_WAV_PATH), () => { /* fire and forget */ })
     }, i * delayMs)
   }
 }
@@ -112,6 +113,12 @@ export function setDockBadge(): void {
   const focusedWindow = BrowserWindow.getFocusedWindow()
   if (!focusedWindow) {
     app.dock?.setBadge('!')
+    if (IS_WIN) {
+      const windows = BrowserWindow.getAllWindows()
+      for (const win of windows) {
+        if (!win.isDestroyed()) win.flashFrame(true)
+      }
+    }
   }
 }
 
@@ -120,6 +127,12 @@ export function setDockBadge(): void {
  */
 export function clearDockBadge(): void {
   app.dock?.setBadge('')
+  if (IS_WIN) {
+    const windows = BrowserWindow.getAllWindows()
+    for (const win of windows) {
+      if (!win.isDestroyed()) win.flashFrame(false)
+    }
+  }
 }
 
 /**

@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { createMockIpcMain } from '../mocks/electron'
 import { EventEmitter } from 'events'
+import { IS_WIN } from '../helpers/platform'
 
 // Create a mock PTY process
 function createMockPty() {
@@ -137,7 +138,11 @@ describe('Terminal IPC Handlers', () => {
 
     await mockIpcMain._invoke('terminal:close', { id })
 
-    expect(processKillSpy).toHaveBeenCalledWith(mockPtyInstance.pid, 'SIGKILL')
+    if (IS_WIN) {
+      expect(processKillSpy).toHaveBeenCalledWith(mockPtyInstance.pid)
+    } else {
+      expect(processKillSpy).toHaveBeenCalledWith(mockPtyInstance.pid, 'SIGKILL')
+    }
   })
 
   it('ne fait rien si on ferme un terminal inexistant', async () => {
@@ -187,6 +192,10 @@ describe('cleanupTerminals', () => {
     cleanupTerminals()
 
     expect(processKillSpy).toHaveBeenCalledTimes(2)
-    expect(processKillSpy).toHaveBeenCalledWith(12345, 'SIGKILL')
+    if (IS_WIN) {
+      expect(processKillSpy).toHaveBeenCalledWith(12345)
+    } else {
+      expect(processKillSpy).toHaveBeenCalledWith(12345, 'SIGKILL')
+    }
   })
 })

@@ -2688,6 +2688,40 @@ body {
   background: rgba(243, 139, 168, 0.08);
 }
 
+.notification-status-text {
+  cursor: pointer;
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+}
+
+.notification-status-text:hover {
+  opacity: 0.8;
+}
+
+.notification-status-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.notification-status-copy {
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid currentColor;
+  color: inherit;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 11px;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.15s ease;
+}
+
+.notification-status-copy:hover {
+  opacity: 1;
+}
+
 /* NPM update buttons */
 .npm-package-update-btn {
   width: 24px;

@@ -211,7 +211,7 @@ export function RulesManager({ projectPath }: Props) {
           isSymlink={contextIsSymlink}
           hasConflict={contextHasConflict}
           onRename={() => {
-            const name = contextMenu.relativePath.split('/').pop() || ''
+            const name = contextMenu.relativePath.split(/[\\/]/).pop() || ''
             state.setRenaming(contextMenu.relativePath)
             state.setRenameValue(name)
             setContextMenu(null)

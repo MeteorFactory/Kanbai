@@ -5,6 +5,8 @@ import os from 'os'
 import fs from 'fs'
 import path from 'path'
 import { IPC_CHANNELS } from '../../shared/types'
+import { IS_WIN, getDefaultShell, getDefaultShellArgs, killProcess } from '../../shared/platform'
+import { StorageService } from '../services/storage'
 
 interface ManagedTerminal {
   id: string
@@ -28,11 +30,7 @@ function disposeTerminal(terminal: ManagedTerminal): void {
     d.dispose()
   }
   terminal.disposables.length = 0
-  try {
-    process.kill(terminal.pty.pid, 'SIGKILL')
-  } catch {
-    // Process already exited — nothing to do.
-  }
+  killProcess(terminal.pty.pid, 'SIGKILL')
 }
 
 /**
@@ -85,13 +83,17 @@ export function registerTerminalHandlers(ipcMain: IpcMain): void {
     IPC_CHANNELS.TERMINAL_CREATE,
     async (_event, options: { cwd?: string; shell?: string }) => {
       const id = uuid()
-      const shell = options.shell || process.env.SHELL || '/bin/zsh'
+      const savedShell = new StorageService().getSettings().defaultShell
+      // Validate saved shell exists — it may be a macOS path (e.g. /bin/zsh)
+      // on a Windows machine if data.json was synced across platforms.
+      const shellExists = savedShell && fs.existsSync(savedShell)
+      const shell = options.shell || (shellExists ? savedShell : null) || getDefaultShell()
       const cwd = options.cwd || os.homedir()
 
       // No -l for zsh (node-pty PTY makes it interactive; login shell causes compdef issues)
       // Keep -l for bash where it's needed for PATH setup
-      const isZsh = shell.endsWith('/zsh')
-      const shellArgs = shell.endsWith('/bash') ? ['-l'] : []
+      const isZsh = !IS_WIN && shell.endsWith('/zsh')
+      const shellArgs = getDefaultShellArgs(shell)
 
       // For zsh: use a custom ZDOTDIR that loads compinit before the user's .zshrc
       const shellEnv: Record<string, string> = {

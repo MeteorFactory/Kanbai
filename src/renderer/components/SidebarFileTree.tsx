@@ -140,7 +140,7 @@ function FileNode({ entry, depth, onRefresh }: FileNodeProps) {
   const handlePaste = useCallback(async () => {
     const { clipboardPath } = useViewStore.getState()
     if (!clipboardPath) return
-    const name = clipboardPath.split('/').pop() ?? 'paste'
+    const name = clipboardPath.split(/[\\/]/).pop() ?? 'paste'
     let destPath = `${entry.path}/${name}`
     let counter = 2
     while (await window.mirehub.fs.exists(destPath)) {

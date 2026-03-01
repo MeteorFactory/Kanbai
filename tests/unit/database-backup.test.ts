@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterAll, vi } from 'vitest'
 import fs from 'fs'
 import path from 'path'
 import os from 'os'
+import { IS_WIN } from '../helpers/platform'
 
 // Hoist TEST_DIR for os mock
 const TEST_DIR = vi.hoisted(() => {
@@ -256,9 +257,14 @@ describe('Database Backup Service', () => {
 
       // Verify exec was called with extended PATH in env
       const callOpts = mockExecAsync.mock.calls[0]![1]
-      expect(callOpts.env.PATH).toContain('/opt/homebrew/bin')
-      expect(callOpts.env.PATH).toContain('/opt/homebrew/opt/postgresql@16/bin')
-      expect(callOpts.env.PATH).toContain('/usr/local/bin')
+      if (IS_WIN) {
+        expect(callOpts.env.PATH).toContain('PostgreSQL')
+        expect(callOpts.env.PATH).toContain('chocolatey')
+      } else {
+        expect(callOpts.env.PATH).toContain('/opt/homebrew/bin')
+        expect(callOpts.env.PATH).toContain('/opt/homebrew/opt/postgresql@16/bin')
+        expect(callOpts.env.PATH).toContain('/usr/local/bin')
+      }
     })
   })
 

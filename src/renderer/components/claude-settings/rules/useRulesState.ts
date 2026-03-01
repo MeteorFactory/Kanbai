@@ -178,7 +178,7 @@ export function useRulesState(projectPath: string) {
 
   const handleRename = useCallback(async (oldRelativePath: string) => {
     const newFilename = renameValue.trim()
-    if (!newFilename || newFilename === oldRelativePath.split('/').pop()) {
+    if (!newFilename || newFilename === oldRelativePath.split(/[\\/]/).pop()) {
       setRenaming(null)
       return
     }

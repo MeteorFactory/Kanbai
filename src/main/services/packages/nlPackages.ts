@@ -1,5 +1,6 @@
-import { spawn, type ChildProcess } from 'child_process'
+import type { ChildProcess } from 'child_process'
 import type { PackageInfo, PackageManagerType, PkgNlMessage } from '../../../shared/types'
+import { crossSpawn } from '../../../shared/platform'
 
 /** Active NL query process for packages (single query at a time) */
 const activeProcesses = new Map<string, ChildProcess>()
@@ -161,7 +162,7 @@ function callClaude(prompt: string): Promise<string> {
     delete env.CLAUDE_CODE_ENTRYPOINT
     env.MIREHUB_NL_QUERY = '1'
 
-    const proc = spawn('claude', ['-p', '--model', 'claude-haiku-4-5-20251001', '--output-format', 'json'], {
+    const proc = crossSpawn('claude', ['-p', '--model', 'claude-haiku-4-5-20251001', '--output-format', 'json'], {
       env,
       stdio: ['pipe', 'pipe', 'pipe'],
     })
