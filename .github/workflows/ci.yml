@@ -137,22 +137,6 @@ jobs:
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
 
-      - name: Clean up release assets (remove dmg blockmap)
-        run: |
-          TAG="${{ steps.version.outputs.tag }}"
-          # Delete .dmg.blockmap files — not used by auto-updater
-          for asset in $(gh release view "$TAG" --json assets -q '.assets[].name' | grep '\.dmg\.blockmap$'); do
-            echo "Removing $asset"
-            gh release delete-asset "$TAG" "$asset" --yes
-          done
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Publish release (draft → public)
-        run: gh release edit ${{ steps.version.outputs.tag }} --draft=false
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   release-win:
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     needs: [lint, typecheck, test, build, release-mac]
@@ -195,13 +179,33 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Clean up release assets (remove exe blockmap)
-        shell: bash
+  finalize-release:
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    needs: [release-mac, release-win]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get latest tag
+        id: version
+        run: |
+          LATEST=$(git tag -l 'v*' --sort=-v:refname | head -n1)
+          echo "tag=$LATEST" >> "$GITHUB_OUTPUT"
+          echo "Latest tag: $LATEST"
+
+      - name: Clean up release assets (remove blockmaps)
         run: |
           TAG="${{ steps.version.outputs.tag }}"
           for asset in $(gh release view "$TAG" --json assets -q '.assets[].name' | grep '\.blockmap$'); do
             echo "Removing $asset"
             gh release delete-asset "$TAG" "$asset" --yes
           done
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish release (draft → public)
+        run: gh release edit ${{ steps.version.outputs.tag }} --draft=false
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
