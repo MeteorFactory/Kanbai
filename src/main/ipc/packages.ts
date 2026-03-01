@@ -384,7 +384,19 @@ function getInstalledNpmVersion(projectPath: string, packageName: string): strin
 
 async function updateNpmPackage(projectPath: string, packageName: string): Promise<{ success: boolean; error?: string; versionBefore?: string | null; versionAfter?: string | null }> {
   const versionBefore = getInstalledNpmVersion(projectPath, packageName)
-  await execFileAsync('npm', ['update', packageName], { cwd: projectPath, timeout: 120000 })
+  const args = ['install', `${packageName}@latest`]
+
+  try {
+    await execFileAsync('npm', args, { cwd: projectPath, timeout: 120000 })
+  } catch (installErr: unknown) {
+    const errMsg = String((installErr as { stderr?: string }).stderr ?? '')
+    if (errMsg.includes('ERESOLVE') || errMsg.includes('peer dep') || errMsg.includes('Could not resolve dependency')) {
+      await execFileAsync('npm', [...args, '--legacy-peer-deps'], { cwd: projectPath, timeout: 120000 })
+    } else {
+      throw installErr
+    }
+  }
+
   const versionAfter = getInstalledNpmVersion(projectPath, packageName)
   const result: { success: boolean; versionBefore?: string | null; versionAfter?: string | null } = { success: true }
   if (versionBefore !== null || versionAfter !== null) {
@@ -395,7 +407,16 @@ async function updateNpmPackage(projectPath: string, packageName: string): Promi
 }
 
 async function updateAllNpmPackages(projectPath: string): Promise<{ success: boolean; error?: string }> {
-  await execFileAsync('npm', ['update'], { cwd: projectPath, timeout: 120000 })
+  try {
+    await execFileAsync('npm', ['update'], { cwd: projectPath, timeout: 120000 })
+  } catch (installErr: unknown) {
+    const errMsg = String((installErr as { stderr?: string }).stderr ?? '')
+    if (errMsg.includes('ERESOLVE') || errMsg.includes('peer dep') || errMsg.includes('Could not resolve dependency')) {
+      await execFileAsync('npm', ['update', '--legacy-peer-deps'], { cwd: projectPath, timeout: 120000 })
+    } else {
+      throw installErr
+    }
+  }
   return { success: true }
 }
 
