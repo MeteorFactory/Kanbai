@@ -59,6 +59,7 @@ html {
 @media (prefers-reduced-motion: reduce) {
   .animate-in { opacity: 1 !important; transform: none !important; }
   .tab-ready [data-panel].panel-active { animation: none; }
+  .hero-rotate { transition: none !important; }
 }
 
 /* --- Tab Panels --- */
@@ -281,6 +282,18 @@ a:hover { color: var(--accent-hover); }
 }
 .hero h1 em.hero-claudez {
   -webkit-text-fill-color: #C15F3C;
+}
+.hero h1 em.hero-codex {
+  -webkit-text-fill-color: #10A37F;
+}
+
+/* Punchline rotation */
+.hero-rotate {
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.hero-rotate.fade-out {
+  opacity: 0;
+  transform: translateY(8px);
 }
 
 .hero-subtitle {

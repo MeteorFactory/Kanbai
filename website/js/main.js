@@ -138,6 +138,70 @@
     });
   })();
 
+  // --- Punchline Rotation ---
+  var punchlines = [
+    {
+      fr: 'Arretez de jongler<br>entre vos outils. <em class="hero-claudez">Claudez.</em>',
+      en: 'Stop juggling<br>your tools. <em class="hero-claudez">Claude this.</em>',
+      subtitleFr: 'Ecrivez un ticket. Claude le resout. Vous reviewez. C\u2019est tout.',
+      subtitleEn: 'Write a ticket. Claude solves it. You review. That\u2019s it.',
+      descFr: 'Le Kanban de Mirehub transforme chaque tache en action concrete pour Claude AI. Il code, il met a jour le ticket en temps reel, vous gardez le controle. Plus Terminal, Git et 8 autres outils \u2014 dans une seule fenetre.',
+      descEn: 'Mirehub\u2019s Kanban turns every task into a concrete action for Claude AI. It codes, it updates the ticket in real time, you stay in control. Plus Terminal, Git and 8 more tools \u2014 in a single window.'
+    },
+    {
+      fr: 'Arretez de coder<br>a la main. <em class="hero-codex">Codex.</em>',
+      en: 'Stop hand-coding<br>everything. <em class="hero-codex">Codex.</em>',
+      subtitleFr: 'Decrivez la tache. Codex genere le code. Vous mergez.',
+      subtitleEn: 'Describe the task. Codex generates the code. You merge.',
+      descFr: 'Mirehub connecte OpenAI Codex a votre workflow. Chaque ticket devient du code fonctionnel \u2014 revise, teste, pret a merger. Terminal, Git et 8 autres outils dans une seule fenetre.',
+      descEn: 'Mirehub connects OpenAI Codex to your workflow. Every ticket becomes working code \u2014 reviewed, tested, ready to merge. Terminal, Git and 8 more tools in a single window.'
+    }
+  ];
+
+  var heroTitle = document.querySelector('.hero h1');
+  var heroSubtitle = document.querySelector('.hero-subtitle');
+  var heroDesc = document.querySelector('.hero-description');
+
+  if (heroTitle && heroSubtitle && heroDesc) {
+    heroTitle.classList.add('hero-rotate');
+    heroSubtitle.classList.add('hero-rotate');
+    heroDesc.classList.add('hero-rotate');
+
+    var currentPunchline = Math.floor(Math.random() * punchlines.length);
+
+    function applyPunchline(index) {
+      var p = punchlines[index];
+      var frTitle = heroTitle.querySelector('[data-lang="fr"]');
+      var enTitle = heroTitle.querySelector('[data-lang="en"]');
+      var frSub = heroSubtitle.querySelector('[data-lang="fr"]');
+      var enSub = heroSubtitle.querySelector('[data-lang="en"]');
+      var frDesc = heroDesc.querySelector('[data-lang="fr"]');
+      var enDesc = heroDesc.querySelector('[data-lang="en"]');
+      if (frTitle) frTitle.innerHTML = p.fr;
+      if (enTitle) enTitle.innerHTML = p.en;
+      if (frSub) frSub.textContent = p.subtitleFr;
+      if (enSub) enSub.textContent = p.subtitleEn;
+      if (frDesc) frDesc.textContent = p.descFr;
+      if (enDesc) enDesc.textContent = p.descEn;
+    }
+
+    applyPunchline(currentPunchline);
+
+    setInterval(function () {
+      currentPunchline = (currentPunchline + 1) % punchlines.length;
+      heroTitle.classList.add('fade-out');
+      heroSubtitle.classList.add('fade-out');
+      heroDesc.classList.add('fade-out');
+
+      setTimeout(function () {
+        applyPunchline(currentPunchline);
+        heroTitle.classList.remove('fade-out');
+        heroSubtitle.classList.remove('fade-out');
+        heroDesc.classList.remove('fade-out');
+      }, 600);
+    }, 120000);
+  }
+
   // --- Scroll Animations ---
   if ('IntersectionObserver' in window) {
     var observer = new IntersectionObserver(

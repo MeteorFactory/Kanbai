@@ -1,4 +1,4 @@
-.PHONY: dev build clean install lint format test typecheck build-app app app-win check
+.PHONY: dev build clean install lint format test typecheck build-app app app-win check web
 
 STAMP = node_modules/.install-stamp
 
@@ -54,6 +54,11 @@ test-watch: $(STAMP)
 
 test-coverage: $(STAMP)
 	npm run test:coverage
+
+# Website local server
+web:
+	@echo "Serving website at http://localhost:8080"
+	cd website && python3 -m http.server 8080
 
 # Nettoyage
 ifeq ($(OS),Windows_NT)

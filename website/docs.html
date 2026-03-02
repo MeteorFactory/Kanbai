@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mirehub — Documentation</title>
-  <meta name="description" content="Documentation complete de Mirehub : Terminal, Claude AI, Git, Kanban avec Mode CTO, Packages multi-ecosysteme avec IA, TODO Scanner, Statistiques, Prompts, Database Explorer avec chat IA, Code Analysis, API Tester. Guide d'utilisation avec screenshots.">
+  <meta name="description" content="Documentation complete de Mirehub : Terminal, Claude AI, Codex, Git, Kanban avec Mode CTO, Packages multi-ecosysteme avec IA, TODO Scanner, Statistiques, Prompts, Database Explorer avec chat IA, Code Analysis, API Tester. Guide d'utilisation avec screenshots.">
   <link rel="icon" type="image/png" href="assets/favicon.png">
   <link rel="stylesheet" href="css/style.css">
 </head>
@@ -100,6 +100,22 @@
               </a>
             </div>
             <a href="#autoclaude" class="docs-nav-link">AutoClaude</a>
+            <div class="docs-nav-group">
+              <a href="#codex" class="docs-nav-group-title">Codex</a>
+              <a href="#codex-general" class="docs-nav-link" style="padding-left:28px;font-size:13px;">
+                <span data-lang="fr">General</span>
+                <span data-lang="en">General</span>
+              </a>
+              <a href="#codex-rules" class="docs-nav-link" style="padding-left:28px;font-size:13px;">
+                <span data-lang="fr">Regles</span>
+                <span data-lang="en">Rules</span>
+              </a>
+              <a href="#codex-memory" class="docs-nav-link" style="padding-left:28px;font-size:13px;">
+                <span data-lang="fr">Memoire</span>
+                <span data-lang="en">Memory</span>
+              </a>
+              <a href="#codex-skills" class="docs-nav-link" style="padding-left:28px;font-size:13px;">Skills</a>
+            </div>
             <a href="#git" class="docs-nav-link">Git</a>
             <div class="docs-nav-group">
               <a href="#kanban" class="docs-nav-group-title">Kanban</a>
@@ -150,8 +166,8 @@
             <span data-lang="en">Mirehub Documentation</span>
           </h1>
           <p>
-            <span data-lang="fr">Guide complet de toutes les fonctionnalites de Mirehub, votre IDE macOS natif. De l'installation aux workflows avances avec Claude AI, cette documentation couvre chaque outil en detail.</span>
-            <span data-lang="en">Complete guide to all Mirehub features, your native macOS IDE. From installation to advanced workflows with Claude AI, this documentation covers every tool in detail.</span>
+            <span data-lang="fr">Guide complet de toutes les fonctionnalites de Mirehub, votre IDE macOS natif. De l'installation aux workflows avances avec Claude AI et Codex, cette documentation couvre chaque outil en detail.</span>
+            <span data-lang="en">Complete guide to all Mirehub features, your native macOS IDE. From installation to advanced workflows with Claude AI and Codex, this documentation covers every tool in detail.</span>
           </p>
         </div>
 
@@ -165,8 +181,8 @@
           </h2>
           <div class="docs-text">
             <p>
-              <span data-lang="fr">Mirehub est un IDE natif (macOS &amp; Windows) qui reunit plus de 15 outils de developpement dans une seule fenetre : Terminal, Claude AI, Git, Kanban avec Mode CTO, Packages multi-ecosysteme avec IA, TODO Scanner, Statistiques, Prompts, Database Explorer avec chat IA, Code Analysis, API Tester, et bien plus encore. Aucune configuration n'est necessaire. Les mises a jour sont automatiques.</span>
-              <span data-lang="en">Mirehub is a native IDE (macOS &amp; Windows) that combines over 15 development tools in a single window: Terminal, Claude AI, Git, Kanban with CTO Mode, multi-ecosystem Packages with AI, TODO Scanner, Statistics, Prompts, Database Explorer with AI chat, Code Analysis, API Tester, and much more. No configuration needed. Updates are automatic.</span>
+              <span data-lang="fr">Mirehub est un IDE natif (macOS &amp; Windows) qui reunit plus de 15 outils de developpement dans une seule fenetre : Terminal, Claude AI, Codex, Git, Kanban avec Mode CTO, Packages multi-ecosysteme avec IA, TODO Scanner, Statistiques, Prompts, Database Explorer avec chat IA, Code Analysis, API Tester, et bien plus encore. Aucune configuration n'est necessaire. Les mises a jour sont automatiques.</span>
+              <span data-lang="en">Mirehub is a native IDE (macOS &amp; Windows) that combines over 15 development tools in a single window: Terminal, Claude AI, Codex, Git, Kanban with CTO Mode, multi-ecosystem Packages with AI, TODO Scanner, Statistics, Prompts, Database Explorer with AI chat, Code Analysis, API Tester, and much more. No configuration needed. Updates are automatic.</span>
             </p>
           </div>
 
@@ -1304,6 +1320,170 @@
         </section>
 
         <!-- ============================================ -->
+        <!-- CODEX                                        -->
+        <!-- ============================================ -->
+        <section class="docs-section" id="codex">
+          <h2>Codex</h2>
+          <div class="docs-text">
+            <p>
+              <span data-lang="fr">Mirehub integre OpenAI Codex en tant qu'agent IA complementaire a Claude Code. Un tableau de bord dedie avec quatre onglets permet de configurer Codex : General, Regles, Memoire et Skills. Codex fonctionne avec le meme Kanban que Claude — envoyez un ticket a Codex, il le resout automatiquement.</span>
+              <span data-lang="en">Mirehub integrates OpenAI Codex as a complementary AI agent to Claude Code. A dedicated dashboard with four tabs lets you configure Codex: General, Rules, Memory and Skills. Codex works with the same Kanban as Claude — send a ticket to Codex, it resolves it automatically.</span>
+            </p>
+          </div>
+
+          <div class="docs-callout docs-callout--note">
+            <svg class="docs-callout-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <div class="docs-callout-content">
+              <p><span data-lang="fr">Codex CLI doit etre installe sur votre systeme. Mirehub detecte automatiquement sa presence et active l'onglet Codex dans le tableau de bord AI.</span><span data-lang="en">Codex CLI must be installed on your system. Mirehub automatically detects its presence and activates the Codex tab in the AI dashboard.</span></p>
+            </div>
+          </div>
+
+          <!-- Codex General -->
+          <div id="codex-general">
+            <h3>
+              <span data-lang="fr">Onglet General</span>
+              <span data-lang="en">General tab</span>
+            </h3>
+            <div class="docs-text">
+              <p>
+                <span data-lang="fr">L'onglet General de Codex controle les parametres fondamentaux de l'agent : politique d'approbation, mode sandbox, et fonctionnalites avancees.</span>
+                <span data-lang="en">The Codex General tab controls the agent's core settings: approval policy, sandbox mode, and advanced features.</span>
+              </p>
+
+              <h4>
+                <span data-lang="fr">Politique d'approbation</span>
+                <span data-lang="en">Approval policy</span>
+              </h4>
+              <p>
+                <span data-lang="fr">Trois modes disponibles pour controler le niveau d'autonomie de Codex :</span>
+                <span data-lang="en">Three modes available to control Codex's autonomy level:</span>
+              </p>
+              <ul>
+                <li>
+                  <span data-lang="fr"><strong>Suggest</strong> — Codex propose des modifications, vous les validez avant application</span>
+                  <span data-lang="en"><strong>Suggest</strong> — Codex proposes changes, you validate them before applying</span>
+                </li>
+                <li>
+                  <span data-lang="fr"><strong>Auto-edit</strong> — Codex applique automatiquement les modifications aux fichiers mais demande approbation pour les commandes systeme</span>
+                  <span data-lang="en"><strong>Auto-edit</strong> — Codex automatically applies file changes but asks approval for system commands</span>
+                </li>
+                <li>
+                  <span data-lang="fr"><strong>Full auto</strong> — Codex agit sans approbation. Mode le plus rapide, ideal pour les taches de confiance</span>
+                  <span data-lang="en"><strong>Full auto</strong> — Codex acts without approval. Fastest mode, ideal for trusted tasks</span>
+                </li>
+              </ul>
+
+              <h4>
+                <span data-lang="fr">Mode Sandbox</span>
+                <span data-lang="en">Sandbox mode</span>
+              </h4>
+              <p>
+                <span data-lang="fr">Le sandbox controle les acces fichiers de Codex :</span>
+                <span data-lang="en">The sandbox controls Codex's file access:</span>
+              </p>
+              <ul>
+                <li>
+                  <span data-lang="fr"><strong>Lecture seule</strong> — Codex peut lire les fichiers mais pas les modifier</span>
+                  <span data-lang="en"><strong>Read-only</strong> — Codex can read files but not modify them</span>
+                </li>
+                <li>
+                  <span data-lang="fr"><strong>Ecriture workspace</strong> — Codex peut modifier les fichiers dans le workspace uniquement</span>
+                  <span data-lang="en"><strong>Workspace write</strong> — Codex can modify files within the workspace only</span>
+                </li>
+              </ul>
+
+              <h4>
+                <span data-lang="fr">Fonctionnalites avancees</span>
+                <span data-lang="en">Advanced features</span>
+              </h4>
+              <ul>
+                <li>
+                  <span data-lang="fr"><strong>Multi-agent</strong> — Activez les equipes d'agents Codex pour des taches complexes</span>
+                  <span data-lang="en"><strong>Multi-agent</strong> — Enable Codex agent teams for complex tasks</span>
+                </li>
+                <li>
+                  <span data-lang="fr"><strong>Recherche web</strong> — Autorisez Codex a effectuer des recherches web pour enrichir ses reponses</span>
+                  <span data-lang="en"><strong>Web search</strong> — Allow Codex to perform web searches to enrich its responses</span>
+                </li>
+                <li>
+                  <span data-lang="fr"><strong>Persistence d'historique</strong> — Configurez la sauvegarde des sessions Codex (tout sauvegarder, rien sauvegarder, ou sauvegarder par defaut)</span>
+                  <span data-lang="en"><strong>History persistence</strong> — Configure Codex session saving (save all, save nothing, or save by default)</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <hr class="docs-separator">
+
+          <!-- Codex Rules -->
+          <div id="codex-rules">
+            <h3>
+              <span data-lang="fr">Onglet Regles</span>
+              <span data-lang="en">Rules tab</span>
+            </h3>
+            <div class="docs-text">
+              <p>
+                <span data-lang="fr">L'onglet Regles permet de definir les instructions que Codex doit suivre pendant ses sessions. Ces regles sont ecrites dans le fichier <code>.codex/AGENTS.md</code> et sont injectees automatiquement dans chaque session Codex.</span>
+                <span data-lang="en">The Rules tab lets you define instructions that Codex must follow during its sessions. These rules are written in the <code>.codex/AGENTS.md</code> file and are automatically injected into every Codex session.</span>
+              </p>
+              <p>
+                <span data-lang="fr">Editez les regles directement dans l'interface avec apercu en temps reel, ou ajoutez des regles partagees via le systeme de fichiers de regles. Les modifications sont sauvegardees automatiquement.</span>
+                <span data-lang="en">Edit rules directly in the interface with real-time preview, or add shared rules via the rules file system. Changes are saved automatically.</span>
+              </p>
+            </div>
+          </div>
+
+          <hr class="docs-separator">
+
+          <!-- Codex Memory -->
+          <div id="codex-memory">
+            <h3>
+              <span data-lang="fr">Onglet Memoire</span>
+              <span data-lang="en">Memory tab</span>
+            </h3>
+            <div class="docs-text">
+              <p>
+                <span data-lang="fr">L'onglet Memoire de Codex centralise la configuration persistante : le fichier <code>.codex/config.toml</code>. Visualisez et editez la configuration directement dans Mirehub — politique d'approbation, mode sandbox, fonctionnalites et historique.</span>
+                <span data-lang="en">The Codex Memory tab centralizes persistent configuration: the <code>.codex/config.toml</code> file. View and edit the configuration directly in Mirehub — approval policy, sandbox mode, features and history.</span>
+              </p>
+            </div>
+          </div>
+
+          <hr class="docs-separator">
+
+          <!-- Codex Skills -->
+          <div id="codex-skills">
+            <h3>Skills</h3>
+            <div class="docs-text">
+              <p>
+                <span data-lang="fr">L'onglet Skills de Codex permet d'etendre les capacites de l'agent avec des competences personnalisees. Ajoutez des skills specifiques a votre projet qui seront automatiquement disponibles dans les sessions Codex.</span>
+                <span data-lang="en">The Codex Skills tab lets you extend the agent's capabilities with custom skills. Add project-specific skills that will be automatically available in Codex sessions.</span>
+              </p>
+            </div>
+          </div>
+
+          <hr class="docs-separator">
+
+          <div class="docs-text">
+            <h3>
+              <span data-lang="fr">Integration Kanban</span>
+              <span data-lang="en">Kanban integration</span>
+            </h3>
+            <p>
+              <span data-lang="fr">Codex s'integre au Kanban de la meme maniere que Claude. Chaque ticket peut etre envoye a Codex via le bouton dedie. Mirehub ouvre un onglet terminal avec Codex CLI et lui transmet le fichier prompt du ticket. Le workflow est identique : TODO → WORKING → DONE/PENDING/FAILED.</span>
+              <span data-lang="en">Codex integrates with the Kanban the same way as Claude. Every ticket can be sent to Codex via the dedicated button. Mirehub opens a terminal tab with Codex CLI and passes it the ticket's prompt file. The workflow is identical: TODO → WORKING → DONE/PENDING/FAILED.</span>
+            </p>
+          </div>
+
+          <div class="docs-callout docs-callout--tip">
+            <svg class="docs-callout-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            <div class="docs-callout-content">
+              <p><span data-lang="fr">Utilisez Claude et Codex de maniere complementaire : Claude excelle en architecture et raisonnement complexe, Codex est rapide pour les modifications simples et le scaffolding de code. Envoyez chaque ticket a l'agent le plus adapte.</span><span data-lang="en">Use Claude and Codex in a complementary way: Claude excels at architecture and complex reasoning, Codex is fast for simple changes and code scaffolding. Send each ticket to the most suitable agent.</span></p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================ -->
         <!-- GIT                                          -->
         <!-- ============================================ -->
         <section class="docs-section" id="git">
@@ -1475,8 +1655,8 @@
           <h2>Kanban</h2>
           <div class="docs-text">
             <p>
-              <span data-lang="fr">Le Kanban integre vous permet de gerer vos taches directement a cote de votre code. Plus besoin d'ouvrir Trello ou Notion — vos taches vivent dans votre workspace. Et surtout, le Kanban de Mirehub est propulse par Claude AI : envoyez un ticket, Claude le resout automatiquement.</span>
-              <span data-lang="en">The integrated Kanban lets you manage tasks right next to your code. No need to open Trello or Notion — your tasks live in your workspace. And best of all, Mirehub's Kanban is powered by Claude AI: send a ticket, Claude solves it automatically.</span>
+              <span data-lang="fr">Le Kanban integre vous permet de gerer vos taches directement a cote de votre code. Plus besoin d'ouvrir Trello ou Notion — vos taches vivent dans votre workspace. Et surtout, le Kanban de Mirehub est propulse par l'IA : envoyez un ticket a Claude ou Codex, l'agent le resout automatiquement.</span>
+              <span data-lang="en">The integrated Kanban lets you manage tasks right next to your code. No need to open Trello or Notion — your tasks live in your workspace. And best of all, Mirehub's Kanban is AI-powered: send a ticket to Claude or Codex, the agent solves it automatically.</span>
             </p>
           </div>
 
@@ -1551,12 +1731,12 @@
 
           <div class="docs-text">
             <h3>
-              <span data-lang="fr">Integration Claude AI</span>
-              <span data-lang="en">Claude AI integration</span>
+              <span data-lang="fr">Integration IA (Claude &amp; Codex)</span>
+              <span data-lang="en">AI integration (Claude &amp; Codex)</span>
             </h3>
             <p>
-              <span data-lang="fr">Le Kanban de Mirehub est propulse par l'IA. Chaque ticket peut etre envoye directement a Claude Code qui le resout automatiquement. Voici le workflow complet :</span>
-              <span data-lang="en">Mirehub's Kanban is AI-powered. Every ticket can be sent directly to Claude Code which resolves it automatically. Here is the complete workflow:</span>
+              <span data-lang="fr">Le Kanban de Mirehub est propulse par l'IA. Chaque ticket peut etre envoye directement a Claude Code ou Codex qui le resout automatiquement. Voici le workflow complet :</span>
+              <span data-lang="en">Mirehub's Kanban is AI-powered. Every ticket can be sent directly to Claude Code or Codex which resolves it automatically. Here is the complete workflow:</span>
             </p>
             <ol class="docs-steps">
               <li>
