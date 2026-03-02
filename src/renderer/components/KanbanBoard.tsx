@@ -203,7 +203,13 @@ export function KanbanBoard() {
       // Search filter
       if (searchQuery) {
         const q = searchQuery.toLowerCase()
-        if (!t.title.toLowerCase().includes(q) && !t.description.toLowerCase().includes(q)) {
+        const matchesTitle = t.title.toLowerCase().includes(q)
+        const matchesDescription = t.description.toLowerCase().includes(q)
+        const matchesTicketNumber =
+          t.ticketNumber != null &&
+          (String(t.ticketNumber).includes(q) ||
+            formatTicketNumber(t.ticketNumber).toLowerCase().includes(q))
+        if (!matchesTitle && !matchesDescription && !matchesTicketNumber) {
           return false
         }
       }
@@ -894,8 +900,8 @@ function KanbanCard({
   onDelete,
   onContextMenu,
   onDoubleClick,
-  onGoToTerminal,
-  projects,
+  onGoToTerminal: _onGoToTerminal,
+  projects: _projects,
 }: {
   task: KanbanTask
   isSelected: boolean
@@ -935,7 +941,6 @@ function KanbanCard({
   }
 
   const isWorking = task.status === 'WORKING'
-  const targetProject = task.targetProjectId ? projects.find((p) => p.id === task.targetProjectId) : null
 
   return (
     <div
@@ -963,10 +968,14 @@ function KanbanCard({
           &times;
         </button>
       </div>
+      <span className="kanban-card-date">
+        {new Date(task.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+        {', '}
+        {new Date(task.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+      </span>
       <p className="kanban-card-desc">
         {task.description || t('kanban.noDescription')}
       </p>
-      {/* Labels */}
       {task.labels && task.labels.length > 0 && (
         <div className="kanban-card-labels">
           {task.labels.map((label) => (
@@ -979,40 +988,6 @@ function KanbanCard({
           ))}
         </div>
       )}
-      <div className="kanban-card-footer">
-        {isWorking && (
-          <span className="kanban-card-ai-badge">
-            <span className="kanban-card-ai-dot" />
-            {t('kanban.aiInProgress')}
-          </span>
-        )}
-        {onGoToTerminal && (
-          <button
-            className="kanban-card-terminal-btn"
-            onClick={(e) => { e.stopPropagation(); onGoToTerminal() }}
-            title={t('kanban.goToTerminal')}
-          >
-            &#9002; {t('kanban.terminal')}
-          </button>
-        )}
-        {task.result && (
-          <span className="kanban-card-result-badge">{t('kanban.resultAvailable')}</span>
-        )}
-        {task.question && (
-          <span className="kanban-card-question-badge">{t('kanban.questionPending')}</span>
-        )}
-        <span className="kanban-card-created-badge">
-          {new Date(task.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
-        </span>
-        {task.attachments && task.attachments.length > 0 && (
-          <span className="kanban-card-attachment-badge">
-            {t('kanban.filesCount', { count: String(task.attachments.length) })}
-          </span>
-        )}
-        <span className={`kanban-card-scope-tag kanban-card-scope-tag--${targetProject ? 'project' : 'workspace'}`}>
-          {targetProject ? targetProject.name : 'Workspace'}
-        </span>
-      </div>
     </div>
   )
 }
