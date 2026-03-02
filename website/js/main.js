@@ -79,16 +79,64 @@
     }
   });
 
-  // --- Smooth Scroll ---
-  document.querySelectorAll('a[href^="#"]').forEach(function (link) {
+  // --- Page Tab Navigation ---
+  var VALID_TABS = ['home', 'features'];
+  var currentTab = '';
+
+  function switchTab(tabName, skipScroll) {
+    if (VALID_TABS.indexOf(tabName) === -1) tabName = 'home';
+    if (tabName === currentTab) return;
+    currentTab = tabName;
+
+    // Toggle panel sections
+    document.querySelectorAll('[data-panel]').forEach(function (el) {
+      el.classList.toggle('panel-active', el.getAttribute('data-panel') === tabName);
+    });
+
+    // Update nav links
+    document.querySelectorAll('.nav a[data-tab]').forEach(function (link) {
+      link.classList.toggle('nav-current', link.getAttribute('data-tab') === tabName);
+    });
+
+    if (!skipScroll) window.scrollTo(0, 0);
+  }
+
+  // Nav tab clicks
+  document.querySelectorAll('.nav a[data-tab]').forEach(function (link) {
     link.addEventListener('click', function (e) {
-      var target = document.querySelector(this.getAttribute('href'));
-      if (target) {
-        e.preventDefault();
-        target.scrollIntoView({ behavior: 'smooth' });
-      }
+      e.preventDefault();
+      var tab = this.getAttribute('data-tab');
+      switchTab(tab);
+      history.pushState(null, '', '#' + tab);
+      // Close mobile menu
+      nav.classList.remove('open');
+      menuToggle.setAttribute('aria-expanded', 'false');
     });
   });
+
+  // Logo → home
+  document.querySelector('.logo').addEventListener('click', function (e) {
+    e.preventDefault();
+    switchTab('home');
+    history.pushState(null, '', '#home');
+  });
+
+  // Browser back/forward
+  window.addEventListener('popstate', function () {
+    var hash = window.location.hash.replace('#', '');
+    currentTab = '';
+    switchTab(VALID_TABS.indexOf(hash) !== -1 ? hash : 'home');
+  });
+
+  // Init: read hash or default to home
+  (function initTab() {
+    var hash = window.location.hash.replace('#', '');
+    switchTab(VALID_TABS.indexOf(hash) !== -1 ? hash : 'home', true);
+    // Enable panel animations for subsequent tab switches
+    requestAnimationFrame(function () {
+      document.body.classList.add('tab-ready');
+    });
+  })();
 
   // --- Scroll Animations ---
   if ('IntersectionObserver' in window) {
@@ -134,14 +182,14 @@
     });
   });
 
-  // --- Feature card click scrolls to screenshot tab ---
+  // --- Feature card click activates screenshot tab and scrolls ---
   document.querySelectorAll('.feature-card[data-screenshot]').forEach(function (card) {
     card.style.cursor = 'pointer';
     card.addEventListener('click', function () {
       var target = this.getAttribute('data-screenshot');
-      var tab = document.querySelector('.tab[data-tab="' + target + '"]');
-      if (tab) {
-        tab.click();
+      var screenshotTab = document.querySelector('.tab[data-tab="' + target + '"]');
+      if (screenshotTab) {
+        screenshotTab.click();
         var screenshotsSection = document.getElementById('screenshots');
         if (screenshotsSection) screenshotsSection.scrollIntoView({ behavior: 'smooth' });
       }
@@ -166,6 +214,25 @@
         var prev = tabsArr[(idx - 1 + tabsArr.length) % tabsArr.length];
         prev.focus();
         prev.click();
+      }
+    });
+  }
+
+  // --- Install Command Copy ---
+  var installCopyBtn = document.getElementById('install-copy');
+  var installCmd = document.getElementById('install-cmd');
+  if (installCopyBtn && installCmd) {
+    installCopyBtn.addEventListener('click', function () {
+      var text = installCmd.textContent.trim();
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(function () {
+          installCopyBtn.classList.add('copied');
+          installCopyBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+          setTimeout(function () {
+            installCopyBtn.classList.remove('copied');
+            installCopyBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+          }, 2000);
+        });
       }
     });
   }
@@ -277,8 +344,8 @@
       });
   }
 
-  // Only fetch if on the index page (has download section)
-  if (document.getElementById('download-buttons')) {
+  // Fetch release data on index page (has download section)
+  if (document.querySelector('[id="download-buttons"]')) {
     fetchLatestRelease();
   }
 

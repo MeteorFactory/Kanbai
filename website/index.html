@@ -26,17 +26,13 @@
         <span>Mirehub</span>
       </a>
       <nav class="nav" id="nav" aria-label="Navigation principale">
-        <a href="#features">
+        <a href="#home" data-tab="home" class="nav-current">
+          <span data-lang="fr">Accueil</span>
+          <span data-lang="en">Home</span>
+        </a>
+        <a href="#features" data-tab="features">
           <span data-lang="fr">Fonctionnalites</span>
           <span data-lang="en">Features</span>
-        </a>
-        <a href="#screenshots">
-          <span data-lang="fr">En action</span>
-          <span data-lang="en">In action</span>
-        </a>
-        <a href="#download">
-          <span data-lang="fr">Telecharger</span>
-          <span data-lang="en">Download</span>
         </a>
         <a href="docs.html">
           <span data-lang="fr">Documentation</span>
@@ -61,7 +57,7 @@
 
   <main id="main">
     <!-- Hero -->
-    <section class="hero">
+    <section class="hero" data-panel="home">
       <div class="container">
         <div class="hero-content animate-in">
           <span class="badge">
@@ -71,7 +67,7 @@
           </span>
           <h1>
             <span data-lang="fr">Arretez de jongler<br>entre vos outils. <em class="hero-claudez">Claudez.</em></span>
-            <span data-lang="en">Stop juggling<br>your tools. <em class="hero-claudez">Claudez.</em></span>
+            <span data-lang="en">Stop juggling<br>your tools. <em class="hero-claudez">Claude this.</em></span>
           </h1>
           <p class="hero-subtitle">
             <span data-lang="fr">Ecrivez un ticket. Claude le resout. Vous reviewez. C'est tout.</span>
@@ -83,7 +79,7 @@
           </p>
           <div class="hero-actions">
             <a href="https://github.com/AntonyCanut/Mirehub/releases/latest" class="btn btn-primary" id="hero-download" target="_blank" rel="noopener">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                 <polyline points="7 10 12 15 17 10"/>
                 <line x1="12" y1="15" x2="12" y2="3"/>
@@ -94,12 +90,35 @@
               </span>
             </a>
             <a href="https://github.com/AntonyCanut/Mirehub" class="btn btn-secondary" target="_blank" rel="noopener">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
               </svg>
-              <span data-lang="fr">Voir le code source</span>
-              <span data-lang="en">View source code</span>
+              GitHub
             </a>
+            <a href="docs.html" class="btn btn-secondary">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+              </svg>
+              Docs
+            </a>
+          </div>
+          <!-- Terminal-style install hint -->
+          <div class="hero-install">
+            <div class="install-block">
+              <span class="install-prompt">$</span>
+              <span class="install-cmd" id="install-cmd">brew install --cask AntonyCanut/mirehub/mirehub</span>
+              <button class="install-copy" id="install-copy" aria-label="Copy install command">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+              </button>
+            </div>
+            <p class="install-hint">
+              <span data-lang="fr">Ou <a href="https://github.com/AntonyCanut/Mirehub/releases/latest" id="install-direct-link" target="_blank" rel="noopener">telecharger directement</a> &middot; macOS &amp; Windows</span>
+              <span data-lang="en">Or <a href="https://github.com/AntonyCanut/Mirehub/releases/latest" target="_blank" rel="noopener">download directly</a> &middot; macOS &amp; Windows</span>
+            </p>
           </div>
         </div>
         <div class="hero-screenshot animate-in">
@@ -110,7 +129,7 @@
     </section>
 
     <!-- Stats bar -->
-    <section class="stats-bar">
+    <section class="stats-bar" data-panel="home">
       <div class="container">
         <div class="stats-row animate-in">
           <div class="stat-item">
@@ -149,7 +168,7 @@
     </section>
 
     <!-- Features -->
-    <section class="section" id="features">
+    <section class="section" id="features" data-panel="features">
       <div class="container">
         <h2 class="section-title animate-in">
           <span data-lang="fr">11 outils. Une seule fenetre.<br>Zero friction.</span>
@@ -369,7 +388,7 @@
     </section>
 
     <!-- Screenshots -->
-    <section class="section section--dark" id="screenshots">
+    <section class="section section--dark" id="screenshots" data-panel="features">
       <div class="container">
         <h2 class="section-title animate-in">
           <span data-lang="fr">Voyez la difference</span>
@@ -494,7 +513,7 @@
     </section>
 
     <!-- Workspace -->
-    <section class="section" id="workspace-section">
+    <section class="section" id="workspace-section" data-panel="home">
       <div class="container">
         <div class="workspace-block animate-in">
           <div class="workspace-text">
@@ -537,7 +556,7 @@
     </section>
 
     <!-- Built for devs -->
-    <section class="section section--dark" id="built-for-devs">
+    <section class="section section--dark" id="built-for-devs" data-panel="home">
       <div class="container">
         <div class="dev-block animate-in">
           <h2>
@@ -618,7 +637,7 @@
     </section>
 
     <!-- Download -->
-    <section class="section" id="download">
+    <section class="section" id="download" data-panel="home">
       <div class="container">
         <div class="download-block animate-in">
           <img src="assets/icon-256.png" alt="" width="96" height="96" class="download-icon">
@@ -674,8 +693,8 @@
   <footer class="footer">
     <div class="container footer-inner">
       <div class="footer-left">
-        <span data-lang="fr">Cree par <strong>akc</strong></span>
-        <span data-lang="en">Built by <strong>akc</strong></span>
+        <span data-lang="fr">Créé par <a href="https://www.linkedin.com/in/antonykervazocanut/" target="_blank" rel="noopener"><strong>Antony Kervazo Canut</strong></a></span>
+        <span data-lang="en">Built by <a href="https://www.linkedin.com/in/antonykervazocanut/" target="_blank" rel="noopener"><strong>Antony Kervazo Canut</strong></a></span>
         <span class="sep">&middot;</span>
         <span data-lang="fr">Licence MIT</span>
         <span data-lang="en">MIT License</span>
