@@ -122,13 +122,22 @@ jobs:
       - name: Build renderer + main
         run: npm run build
 
-      - name: Build Electron app and publish (arm64 + x64)
+      - name: Verify signing credentials
         run: |
           if [ -z "$CSC_LINK" ]; then
-            unset CSC_LINK
-            export CSC_IDENTITY_AUTO_DISCOVERY=false
+            echo "::error::MAC_CERTIFICATE secret is required for release builds. Unsigned apps lose macOS permissions on every update."
+            exit 1
           fi
-          npx electron-builder --mac --arm64 --x64 --publish always
+          if [ -z "$APPLE_TEAM_ID" ]; then
+            echo "::error::APPLE_TEAM_ID secret is required for notarization."
+            exit 1
+          fi
+        env:
+          CSC_LINK: ${{ secrets.MAC_CERTIFICATE }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+
+      - name: Build Electron app and publish (arm64 + x64)
+        run: npx electron-builder --mac --arm64 --x64 --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_LINK: ${{ secrets.MAC_CERTIFICATE }}

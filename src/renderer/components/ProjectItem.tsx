@@ -28,8 +28,8 @@ export function ProjectItem({ project, isActive }: ProjectItemProps) {
   const [notesLoaded, setNotesLoaded] = useState(false)
 
   useEffect(() => {
-    if (isActive) {
-      setExpanded(true)
+    if (!isActive) {
+      setExpanded(false)
     }
   }, [isActive])
 
@@ -44,15 +44,10 @@ export function ProjectItem({ project, isActive }: ProjectItemProps) {
     if (isActive) {
       setExpanded((prev) => !prev)
     } else {
-      const { activeWorkspaceId } = useWorkspaceStore.getState()
-      const isCrossWorkspace = project.workspaceId !== activeWorkspaceId
       setActiveProject(project.id)
-      setExpanded(true)
-      if (isCrossWorkspace) {
-        useViewStore.getState().setViewMode('terminal')
-      }
+      useViewStore.getState().setViewMode('kanban')
     }
-  }, [isActive, project.id, project.workspaceId, setActiveProject])
+  }, [isActive, project.id, setActiveProject])
 
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault()

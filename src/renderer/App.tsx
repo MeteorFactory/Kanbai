@@ -298,22 +298,22 @@ export function App() {
               ) : null
             })()}
             <button
+              className={`view-btn${viewMode === 'kanban' ? ' view-btn--active' : ''}`}
+              onClick={() => setViewMode('kanban')}
+            >
+              {t('view.kanban')}
+            </button>
+            <button
               className={`view-btn${viewMode === 'terminal' ? ' view-btn--active' : ''}`}
               onClick={() => setViewMode('terminal')}
             >
               {t('view.terminal')}
             </button>
             <button
-              className={`view-btn${viewMode === 'git' ? ' view-btn--active' : ''}`}
-              onClick={() => setViewMode('git')}
+              className={`view-btn${viewMode === 'database' ? ' view-btn--active' : ''}`}
+              onClick={() => setViewMode('database')}
             >
-              {t('view.git')}
-            </button>
-            <button
-              className={`view-btn${viewMode === 'kanban' ? ' view-btn--active' : ''}`}
-              onClick={() => setViewMode('kanban')}
-            >
-              {t('view.kanban')}
+              {t('view.database')}
             </button>
             {availableMagicTabs.includes('packages') && (
               <button
@@ -323,14 +323,12 @@ export function App() {
                 {t('view.packages')}
               </button>
             )}
-            {activeProject?.hasClaude && (
-              <button
-                className={`view-btn${viewMode === 'claude' ? ' view-btn--active' : ''}`}
-                onClick={() => setViewMode('claude')}
-              >
-                {t('view.claude')}
-              </button>
-            )}
+            <button
+              className={`view-btn${viewMode === 'analysis' ? ' view-btn--active' : ''}`}
+              onClick={() => setViewMode('analysis')}
+            >
+              {t('view.analysis')}
+            </button>
             <button
               className={`view-btn${viewMode === 'todos' ? ' view-btn--active' : ''}`}
               onClick={() => setViewMode('todos')}
@@ -349,6 +347,14 @@ export function App() {
             >
               {t('view.prompts')}
             </button>
+            {activeProject?.hasClaude && (
+              <button
+                className={`view-btn${viewMode === 'claude' ? ' view-btn--active' : ''}`}
+                onClick={() => setViewMode('claude')}
+              >
+                {t('view.claude')}
+              </button>
+            )}
             <button
               className={`view-btn${viewMode === 'api' ? ' view-btn--active' : ''}`}
               onClick={() => setViewMode('api')}
@@ -356,16 +362,10 @@ export function App() {
               {t('view.api')}
             </button>
             <button
-              className={`view-btn${viewMode === 'database' ? ' view-btn--active' : ''}`}
-              onClick={() => setViewMode('database')}
+              className={`view-btn${viewMode === 'git' ? ' view-btn--active' : ''}`}
+              onClick={() => setViewMode('git')}
             >
-              {t('view.database')}
-            </button>
-            <button
-              className={`view-btn${viewMode === 'analysis' ? ' view-btn--active' : ''}`}
-              onClick={() => setViewMode('analysis')}
-            >
-              {t('view.analysis')}
+              {t('view.git')}
             </button>
             {viewMode === 'file' && (
               <button className="view-btn view-btn--active">

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mirehub — L'IDE natif propulse par Claude AI</title>
-  <meta name="description" content="Mirehub remplace 11 outils par une seule app native (macOS & Windows). Terminal, Kanban, Git, NPM, Claude AI, Database, API Tester, Code Analysis — tout unifie, zero configuration. Telechargez gratuitement.">
+  <meta name="description" content="Mirehub remplace 11 outils par une seule app native (macOS & Windows). Terminal, Kanban, Git, Packages, Claude AI, Database, API Tester, Code Analysis — tout unifie, zero configuration. Telechargez gratuitement.">
   <meta property="og:title" content="Mirehub — Arretez de jongler entre vos outils. Codez.">
   <meta property="og:description" content="11 outils de dev dans une seule app native (macOS & Windows) avec Claude AI integre. Terminal, Git, Kanban, API Tester, Code Analysis et plus. Gratuit et open source.">
   <meta property="og:type" content="website">
@@ -178,8 +178,8 @@
                 <span data-lang="en">Kanban + Claude AI = accelerated development</span>
               </h3>
               <p>
-                <span data-lang="fr">Le coeur de Mirehub. Ecrivez une tache, assignez-la a Claude, il code pendant que vous avancez sur autre chose. Chaque ticket garde le contexte complet : description, fichiers cibles, priorite, labels. Claude met a jour le statut en temps reel — vous voyez exactement ou en est chaque tache. 5 colonnes, filtres par tags et scopes, et surtout : zero perte de contexte entre les sessions. Le premier Kanban qui transforme vos idees en code automatiquement.</span>
-                <span data-lang="en">The heart of Mirehub. Write a task, assign it to Claude, it codes while you move on to something else. Each ticket keeps full context: description, target files, priority, labels. Claude updates the status in real time — you see exactly where each task stands. 5 columns, tag and scope filters, and most importantly: zero context loss between sessions. The first Kanban that turns your ideas into code automatically.</span>
+                <span data-lang="fr">Le coeur de Mirehub. Ecrivez une tache, assignez-la a Claude, il code pendant que vous avancez sur autre chose. Chaque ticket garde le contexte complet : description, fichiers cibles, priorite, labels. Claude met a jour le statut en temps reel — vous voyez exactement ou en est chaque tache. 5 colonnes, filtres par tags et scopes, et surtout : zero perte de contexte entre les sessions. <strong>Nouveau : le Mode CTO</strong> — activez l'amelioration continue et laissez Claude ameliorer votre codebase automatiquement, session apres session.</span>
+                <span data-lang="en">The heart of Mirehub. Write a task, assign it to Claude, it codes while you move on to something else. Each ticket keeps full context: description, target files, priority, labels. Claude updates the status in real time — you see exactly where each task stands. 5 columns, tag and scope filters, and most importantly: zero context loss between sessions. <strong>New: CTO Mode</strong> — enable continuous improvement and let Claude enhance your codebase automatically, session after session.</span>
               </p>
             </div>
             <div class="feature-highlight-img">
@@ -197,8 +197,8 @@
               </div>
               <h3>Terminal</h3>
               <p>
-                <span data-lang="fr">Un vrai terminal, pas un gadget. Onglets multiples, split panes avec Claude Code a cote de votre shell, et tous vos scripts NPM accessibles en un clic. Vous ne reviendrez plus a iTerm.</span>
-                <span data-lang="en">A real terminal, not a gimmick. Multiple tabs, split panes with Claude Code next to your shell, and all your NPM scripts one click away. You won't go back to iTerm.</span>
+                <span data-lang="fr">Un vrai terminal, pas un gadget. Onglets multiples, split panes avec Claude Code a cote de votre shell, et tous vos scripts accessibles en un clic. Vous ne reviendrez plus a iTerm.</span>
+                <span data-lang="en">A real terminal, not a gimmick. Multiple tabs, split panes with Claude Code next to your shell, and all your scripts one click away. You won't go back to iTerm.</span>
               </p>
             </div>
             <div class="feature-highlight-img">
@@ -246,7 +246,7 @@
               <span data-lang="en">Branches, commits, staging, diffs, stash, push — all visual, one click away. For those tired of typing <code>git status</code> 50 times a day.</span>
             </p>
           </div>
-          <!-- NPM -->
+          <!-- Packages -->
           <div class="feature-card" data-screenshot="npm">
             <div class="feature-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -255,10 +255,10 @@
                 <line x1="12" y1="22.08" x2="12" y2="12"/>
               </svg>
             </div>
-            <h3>NPM</h3>
+            <h3>Packages</h3>
             <p>
-              <span data-lang="fr">Voyez tous vos packages d'un coup d'oeil. Mises a jour detectees automatiquement, upgrade en un clic. Plus jamais de <code>npm outdated</code> oublie.</span>
-              <span data-lang="en">See all your packages at a glance. Updates detected automatically, one-click upgrade. Never forget <code>npm outdated</code> again.</span>
+              <span data-lang="fr">Gestionnaire multi-ecosysteme (npm, Go, pip, Cargo, NuGet...) avec chat IA integre. Analysez vos dependances, detectez les failles et mettez a jour en un clic — Claude vous assiste.</span>
+              <span data-lang="en">Multi-ecosystem manager (npm, Go, pip, Cargo, NuGet...) with built-in AI chat. Analyze dependencies, detect vulnerabilities and update in one click — Claude assists you.</span>
             </p>
           </div>
           <!-- TODOs -->
@@ -320,8 +320,8 @@
             </div>
             <h3>Database Explorer</h3>
             <p>
-              <span data-lang="fr">Connectez-vous a vos bases de donnees directement depuis l'app. PostgreSQL, MySQL, MongoDB, SQLite, MSSQL — explorez vos tables, executez des requetes et visualisez les resultats sans quitter Mirehub.</span>
-              <span data-lang="en">Connect to your databases directly from the app. PostgreSQL, MySQL, MongoDB, SQLite, MSSQL — browse tables, run queries and visualize results without leaving Mirehub.</span>
+              <span data-lang="fr">Interrogez vos bases en langage naturel grace au chat IA integre. PostgreSQL, MySQL, MongoDB, SQLite, MSSQL — Claude genere le SQL, l'execute et vous explique les resultats. Backup/restore, tags d'environnement et permissions granulaires inclus.</span>
+              <span data-lang="en">Query your databases in natural language with the built-in AI chat. PostgreSQL, MySQL, MongoDB, SQLite, MSSQL — Claude generates SQL, executes it and explains the results. Backup/restore, environment tags and granular permissions included.</span>
             </p>
           </div>
           <!-- Code Analysis -->
@@ -376,7 +376,7 @@
             <span data-lang="fr">Historique</span>
             <span data-lang="en">History</span>
           </button>
-          <button class="tab" data-tab="npm" role="tab" aria-selected="false">NPM</button>
+          <button class="tab" data-tab="npm" role="tab" aria-selected="false">Packages</button>
           <button class="tab" data-tab="todos" role="tab" aria-selected="false">TODOs</button>
           <button class="tab" data-tab="stats" role="tab" aria-selected="false">Stats</button>
           <button class="tab" data-tab="prompts" role="tab" aria-selected="false">Prompts</button>
@@ -395,8 +395,8 @@
           <div class="screenshot-panel" id="tab-terminal" role="tabpanel">
             <img src="screenshots/screenshot-terminal.png" alt="Vue Terminal" loading="lazy">
             <p class="screenshot-caption">
-              <span data-lang="fr">Terminal split : Claude Code a gauche, votre shell a droite. Scripts NPM du projet en acces direct dans la barre. Changez d'onglet, pas d'application.</span>
-              <span data-lang="en">Split terminal: Claude Code on the left, your shell on the right. Project NPM scripts in the toolbar. Switch tabs, not applications.</span>
+              <span data-lang="fr">Terminal split : Claude Code a gauche, votre shell a droite. Scripts du projet en acces direct dans la barre. Changez d'onglet, pas d'application.</span>
+              <span data-lang="en">Split terminal: Claude Code on the left, your shell on the right. Project scripts in the toolbar. Switch tabs, not applications.</span>
             </p>
           </div>
           <div class="screenshot-panel" id="tab-git" role="tabpanel">
@@ -428,10 +428,10 @@
             </p>
           </div>
           <div class="screenshot-panel" id="tab-npm" role="tabpanel">
-            <img src="screenshots/screenshot-npm.png" alt="Vue NPM" loading="lazy">
+            <img src="screenshots/screenshot-npm.png" alt="Vue Packages" loading="lazy">
             <p class="screenshot-caption">
-              <span data-lang="fr">Gestionnaire NPM visuel : tous vos packages affiches avec badges DEP/DEV, detection automatique des mises a jour disponibles, et upgrade en un clic.</span>
-              <span data-lang="en">Visual NPM manager: all packages displayed with DEP/DEV badges, automatic update detection, and one-click upgrade.</span>
+              <span data-lang="fr">Gestionnaire multi-ecosysteme : npm, Go, pip, Cargo, NuGet et plus. Filtres intelligents, liens directs vers les registres, mises a jour en un clic, et chat IA pour analyser vos dependances en profondeur.</span>
+              <span data-lang="en">Multi-ecosystem manager: npm, Go, pip, Cargo, NuGet and more. Smart filters, direct registry links, one-click updates, and AI chat to analyze your dependencies in depth.</span>
             </p>
           </div>
           <div class="screenshot-panel" id="tab-todos" role="tabpanel">
@@ -456,10 +456,10 @@
             </p>
           </div>
           <div class="screenshot-panel" id="tab-database" role="tabpanel">
-            <img src="screenshots/screenshot-database.png" alt="Vue Database Explorer" loading="lazy">
+            <img src="screenshots/screenshot-database.png" alt="Vue Database Explorer avec chat IA" loading="lazy">
             <p class="screenshot-caption">
-              <span data-lang="fr">Explorateur de bases de donnees integre : connectez-vous a PostgreSQL, MySQL, MongoDB, SQLite ou MSSQL. Parcourez les tables, executez des requetes SQL et visualisez les resultats dans un tableau interactif.</span>
-              <span data-lang="en">Built-in database explorer: connect to PostgreSQL, MySQL, MongoDB, SQLite or MSSQL. Browse tables, run SQL queries and view results in an interactive table.</span>
+              <span data-lang="fr">Database Explorer avec IA integree : interrogez vos bases en langage naturel, Claude genere le SQL et explique les resultats. Tags d'environnement, permissions NL granulaires, backup/restore et export CSV.</span>
+              <span data-lang="en">Database Explorer with built-in AI: query databases in natural language, Claude generates SQL and explains results. Environment tags, granular NL permissions, backup/restore and CSV export.</span>
             </p>
           </div>
           <div class="screenshot-panel" id="tab-code-analysis" role="tabpanel">
@@ -532,8 +532,8 @@
             <span data-lang="en">Built by a dev, for devs</span>
           </h2>
           <p>
-            <span data-lang="fr">Mirehub est ne d'une frustration simple : pourquoi faut-il 11 apps pour faire le travail d'une seule ? Terminal, gestionnaire Git, Kanban, client NPM, scanner TODO, statistiques, editeur de prompts, panneau Claude AI avec MCP et workflows, explorateur de bases de donnees, testeur d'API, analyse de code — tout est la, dans une app native rapide et elegante, sur macOS et Windows. Mises a jour automatiques, open source, gratuit, sans tracking.</span>
-            <span data-lang="en">Mirehub was born from a simple frustration: why do we need 11 apps to do the job of one? Terminal, Git manager, Kanban, NPM client, TODO scanner, statistics, prompt editor, Claude AI panel with MCP and workflows, database explorer, API tester, code analysis — it's all here, in a fast and elegant native app on macOS and Windows. Auto-updates, open source, free, no tracking.</span>
+            <span data-lang="fr">Mirehub est ne d'une frustration simple : pourquoi faut-il 11 apps pour faire le travail d'une seule ? Terminal, gestionnaire Git, Kanban avec Mode CTO, gestionnaire de packages multi-ecosysteme avec IA, scanner TODO, statistiques, editeur de prompts, panneau Claude AI avec MCP et workflows, explorateur de bases de donnees avec chat IA, testeur d'API, analyse de code — tout est la, dans une app native rapide et elegante, sur macOS et Windows. Mises a jour automatiques, open source, gratuit, sans tracking.</span>
+            <span data-lang="en">Mirehub was born from a simple frustration: why do we need 11 apps to do the job of one? Terminal, Git manager, Kanban with CTO Mode, multi-ecosystem package manager with AI, TODO scanner, statistics, prompt editor, Claude AI panel with MCP and workflows, database explorer with AI chat, API tester, code analysis — it's all here, in a fast and elegant native app on macOS and Windows. Auto-updates, open source, free, no tracking.</span>
           </p>
           <div class="dev-features">
             <div class="dev-feature">

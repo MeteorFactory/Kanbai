@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { useShallow } from 'zustand/shallow'
 import type { Workspace, Project, Namespace } from '../../../shared/types/index'
 import { useTerminalTabStore } from './terminalTabStore'
+import { useViewStore } from './viewStore'
 
 interface WorkspaceState {
   workspaces: Workspace[]
@@ -501,6 +502,9 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
     set({ activeWorkspaceId: id })
 
     if (id) {
+      // Switch to kanban view when changing workspace
+      useViewStore.getState().setViewMode('kanban')
+
       // Auto-select the first project in this workspace
       const { projects, workspaces } = get()
       const workspace = workspaces.find((w) => w.id === id)

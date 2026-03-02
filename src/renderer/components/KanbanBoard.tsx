@@ -1,5 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react'
 import { useKanbanStore } from '../lib/stores/kanbanStore'
+import { useTerminalTabStore } from '../lib/stores/terminalTabStore'
+import { useViewStore } from '../lib/stores/viewStore'
 import { useWorkspaceStore } from '../lib/stores/workspaceStore'
 import { useI18n } from '../lib/i18n'
 import { ContextMenu } from './ContextMenu'
@@ -90,7 +92,11 @@ export function KanbanBoard() {
     attachFiles,
     attachFromClipboard,
     removeAttachment,
+    kanbanTabIds,
   } = useKanbanStore()
+  const terminalTabs = useTerminalTabStore((s) => s.tabs)
+  const setActiveTerminalTab = useTerminalTabStore((s) => s.setActiveTab)
+  const setViewMode = useViewStore((s) => s.setViewMode)
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [newTitle, setNewTitle] = useState('')
   const [newDesc, setNewDesc] = useState('')
@@ -363,6 +369,8 @@ export function KanbanBoard() {
       action: () => updateTaskStatus(task.id, col.status),
     }))
 
+    const hasExistingTab = !!useKanbanStore.getState().kanbanTabIds[task.id]
+
     return [
       { label: t('kanban.duplicateTask'), action: () => duplicateTask(task), separator: false },
       { label: task.disabled ? t('kanban.enableTask') : t('kanban.disableTask'), action: () => updateTask(task.id, { disabled: !task.disabled }) },
@@ -370,6 +378,7 @@ export function KanbanBoard() {
       ...statusItems,
       { label: '', action: () => {}, separator: true },
       { label: t('kanban.sendToClaude'), action: () => handleSendToClaude(task) },
+      ...(hasExistingTab || task.status === 'WORKING' ? [{ label: t('kanban.relaunchTask'), action: () => handleSendToClaude(task) }] : []),
     ]
   }, [t, updateTaskStatus, updateTask, duplicateTask, handleSendToClaude])
 
@@ -417,6 +426,17 @@ export function KanbanBoard() {
   }, [editingTask, editTitle, editDesc, editPriority, editTargetProjectId, editLabels, updateTask])
 
   const hasActiveFilters = filterPriority !== 'all' || filterLabels.length > 0 || filterScope !== 'all' || searchQuery !== ''
+
+  const getGoToTerminal = useCallback((taskId: string): (() => void) | null => {
+    const tabId = kanbanTabIds[taskId]
+    if (!tabId) return null
+    const tabExists = terminalTabs.some((tab) => tab.id === tabId)
+    if (!tabExists) return null
+    return () => {
+      setActiveTerminalTab(tabId)
+      setViewMode('terminal')
+    }
+  }, [kanbanTabIds, terminalTabs, setActiveTerminalTab, setViewMode])
 
   if (!activeWorkspaceId) {
     return (
@@ -756,6 +776,7 @@ export function KanbanBoard() {
                     onDelete={() => deleteTask(task.id)}
                     onContextMenu={(e) => handleContextMenu(e, task)}
                     onDoubleClick={() => handleOpenEditModal(task)}
+                    onGoToTerminal={getGoToTerminal(task.id)}
                     projects={workspaceProjects}
                   />
                 ))}
@@ -785,6 +806,7 @@ export function KanbanBoard() {
                     onDelete={() => deleteTask(task.id)}
                     onContextMenu={(e) => handleContextMenu(e, task)}
                     onDoubleClick={() => handleOpenEditModal(task)}
+                    onGoToTerminal={getGoToTerminal(task.id)}
                     projects={workspaceProjects}
                   />
                   <button
@@ -872,6 +894,7 @@ function KanbanCard({
   onDelete,
   onContextMenu,
   onDoubleClick,
+  onGoToTerminal,
   projects,
 }: {
   task: KanbanTask
@@ -881,6 +904,7 @@ function KanbanCard({
   onDelete: () => void
   onContextMenu: (e: React.MouseEvent) => void
   onDoubleClick: () => void
+  onGoToTerminal: (() => void) | null
   projects: Array<{ id: string; name: string }>
 }) {
   const { t } = useI18n()
@@ -961,6 +985,15 @@ function KanbanCard({
             <span className="kanban-card-ai-dot" />
             {t('kanban.aiInProgress')}
           </span>
+        )}
+        {onGoToTerminal && (
+          <button
+            className="kanban-card-terminal-btn"
+            onClick={(e) => { e.stopPropagation(); onGoToTerminal() }}
+            title={t('kanban.goToTerminal')}
+          >
+            &#9002; {t('kanban.terminal')}
+          </button>
         )}
         {task.result && (
           <span className="kanban-card-result-badge">{t('kanban.resultAvailable')}</span>

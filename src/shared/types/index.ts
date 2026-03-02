@@ -196,6 +196,7 @@ export interface AppSettings {
   autoCloseCompletedTerminals: boolean
   autoCloseCtoTerminals: boolean
   autoApprove: boolean
+  tutorialCompleted: boolean
 }
 
 export interface ProjectInfo {

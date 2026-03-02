@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mirehub — Documentation</title>
-  <meta name="description" content="Documentation complete de Mirehub : Terminal, Claude AI, Git, Kanban, NPM, TODO Scanner, Statistiques, Prompts, Database Explorer, Code Analysis, API Tester. Guide d'utilisation avec screenshots.">
+  <meta name="description" content="Documentation complete de Mirehub : Terminal, Claude AI, Git, Kanban avec Mode CTO, Packages multi-ecosysteme avec IA, TODO Scanner, Statistiques, Prompts, Database Explorer avec chat IA, Code Analysis, API Tester. Guide d'utilisation avec screenshots.">
   <link rel="icon" type="image/png" href="assets/favicon.png">
   <link rel="stylesheet" href="css/style.css">
 </head>
@@ -100,8 +100,14 @@
             </div>
             <a href="#autoclaude" class="docs-nav-link">AutoClaude</a>
             <a href="#git" class="docs-nav-link">Git</a>
-            <a href="#kanban" class="docs-nav-link">Kanban</a>
-            <a href="#npm" class="docs-nav-link">NPM</a>
+            <div class="docs-nav-group">
+              <a href="#kanban" class="docs-nav-group-title">Kanban</a>
+              <a href="#cto-mode" class="docs-nav-link" style="padding-left:28px;font-size:13px;">
+                <span data-lang="fr">Mode CTO</span>
+                <span data-lang="en">CTO Mode</span>
+              </a>
+            </div>
+            <a href="#packages" class="docs-nav-link">Packages</a>
             <a href="#todos" class="docs-nav-link">TODO Scanner</a>
             <a href="#stats" class="docs-nav-link">
               <span data-lang="fr">Statistiques</span>
@@ -157,8 +163,8 @@
           </h2>
           <div class="docs-text">
             <p>
-              <span data-lang="fr">Mirehub est un IDE macOS natif qui reunit plus de 15 outils de developpement dans une seule fenetre : Terminal, Claude AI, Git, Kanban, NPM, TODO Scanner, Statistiques, Prompts, Database Explorer, Code Analysis, API Tester, et bien plus encore. Aucune configuration n'est necessaire. Les mises a jour sont automatiques.</span>
-              <span data-lang="en">Mirehub is a native macOS IDE that combines over 15 development tools in a single window: Terminal, Claude AI, Git, Kanban, NPM, TODO Scanner, Statistics, Prompts, Database Explorer, Code Analysis, API Tester, and much more. No configuration needed. Updates are automatic.</span>
+              <span data-lang="fr">Mirehub est un IDE natif (macOS &amp; Windows) qui reunit plus de 15 outils de developpement dans une seule fenetre : Terminal, Claude AI, Git, Kanban avec Mode CTO, Packages multi-ecosysteme avec IA, TODO Scanner, Statistiques, Prompts, Database Explorer avec chat IA, Code Analysis, API Tester, et bien plus encore. Aucune configuration n'est necessaire. Les mises a jour sont automatiques.</span>
+              <span data-lang="en">Mirehub is a native IDE (macOS &amp; Windows) that combines over 15 development tools in a single window: Terminal, Claude AI, Git, Kanban with CTO Mode, multi-ecosystem Packages with AI, TODO Scanner, Statistics, Prompts, Database Explorer with AI chat, Code Analysis, API Tester, and much more. No configuration needed. Updates are automatic.</span>
             </p>
           </div>
 
@@ -1680,24 +1686,171 @@
             </div>
           </div>
 
+          <hr class="docs-separator">
+
+          <div id="cto-mode">
+            <h3>
+              <span data-lang="fr">Mode CTO</span>
+              <span data-lang="en">CTO Mode</span>
+            </h3>
+            <div class="docs-text">
+              <p>
+                <span data-lang="fr">Le Mode CTO transforme Claude en directeur technique autonome qui ameliore continuellement votre codebase. Un seul clic sur le bouton "CTO Mode" dans l'en-tete du Kanban cree un ticket special qui ne se termine jamais — Claude analyse, planifie et implemente des ameliorations session apres session.</span>
+                <span data-lang="en">CTO Mode transforms Claude into an autonomous CTO who continuously improves your codebase. A single click on the "CTO Mode" button in the Kanban header creates a special ticket that never ends — Claude analyzes, plans and implements improvements session after session.</span>
+              </p>
+
+              <h4>
+                <span data-lang="fr">Comment ca fonctionne</span>
+                <span data-lang="en">How it works</span>
+              </h4>
+              <ol class="docs-steps">
+                <li>
+                  <span data-lang="fr">Cliquez sur le bouton <strong>CTO Mode</strong> dans l'en-tete du Kanban</span>
+                  <span data-lang="en">Click the <strong>CTO Mode</strong> button in the Kanban header</span>
+                </li>
+                <li>
+                  <span data-lang="fr">Un ticket special est cree automatiquement avec le label <code>cto</code> et une priorite haute</span>
+                  <span data-lang="en">A special ticket is automatically created with the <code>cto</code> label and high priority</span>
+                </li>
+                <li>
+                  <span data-lang="fr">Claude est assigne immediatement et commence a analyser votre projet</span>
+                  <span data-lang="en">Claude is assigned immediately and starts analyzing your project</span>
+                </li>
+                <li>
+                  <span data-lang="fr">Il identifie 3 a 5 axes d'amelioration et cree des sous-tickets lies</span>
+                  <span data-lang="en">It identifies 3 to 5 improvement axes and creates linked sub-tickets</span>
+                </li>
+                <li>
+                  <span data-lang="fr">Il implemente les quick wins et commite apres chaque amelioration</span>
+                  <span data-lang="en">It implements quick wins and commits after each improvement</span>
+                </li>
+                <li>
+                  <span data-lang="fr">En fin de session, le ticket repasse en TODO avec un resume — pret pour la session suivante</span>
+                  <span data-lang="en">At the end of the session, the ticket goes back to TODO with a summary — ready for the next session</span>
+                </li>
+              </ol>
+
+              <h4>
+                <span data-lang="fr">Cycle perpetuel</span>
+                <span data-lang="en">Perpetual cycle</span>
+              </h4>
+              <p>
+                <span data-lang="fr">Contrairement aux tickets normaux, un ticket CTO <strong>ne peut jamais passer en DONE</strong>. Il alterne entre TODO et WORKING, session apres session. A chaque nouvelle session, Claude consulte les sous-tickets precedents pour maintenir la continuite et ne pas refaire ce qui a deja ete fait.</span>
+                <span data-lang="en">Unlike normal tickets, a CTO ticket <strong>can never transition to DONE</strong>. It alternates between TODO and WORKING, session after session. At each new session, Claude checks previous sub-tickets to maintain continuity and avoid redoing past work.</span>
+              </p>
+
+              <h4>
+                <span data-lang="fr">Identification visuelle</span>
+                <span data-lang="en">Visual identification</span>
+              </h4>
+              <ul>
+                <li>
+                  <span data-lang="fr"><strong>Shimmer anime</strong> — Un degrade anime mauve/rose/bleu/turquoise distingue les cartes CTO des tickets normaux</span>
+                  <span data-lang="en"><strong>Animated shimmer</strong> — An animated mauve/pink/blue/teal gradient distinguishes CTO cards from normal tickets</span>
+                </li>
+                <li>
+                  <span data-lang="fr"><strong>Halo pulsant</strong> — Quand le ticket est en WORKING, un halo mauve pulse autour de la carte</span>
+                  <span data-lang="en"><strong>Pulsing halo</strong> — When the ticket is WORKING, a mauve halo pulses around the card</span>
+                </li>
+                <li>
+                  <span data-lang="fr"><strong>Label CTO</strong> — Un chip rose/mauve identifie clairement le ticket</span>
+                  <span data-lang="en"><strong>CTO label</strong> — A pink/mauve chip clearly identifies the ticket</span>
+                </li>
+                <li>
+                  <span data-lang="fr"><strong>Sidebar</strong> — Affiche "CTO MODE" avec un style gradient au lieu de "WORKING"</span>
+                  <span data-lang="en"><strong>Sidebar</strong> — Shows "CTO MODE" with a gradient style instead of "WORKING"</span>
+                </li>
+              </ul>
+
+              <h4>
+                <span data-lang="fr">Sous-tickets et continuite</span>
+                <span data-lang="en">Sub-tickets and continuity</span>
+              </h4>
+              <p>
+                <span data-lang="fr">Claude cree des sous-tickets via le MCP (<code>kanban_create</code>) avec un <code>parentTicketId</code>. Le ticket parent garde la trace de tous ses <code>childTicketIds</code>. A chaque nouvelle session, Claude lit ces sous-tickets pour savoir ce qui a deja ete fait et planifier de nouvelles ameliorations.</span>
+                <span data-lang="en">Claude creates sub-tickets via MCP (<code>kanban_create</code>) with a <code>parentTicketId</code>. The parent ticket tracks all its <code>childTicketIds</code>. At each new session, Claude reads these sub-tickets to know what's already been done and plan new improvements.</span>
+              </p>
+
+              <h4>
+                <span data-lang="fr">Desactiver un ticket</span>
+                <span data-lang="en">Disabling a ticket</span>
+              </h4>
+              <p>
+                <span data-lang="fr">Clic droit sur n'importe quel ticket pour le desactiver. Les tickets desactives apparaissent en grise (45% opacite, 40% niveaux de gris), ne peuvent pas etre deplaces par drag & drop, et ne sont pas selectionnes par le scheduler automatique. Clic droit a nouveau pour reactiver.</span>
+                <span data-lang="en">Right-click on any ticket to disable it. Disabled tickets appear grayed out (45% opacity, 40% grayscale), cannot be drag-dropped, and are not selected by the automatic scheduler. Right-click again to re-enable.</span>
+              </p>
+            </div>
+
+            <div class="docs-callout docs-callout--tip">
+              <svg class="docs-callout-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+              <div class="docs-callout-content">
+                <p><span data-lang="fr">Le Mode CTO est ideal pour l'amelioration continue de votre codebase. Activez-le sur un projet mature et laissez Claude identifier les patterns de refactoring, les failles de securite, les optimisations de performance et les oublis de documentation — sans effort de votre part.</span><span data-lang="en">CTO Mode is ideal for continuous improvement of your codebase. Enable it on a mature project and let Claude identify refactoring patterns, security flaws, performance optimizations and documentation gaps — with zero effort from your side.</span></p>
+              </div>
+            </div>
+          </div>
+
           <div class="docs-screenshot">
-            <img src="screenshots/screenshot-kanban.png" alt="Kanban — Tableau de taches propulse par l'IA" loading="lazy">
+            <img src="screenshots/screenshot-kanban.png" alt="Kanban — Tableau de taches propulse par l'IA avec Mode CTO" loading="lazy">
             <p class="docs-screenshot-caption">
-              <span data-lang="fr">Kanban propulse par l'IA : 5 colonnes, envoi direct de tickets a Claude AI, mise a jour en temps reel, filtres par tags et scopes.</span>
-              <span data-lang="en">AI-powered Kanban: 5 columns, direct ticket dispatch to Claude AI, real-time updates, tag and scope filters.</span>
+              <span data-lang="fr">Kanban propulse par l'IA : 5 colonnes, envoi direct de tickets a Claude AI, Mode CTO pour l'amelioration continue, mise a jour en temps reel, filtres par tags et scopes.</span>
+              <span data-lang="en">AI-powered Kanban: 5 columns, direct ticket dispatch to Claude AI, CTO Mode for continuous improvement, real-time updates, tag and scope filters.</span>
             </p>
           </div>
         </section>
         <!-- ============================================ -->
-        <!-- NPM                                          -->
+        <!-- PACKAGES                                     -->
         <!-- ============================================ -->
-        <section class="docs-section" id="npm">
-          <h2>NPM</h2>
+        <section class="docs-section" id="packages">
+          <h2>Packages</h2>
           <div class="docs-text">
             <p>
-              <span data-lang="fr">Le gestionnaire NPM visuel affiche tous vos packages d'un coup d'oeil. Les mises a jour sont detectees automatiquement, et l'upgrade se fait en un clic. Fini les <code>npm outdated</code> manuels dans le terminal.</span>
-              <span data-lang="en">The visual NPM manager displays all your packages at a glance. Updates are detected automatically, and upgrading is one click away. No more manual <code>npm outdated</code> in the terminal.</span>
+              <span data-lang="fr">Le gestionnaire de packages unifie supporte tous les ecosystemes majeurs : npm, Go, pip, Cargo, NuGet, Composer, Bower. Visualisez, filtrez et mettez a jour vos dependances dans une interface unique. Et surtout, un <strong>chat IA integre</strong> vous assiste pour analyser vos packages, detecter les failles de securite et recommander des mises a jour.</span>
+              <span data-lang="en">The unified package manager supports all major ecosystems: npm, Go, pip, Cargo, NuGet, Composer, Bower. View, filter and update your dependencies in a single interface. And best of all, a <strong>built-in AI chat</strong> assists you in analyzing packages, detecting security vulnerabilities and recommending updates.</span>
             </p>
+          </div>
+
+          <div class="docs-text">
+            <h3>
+              <span data-lang="fr">Ecosystemes supportes</span>
+              <span data-lang="en">Supported ecosystems</span>
+            </h3>
+          </div>
+          <div class="docs-feature-overview">
+            <div class="docs-feature-item">
+              <svg class="docs-feature-item-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              <div>
+                <strong>npm</strong>
+                <span data-lang="fr">Node.js — detection via <code>package.json</code></span><span data-lang="en">Node.js — detected via <code>package.json</code></span>
+              </div>
+            </div>
+            <div class="docs-feature-item">
+              <svg class="docs-feature-item-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              <div>
+                <strong>Go modules</strong>
+                <span data-lang="fr">Go — detection via <code>go.mod</code></span><span data-lang="en">Go — detected via <code>go.mod</code></span>
+              </div>
+            </div>
+            <div class="docs-feature-item">
+              <svg class="docs-feature-item-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              <div>
+                <strong>pip</strong>
+                <span data-lang="fr">Python — detection via <code>requirements.txt</code> / <code>pyproject.toml</code></span><span data-lang="en">Python — detected via <code>requirements.txt</code> / <code>pyproject.toml</code></span>
+              </div>
+            </div>
+            <div class="docs-feature-item">
+              <svg class="docs-feature-item-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              <div>
+                <strong>Cargo</strong>
+                <span data-lang="fr">Rust — detection via <code>Cargo.toml</code></span><span data-lang="en">Rust — detected via <code>Cargo.toml</code></span>
+              </div>
+            </div>
+            <div class="docs-feature-item">
+              <svg class="docs-feature-item-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              <div>
+                <strong>NuGet / Composer / Bower</strong>
+                <span data-lang="fr">.NET, PHP et legacy — egalement detectes automatiquement</span><span data-lang="en">.NET, PHP and legacy — also automatically detected</span>
+              </div>
+            </div>
           </div>
 
           <div class="docs-text">
@@ -1710,38 +1863,60 @@
             <div class="docs-feature-item">
               <svg class="docs-feature-item-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
               <div>
-                <strong><span data-lang="fr">Badges DEP/DEV</span><span data-lang="en">DEP/DEV badges</span></strong>
-                <span data-lang="fr">Visualisez en un coup d'oeil si un package est une dependance ou une devDependency</span><span data-lang="en">See at a glance whether a package is a dependency or devDependency</span>
+                <strong><span data-lang="fr">Filtres intelligents</span><span data-lang="en">Smart filters</span></strong>
+                <span data-lang="fr">Filtrez par : tous, dependances, devDependencies, mises a jour disponibles, packages deprecies. Recherche textuelle en temps reel</span><span data-lang="en">Filter by: all, dependencies, devDependencies, available updates, deprecated packages. Real-time text search</span>
               </div>
             </div>
             <div class="docs-feature-item">
               <svg class="docs-feature-item-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
               <div>
-                <strong><span data-lang="fr">Detection des mises a jour</span><span data-lang="en">Update detection</span></strong>
-                <span data-lang="fr">Les packages avec une mise a jour disponible sont signales automatiquement</span><span data-lang="en">Packages with available updates are flagged automatically</span>
+                <strong><span data-lang="fr">Liens directs vers le registre</span><span data-lang="en">Direct registry links</span></strong>
+                <span data-lang="fr">Chaque package est un lien cliquable vers son registre d'origine (npmjs.com, pkg.go.dev, pypi.org, crates.io, etc.)</span><span data-lang="en">Each package is a clickable link to its source registry (npmjs.com, pkg.go.dev, pypi.org, crates.io, etc.)</span>
               </div>
             </div>
             <div class="docs-feature-item">
               <svg class="docs-feature-item-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
               <div>
-                <strong><span data-lang="fr">Upgrade en un clic</span><span data-lang="en">One-click upgrade</span></strong>
-                <span data-lang="fr">Mettez a jour un package ou tous les packages d'un seul clic</span><span data-lang="en">Update one package or all packages with a single click</span>
+                <strong><span data-lang="fr">Mise a jour individuelle ou globale</span><span data-lang="en">Individual or bulk update</span></strong>
+                <span data-lang="fr">Mettez a jour un seul package ou lancez un upgrade global. Compteur de packages a mettre a jour affiche en permanence</span><span data-lang="en">Update a single package or run a bulk upgrade. Count of updatable packages always visible</span>
               </div>
             </div>
             <div class="docs-feature-item">
               <svg class="docs-feature-item-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
               <div>
                 <strong><span data-lang="fr">Packages deprecies</span><span data-lang="en">Deprecated packages</span></strong>
-                <span data-lang="fr">Les packages deprecies sont identifies et signales visuellement</span><span data-lang="en">Deprecated packages are identified and visually flagged</span>
+                <span data-lang="fr">Les packages deprecies sont identifies visuellement avec leur message de depreciation affiche inline</span><span data-lang="en">Deprecated packages are visually identified with their deprecation message displayed inline</span>
               </div>
             </div>
-            <div class="docs-feature-item">
-              <svg class="docs-feature-item-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-              <div>
-                <strong><span data-lang="fr">Audit de securite</span><span data-lang="en">Security audit</span></strong>
-                <span data-lang="fr">Lancez un audit de securite des dependances directement depuis le panneau</span><span data-lang="en">Run a security audit of dependencies directly from the panel</span>
-              </div>
-            </div>
+          </div>
+
+          <div class="docs-text">
+            <h3>
+              <span data-lang="fr">Chat IA — assistant packages</span>
+              <span data-lang="en">AI Chat — package assistant</span>
+            </h3>
+            <p>
+              <span data-lang="fr">Un panneau de chat redimensionnable en bas de l'onglet Packages vous donne acces a un assistant IA dedie. Posez vos questions en langage naturel et Claude analyse vos dependances en profondeur.</span>
+              <span data-lang="en">A resizable chat panel at the bottom of the Packages tab gives you access to a dedicated AI assistant. Ask questions in natural language and Claude analyzes your dependencies in depth.</span>
+            </p>
+            <ul>
+              <li>
+                <span data-lang="fr"><strong>Analyse de dependances</strong> — "Quels packages dois-je mettre a jour en priorite ?"</span>
+                <span data-lang="en"><strong>Dependency analysis</strong> — "Which packages should I update first?"</span>
+              </li>
+              <li>
+                <span data-lang="fr"><strong>Audit de securite</strong> — "Y a-t-il des vulnerabilites connues dans mes dependances ?"</span>
+                <span data-lang="en"><strong>Security audit</strong> — "Are there known vulnerabilities in my dependencies?"</span>
+              </li>
+              <li>
+                <span data-lang="fr"><strong>Actions automatiques</strong> — Claude peut suggerer des mises a jour qui s'executent automatiquement. Si Claude propose "mettre a jour ces packages", le systeme les met a jour pour vous</span>
+                <span data-lang="en"><strong>Automatic actions</strong> — Claude can suggest updates that execute automatically. If Claude suggests "update these packages", the system updates them for you</span>
+              </li>
+              <li>
+                <span data-lang="fr"><strong>Recommandations</strong> — "Ce package est-il toujours maintenu ? Existe-t-il une alternative ?"</span>
+                <span data-lang="en"><strong>Recommendations</strong> — "Is this package still maintained? Is there an alternative?"</span>
+              </li>
+            </ul>
           </div>
 
           <div class="docs-callout docs-callout--warning">
@@ -1752,10 +1927,10 @@
           </div>
 
           <div class="docs-screenshot">
-            <img src="screenshots/screenshot-npm.png" alt="NPM — Gestionnaire de packages" loading="lazy">
+            <img src="screenshots/screenshot-npm.png" alt="Packages — Gestionnaire multi-ecosysteme avec chat IA" loading="lazy">
             <p class="docs-screenshot-caption">
-              <span data-lang="fr">Vue NPM : liste de tous les packages avec badges DEP/DEV, detection automatique des mises a jour, et upgrade global en un clic.</span>
-              <span data-lang="en">NPM view: all packages listed with DEP/DEV badges, automatic update detection, and one-click global upgrade.</span>
+              <span data-lang="fr">Vue Packages : gestionnaire multi-ecosysteme avec filtres intelligents, liens directs vers les registres, mises a jour en un clic et chat IA pour l'analyse de dependances.</span>
+              <span data-lang="en">Packages view: multi-ecosystem manager with smart filters, direct registry links, one-click updates and AI chat for dependency analysis.</span>
             </p>
           </div>
         </section>
@@ -1979,8 +2154,8 @@
           <h2>Database Explorer</h2>
           <div class="docs-text">
             <p>
-              <span data-lang="fr">L'explorateur de bases de donnees vous permet de vous connecter a vos bases directement depuis Mirehub. Plus besoin d'ouvrir un client SQL a cote — interrogez, explorez et visualisez vos donnees sans quitter votre IDE.</span>
-              <span data-lang="en">The database explorer lets you connect to your databases directly from Mirehub. No need to open a separate SQL client — query, explore and visualize your data without leaving your IDE.</span>
+              <span data-lang="fr">L'explorateur de bases de donnees a ete entierement repense. Connectez-vous a vos bases, ecrivez des requetes dans l'editeur Monaco, et surtout : <strong>interrogez vos donnees en langage naturel</strong> grace au chat IA integre. Claude genere le SQL, l'execute, et vous explique les resultats — le tout sans quitter Mirehub.</span>
+              <span data-lang="en">The database explorer has been completely redesigned. Connect to your databases, write queries in the Monaco editor, and most importantly: <strong>query your data in natural language</strong> with the built-in AI chat. Claude generates the SQL, executes it, and explains the results — all without leaving Mirehub.</span>
             </p>
           </div>
 
@@ -2030,111 +2205,147 @@
 
           <div class="docs-text">
             <h3>
-              <span data-lang="fr">Configurer une connexion</span>
-              <span data-lang="en">Setting up a connection</span>
+              <span data-lang="fr">Interface trois panneaux</span>
+              <span data-lang="en">Three-panel interface</span>
             </h3>
-            <ol class="docs-steps">
+            <p>
+              <span data-lang="fr">L'interface se decoupe en trois zones redimensionnables :</span>
+              <span data-lang="en">The interface is divided into three resizable zones:</span>
+            </p>
+            <ol>
               <li>
-                <span data-lang="fr">Ouvrez l'onglet Database Explorer dans la barre d'outils</span>
-                <span data-lang="en">Open the Database Explorer tab in the toolbar</span>
+                <span data-lang="fr"><strong>Barre laterale</strong> — Liste de connexions avec statut (connecte/deconnecte/erreur), tags d'environnement colores (local, dev, int, qua, prd), et actions (editer, supprimer, reordonner par drag)</span>
+                <span data-lang="en"><strong>Sidebar</strong> — Connection list with status (connected/disconnected/error), colored environment tags (local, dev, int, qua, prd), and actions (edit, delete, reorder by drag)</span>
               </li>
               <li>
-                <span data-lang="fr">Cliquez sur "Nouvelle connexion" et selectionnez le type de base de donnees</span>
-                <span data-lang="en">Click "New connection" and select the database type</span>
+                <span data-lang="fr"><strong>Zone de requetes</strong> — Editeur Monaco avec coloration syntaxique SQL/JSON, onglets multiples, selecteur de LIMIT (50-1000), badge d'environnement, export CSV, et pagination des resultats</span>
+                <span data-lang="en"><strong>Query area</strong> — Monaco editor with SQL/JSON syntax highlighting, multiple tabs, LIMIT selector (50-1000), environment badge, CSV export, and result pagination</span>
               </li>
               <li>
-                <span data-lang="fr">Remplissez les informations de connexion (host, port, utilisateur, mot de passe, base)</span>
-                <span data-lang="en">Fill in the connection details (host, port, user, password, database)</span>
-              </li>
-              <li>
-                <span data-lang="fr">Testez la connexion pour verifier qu'elle fonctionne</span>
-                <span data-lang="en">Test the connection to verify it works</span>
-              </li>
-              <li>
-                <span data-lang="fr">Sauvegardez. Les identifiants sont stockes de maniere chiffree</span>
-                <span data-lang="en">Save. Credentials are stored encrypted</span>
+                <span data-lang="fr"><strong>Chat IA (NL Chat)</strong> — Interrogez vos donnees en langage naturel. Claude genere le SQL, l'execute, et vous explique les resultats</span>
+                <span data-lang="en"><strong>AI Chat (NL Chat)</strong> — Query your data in natural language. Claude generates the SQL, executes it, and explains the results</span>
               </li>
             </ol>
           </div>
 
           <div class="docs-text">
             <h3>
-              <span data-lang="fr">Fonctionnalites</span>
-              <span data-lang="en">Features</span>
+              <span data-lang="fr">Chat IA — requetes en langage naturel</span>
+              <span data-lang="en">AI Chat — natural language queries</span>
             </h3>
+            <p>
+              <span data-lang="fr">Le chat IA transforme vos questions en requetes SQL executables, avec un pipeline intelligent en plusieurs etapes :</span>
+              <span data-lang="en">The AI chat transforms your questions into executable SQL queries, with a multi-step intelligent pipeline:</span>
+            </p>
+            <ol class="docs-steps">
+              <li>
+                <span data-lang="fr"><strong>Generation SQL</strong> — Claude comprend votre question et genere la requete SQL appropriee a partir du schema de la base</span>
+                <span data-lang="en"><strong>SQL generation</strong> — Claude understands your question and generates the appropriate SQL query from the database schema</span>
+              </li>
+              <li>
+                <span data-lang="fr"><strong>Execution</strong> — La requete est executee automatiquement sur la base connectee</span>
+                <span data-lang="en"><strong>Execution</strong> — The query is automatically executed on the connected database</span>
+              </li>
+              <li>
+                <span data-lang="fr"><strong>Retry intelligent</strong> — En cas d'erreur SQL (syntaxe, colonne manquante), Claude corrige automatiquement la requete et reessaye</span>
+                <span data-lang="en"><strong>Smart retry</strong> — On SQL error (syntax, missing column), Claude automatically corrects the query and retries</span>
+              </li>
+              <li>
+                <span data-lang="fr"><strong>Interpretation</strong> — Claude recoit les resultats et genere une reponse humaine expliquant ce que les donnees signifient</span>
+                <span data-lang="en"><strong>Interpretation</strong> — Claude receives the results and generates a human-readable answer explaining what the data means</span>
+              </li>
+              <li>
+                <span data-lang="fr"><strong>Raffinement</strong> — Si les resultats ne correspondent pas exactement a l'intention, Claude peut affiner la requete automatiquement</span>
+                <span data-lang="en"><strong>Refinement</strong> — If results don't exactly match the intent, Claude can automatically refine the query</span>
+              </li>
+            </ol>
+            <p>
+              <span data-lang="fr">Un bouton "SQL" sur chaque reponse de Claude permet de copier la requete generee directement dans l'editeur.</span>
+              <span data-lang="en">An "SQL" button on each Claude response lets you copy the generated query directly into the editor.</span>
+            </p>
+          </div>
+
+          <div class="docs-text">
+            <h3>
+              <span data-lang="fr">Permissions NL par connexion</span>
+              <span data-lang="en">NL permissions per connection</span>
+            </h3>
+            <p>
+              <span data-lang="fr">Chaque connexion dispose de permissions granulaires qui controlent ce que Claude peut faire via le chat IA :</span>
+              <span data-lang="en">Each connection has granular permissions that control what Claude can do via the AI chat:</span>
+            </p>
             <ul>
               <li>
-                <span data-lang="fr"><strong>Connexion securisee</strong> avec sauvegarde chiffree des identifiants</span>
-                <span data-lang="en"><strong>Secure connection</strong> with encrypted credential storage</span>
+                <span data-lang="fr"><strong>Lecture</strong> (active par defaut) — Claude peut uniquement lire les donnees (SELECT)</span>
+                <span data-lang="en"><strong>Read</strong> (enabled by default) — Claude can only read data (SELECT)</span>
               </li>
               <li>
-                <span data-lang="fr"><strong>Exploration des tables</strong> et collections avec navigation intuitive</span>
-                <span data-lang="en"><strong>Browse tables</strong> and collections with intuitive navigation</span>
+                <span data-lang="fr"><strong>Ecriture</strong> — Claude peut modifier les donnees (INSERT, UPDATE)</span>
+                <span data-lang="en"><strong>Write</strong> — Claude can modify data (INSERT, UPDATE)</span>
               </li>
               <li>
-                <span data-lang="fr"><strong>Execution de requetes</strong> SQL ou MongoDB avec coloration syntaxique</span>
-                <span data-lang="en"><strong>Execute queries</strong> SQL or MongoDB with syntax highlighting</span>
-              </li>
-              <li>
-                <span data-lang="fr"><strong>Resultats interactifs</strong> affiches dans un tableau triable et filtrable</span>
-                <span data-lang="en"><strong>Interactive results</strong> displayed in a sortable and filterable table</span>
-              </li>
-              <li>
-                <span data-lang="fr"><strong>Connexions par workspace</strong> — chaque project a ses propres bases, isolees</span>
-                <span data-lang="en"><strong>Per-workspace connections</strong> — each project has its own databases, isolated</span>
+                <span data-lang="fr"><strong>Suppression</strong> — Claude peut supprimer des donnees (DELETE, DROP)</span>
+                <span data-lang="en"><strong>Delete</strong> — Claude can delete data (DELETE, DROP)</span>
               </li>
             </ul>
           </div>
 
-          
           <div class="docs-text">
             <h3>
-              <span data-lang="fr">Guide : interroger une base de donnees</span>
-              <span data-lang="en">Guide: querying a database</span>
+              <span data-lang="fr">Tags d'environnement</span>
+              <span data-lang="en">Environment tags</span>
             </h3>
-            <ol class="docs-steps">
+            <p>
+              <span data-lang="fr">Chaque connexion porte un tag d'environnement colore pour identifier rapidement la cible :</span>
+              <span data-lang="en">Each connection carries a colored environment tag to quickly identify the target:</span>
+            </p>
+            <ul>
+              <li><strong>local</strong> — <span data-lang="fr">Developpement local</span><span data-lang="en">Local development</span></li>
+              <li><strong>dev</strong> — <span data-lang="fr">Environnement de developpement</span><span data-lang="en">Development environment</span></li>
+              <li><strong>int</strong> — <span data-lang="fr">Integration</span><span data-lang="en">Integration</span></li>
+              <li><strong>qua</strong> — <span data-lang="fr">Qualification / Staging</span><span data-lang="en">Qualification / Staging</span></li>
+              <li><strong>prd</strong> — <span data-lang="fr">Production</span><span data-lang="en">Production</span></li>
+              <li><strong><span data-lang="fr">personnalise</span><span data-lang="en">custom</span></strong> — <span data-lang="fr">Nom libre</span><span data-lang="en">Custom name</span></li>
+            </ul>
+            <p>
+              <span data-lang="fr">Le badge d'environnement est affiche dans l'editeur de requetes et dans la barre laterale, pour ne jamais executer une requete destructrice sur le mauvais environnement.</span>
+              <span data-lang="en">The environment badge is displayed in the query editor and in the sidebar, so you never run a destructive query on the wrong environment.</span>
+            </p>
+          </div>
+
+          <div class="docs-text">
+            <h3>
+              <span data-lang="fr">Backup &amp; Restore</span>
+              <span data-lang="en">Backup &amp; Restore</span>
+            </h3>
+            <p>
+              <span data-lang="fr">Sauvegardez et restaurez vos bases de donnees directement depuis Mirehub :</span>
+              <span data-lang="en">Back up and restore your databases directly from Mirehub:</span>
+            </p>
+            <ul>
               <li>
-                <span data-lang="fr">Selectionnez une connexion active dans la barre laterale du panneau Database</span>
-                <span data-lang="en">Select an active connection in the Database panel sidebar</span>
+                <span data-lang="fr"><strong>Backup</strong> — Creez un snapshot de votre base en un clic depuis la barre laterale</span>
+                <span data-lang="en"><strong>Backup</strong> — Create a snapshot of your database in one click from the sidebar</span>
               </li>
               <li>
-                <span data-lang="fr">Parcourez les tables/collections dans l'arborescence pour explorer la structure</span>
-                <span data-lang="en">Browse tables/collections in the tree view to explore the structure</span>
+                <span data-lang="fr"><strong>Restore</strong> — Restaurez un backup vers n'importe quelle connexion</span>
+                <span data-lang="en"><strong>Restore</strong> — Restore a backup to any connection</span>
               </li>
               <li>
-                <span data-lang="fr">Ecrivez votre requete SQL ou MongoDB dans l'editeur de requetes avec coloration syntaxique</span>
-                <span data-lang="en">Write your SQL or MongoDB query in the query editor with syntax highlighting</span>
+                <span data-lang="fr"><strong>Journal</strong> — Un panneau de logs en bas affiche l'historique de toutes les operations de backup/restore avec horodatage et statut</span>
+                <span data-lang="en"><strong>Log</strong> — A log panel at the bottom shows the history of all backup/restore operations with timestamps and status</span>
               </li>
-              <li>
-                <span data-lang="fr">Executez la requete et consultez les resultats dans le tableau interactif</span>
-                <span data-lang="en">Execute the query and view results in the interactive table</span>
-              </li>
-              <li>
-                <span data-lang="fr">Triez et filtrez les resultats en cliquant sur les en-tetes de colonnes</span>
-                <span data-lang="en">Sort and filter results by clicking on column headers</span>
-              </li>
-            </ol>
+            </ul>
           </div>
 
           <div class="docs-callout docs-callout--tip">
             <svg class="docs-callout-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
             <div class="docs-callout-content">
-              <p><span data-lang="fr">Pour SQLite, pointez simplement vers le fichier <code>.db</code> ou <code>.sqlite</code> de votre projet. Pas besoin de serveur — Mirehub ouvre le fichier directement. Ideal pour les applications mobiles ou les prototypes.</span><span data-lang="en">For SQLite, simply point to your project's <code>.db</code> or <code>.sqlite</code> file. No server needed — Mirehub opens the file directly. Ideal for mobile applications or prototypes.</span></p>
+              <p><span data-lang="fr">Utilisez les permissions NL pour securiser vos connexions de production : activez uniquement la lecture. Ainsi, meme si vous posez une question ambigue au chat IA, Claude ne pourra jamais modifier ou supprimer vos donnees.</span><span data-lang="en">Use NL permissions to secure your production connections: enable read-only. This way, even if you ask an ambiguous question to the AI chat, Claude can never modify or delete your data.</span></p>
             </div>
           </div>
 
-          <div class="docs-text">
-            <h3>
-              <span data-lang="fr">Connexions par workspace</span>
-              <span data-lang="en">Per-workspace connections</span>
-            </h3>
-            <p>
-              <span data-lang="fr">Chaque workspace gere ses propres connexions de base de donnees de maniere isolee. Quand vous passez d'un workspace a l'autre, les connexions affichees changent automatiquement. Cela evite les confusions entre les bases de dev, staging et production de differents projets.</span>
-              <span data-lang="en">Each workspace manages its own database connections in isolation. When you switch between workspaces, the displayed connections change automatically. This avoids confusion between dev, staging and production databases of different projects.</span>
-            </p>
-          </div>
-
-<div class="docs-callout docs-callout--warning">
+          <div class="docs-callout docs-callout--warning">
             <svg class="docs-callout-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
             <div class="docs-callout-content">
               <p><span data-lang="fr">Bien que les identifiants soient chiffres, evitez de stocker des connexions vers des bases de production sensibles. Utilisez de preference des bases de developpement ou de staging.</span><span data-lang="en">Although credentials are encrypted, avoid storing connections to sensitive production databases. Preferably use development or staging databases.</span></p>
@@ -2142,10 +2353,10 @@
           </div>
 
           <div class="docs-screenshot">
-            <img src="screenshots/screenshot-database.png" alt="Database Explorer — Panneau de connexion" loading="lazy">
+            <img src="screenshots/screenshot-database.png" alt="Database Explorer — Interface trois panneaux avec chat IA" loading="lazy">
             <p class="docs-screenshot-caption">
-              <span data-lang="fr">Panneau Base de donnees : creez vos connexions vers PostgreSQL, MySQL, MongoDB, SQLite ou MSSQL. Chaque workspace gere ses propres connexions de maniere isolee.</span>
-              <span data-lang="en">Database panel: create your connections to PostgreSQL, MySQL, MongoDB, SQLite or MSSQL. Each workspace manages its own connections in isolation.</span>
+              <span data-lang="fr">Database Explorer : interface trois panneaux avec barre laterale de connexions, editeur de requetes Monaco, et chat IA pour interroger vos donnees en langage naturel.</span>
+              <span data-lang="en">Database Explorer: three-panel interface with connection sidebar, Monaco query editor, and AI chat to query your data in natural language.</span>
             </p>
           </div>
         </section>

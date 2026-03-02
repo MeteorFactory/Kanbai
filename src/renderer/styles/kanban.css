@@ -716,6 +716,25 @@
   50% { opacity: 0.3; }
 }
 
+.kanban-card-terminal-btn {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 9px;
+  font-weight: 600;
+  color: #cba6f7;
+  background: rgba(203, 166, 247, 0.1);
+  padding: 2px 6px;
+  border-radius: 3px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.kanban-card-terminal-btn:hover {
+  background: rgba(203, 166, 247, 0.25);
+}
+
 .kanban-card-result-badge {
   font-size: 9px;
   font-weight: 600;

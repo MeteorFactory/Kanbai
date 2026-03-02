@@ -54,7 +54,7 @@ function persistList(key: string, list: string[]): void {
 }
 
 export const useViewStore = create<ViewState>((set, get) => ({
-  viewMode: 'terminal',
+  viewMode: 'kanban',
   selectedFilePath: null,
   highlightedFilePath: null,
   pendingLineNumber: null,

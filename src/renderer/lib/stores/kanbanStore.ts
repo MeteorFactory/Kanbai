@@ -406,19 +406,20 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
     const workspaceId = explicitWorkspaceId ?? get().currentWorkspaceId
     if (!workspaceId) return
 
-    // If a tab already exists for this task, activate it and return
+    // If a tab already exists for this task, activate it instead of recreating
     const { kanbanTabIds } = get()
     const existingTabId = kanbanTabIds[task.id]
     if (existingTabId) {
-      try {
-        const termStore = useTerminalTabStore.getState()
-        const tab = termStore.tabs.find((t) => t.id === existingTabId)
-        if (tab) {
-          termStore.setActiveTab(existingTabId)
-          return
-        }
-        // Tab was closed — remove stale mapping and proceed
-      } catch { /* proceed to create new tab */ }
+      const termStore = useTerminalTabStore.getState()
+      const tab = termStore.tabs.find((t) => t.id === existingTabId)
+      if (tab) {
+        termStore.setActiveTab(existingTabId)
+        return
+      }
+      // Tab was closed — remove stale mapping and proceed to create a new one
+      const newTabIds = { ...get().kanbanTabIds }
+      delete newTabIds[task.id]
+      set({ kanbanTabIds: newTabIds })
     }
 
     // Determine cwd: if task targets a specific project, use its path; otherwise use workspace env
@@ -570,7 +571,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
       const termStore = useTerminalTabStore.getState()
       if (workspaceId) {
         const tabLabel = task.isCtoTicket ? 'CTO' : isCtoMode ? `[CTO] ${task.title}` : task.ticketNumber != null ? `[${ticketLabel}] ${task.title}` : `[IA] ${task.title}`
-        tabId = termStore.createTab(workspaceId, cwd, tabLabel, initialCommand)
+        tabId = termStore.createTab(workspaceId, cwd, tabLabel, initialCommand) || null
         if (tabId) {
           termStore.setTabColor(tabId, '#fab387')
           set((state) => ({
@@ -581,6 +582,9 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
     } catch {
       // Terminal tab creation is non-blocking
     }
+
+    // Abort if terminal could not be created (e.g. workspace limit reached)
+    if (!tabId) return
 
     // Update local state to WORKING immediately (optimistic)
     set((state) => ({
@@ -596,7 +600,10 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
       })
     } catch { /* file update is best-effort */ }
 
-    // Cleanup prompt file after Claude has had time to read it
+    // Cleanup prompt file after Claude has had time to read it.
+    // Use a generous delay: Claude Code can take 60s+ to initialize
+    // (loading context, reading CLAUDE.md, warming up).
+    // The file is a few KB — no cost to keeping it around longer.
     if (tabId) {
       const capturedCwd = cwd
       const capturedWorkspaceId = workspaceId
@@ -604,7 +611,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
         try {
           window.mirehub.kanban.cleanupPrompt(capturedCwd!, task.id)
         } catch { /* best-effort */ }
-      }, 30000)
+      }, 120000)
 
       // Link the conversation JSONL file to the ticket for context recovery
       setTimeout(async () => {
@@ -612,6 +619,23 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
           await window.mirehub.kanban.linkConversation(capturedCwd!, task.id, capturedWorkspaceId!)
         } catch { /* best-effort */ }
       }, 10000)
+
+      // Verify Claude actually started: if the tab disappeared within 20s,
+      // the terminal likely crashed. Reset to TODO so it gets relaunched.
+      const capturedTaskId = task.id
+      const capturedTabId = tabId
+      setTimeout(() => {
+        const termStore = useTerminalTabStore.getState()
+        const tabStillExists = termStore.tabs.some((t) => t.id === capturedTabId)
+        if (tabStillExists) return
+        const currentTask = get().tasks.find((t) => t.id === capturedTaskId)
+        if (!currentTask || currentTask.status === 'DONE' || currentTask.status === 'TODO') return
+        // Tab is gone and task is still WORKING or PENDING — reset to TODO for relaunch
+        if (!relaunchedTaskIds.has(capturedTaskId)) {
+          relaunchedTaskIds.add(capturedTaskId)
+          get().updateTaskStatus(capturedTaskId, 'TODO')
+        }
+      }, 20000)
     }
   },
 

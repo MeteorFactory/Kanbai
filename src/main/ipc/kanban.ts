@@ -371,7 +371,6 @@ export function registerKanbanHandlers(ipcMain: IpcMain): void {
       const idx = tasks.findIndex((t) => t.id === data.id)
       if (idx === -1) throw new Error(`Kanban task ${data.id} not found`)
 
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { workspaceId: _wid, ...updateData } = data
       tasks[idx] = { ...tasks[idx]!, ...updateData, updatedAt: Date.now() }
       writeKanbanTasks(data.workspaceId, tasks)

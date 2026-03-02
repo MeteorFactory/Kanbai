@@ -203,11 +203,19 @@ function getKanbanStore() {
   }
 }
 
+const MAX_TERMINALS_PER_WORKSPACE = 10
+
 export const useTerminalTabStore = create<TerminalTabStore>((set, get) => ({
   tabs: [],
   activeTabId: null,
 
   createTab: (workspaceId: string, cwd: string, label?: string, initialCommand?: string) => {
+    const workspaceTabs = get().tabs.filter((t) => t.workspaceId === workspaceId)
+    if (workspaceTabs.length >= MAX_TERMINALS_PER_WORKSPACE) {
+      // eslint-disable-next-line no-console
+      console.warn(`Terminal limit (${MAX_TERMINALS_PER_WORKSPACE}) reached for workspace ${workspaceId}`)
+      return ''
+    }
     const pane = createLeafPane(initialCommand)
     const id = generateId('tab')
     const tabLabel = label || `Terminal ${nextTabNumber++}`
@@ -234,6 +242,12 @@ export const useTerminalTabStore = create<TerminalTabStore>((set, get) => ({
   },
 
   createSplitTab: (workspaceId: string, cwd: string, label: string, leftCommand: string | null, rightCommand: string | null) => {
+    const workspaceTabs = get().tabs.filter((t) => t.workspaceId === workspaceId)
+    if (workspaceTabs.length >= MAX_TERMINALS_PER_WORKSPACE) {
+      // eslint-disable-next-line no-console
+      console.warn(`Terminal limit (${MAX_TERMINALS_PER_WORKSPACE}) reached for workspace ${workspaceId}`)
+      return ''
+    }
     const leftPane = createLeafPane(leftCommand ?? undefined)
     const rightPane = createLeafPane(rightCommand ?? undefined)
     const splitNode: PaneSplit = {
@@ -269,6 +283,12 @@ export const useTerminalTabStore = create<TerminalTabStore>((set, get) => ({
   },
 
   createViewOnlyTab: (workspaceId: string, cwd: string, label: string, externalSessionId: string) => {
+    const workspaceTabs = get().tabs.filter((t) => t.workspaceId === workspaceId)
+    if (workspaceTabs.length >= MAX_TERMINALS_PER_WORKSPACE) {
+      // eslint-disable-next-line no-console
+      console.warn(`Terminal limit (${MAX_TERMINALS_PER_WORKSPACE}) reached for workspace ${workspaceId}`)
+      return ''
+    }
     const pane = createLeafPane(undefined, externalSessionId)
     const id = generateId('tab')
     const tab: TerminalTabData = {

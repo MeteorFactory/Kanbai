@@ -42,6 +42,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   autoCloseCompletedTerminals: false,
   autoCloseCtoTerminals: true,
   autoApprove: true,
+  tutorialCompleted: false,
 }
 
 type SettingsSection = 'general' | 'appearance' | 'terminal' | 'git' | 'ssh' | 'claude' | 'kanban' | 'notifications' | 'about'
