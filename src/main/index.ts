@@ -1,4 +1,5 @@
 import { app, BrowserWindow, ipcMain, globalShortcut, Menu, shell, protocol, net } from 'electron'
+import fs from 'fs'
 import path from 'path'
 import { pathToFileURL } from 'url'
 import { execSync } from 'child_process'
@@ -316,9 +317,16 @@ app.whenReady().then(() => {
   protocol.handle('pixel-agents', (request) => {
     const url = new URL(request.url)
     const relativePath = url.pathname === '/' ? '/index.html' : url.pathname
-    const basePath = VITE_DEV_SERVER_URL
-      ? path.join(__dirname, '../../vendor/pixel-agents/dist/webview')
-      : path.join(process.resourcesPath, 'pixel-agents')
+    let basePath: string
+    if (VITE_DEV_SERVER_URL) {
+      basePath = path.join(__dirname, '../../vendor/pixel-agents/dist/webview')
+    } else {
+      // Prefer userData (runtime installs), fall back to bundled resources
+      const userDataDist = path.join(app.getPath('userData'), 'pixel-agents')
+      basePath = fs.existsSync(path.join(userDataDist, 'index.html'))
+        ? userDataDist
+        : path.join(process.resourcesPath, 'pixel-agents')
+    }
     return net.fetch(pathToFileURL(path.join(basePath, relativePath)).toString())
   })
 

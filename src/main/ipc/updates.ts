@@ -1,8 +1,11 @@
-import { IpcMain, BrowserWindow } from 'electron'
+import { IpcMain, BrowserWindow, app } from 'electron'
 import fs from 'fs/promises'
+import fsSync from 'fs'
 import path from 'path'
 import { IPC_CHANNELS, UpdateInfo } from '../../shared/types'
 import { IS_WIN, getWhichCommand, getExtendedToolPaths, PATH_SEP, crossExecFile } from '../../shared/platform'
+
+const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 
 function enrichedEnv(): NodeJS.ProcessEnv {
   const extraPaths = getExtendedToolPaths()
@@ -142,9 +145,23 @@ async function getLatestBrewVersion(formula: string): Promise<string | null> {
   }
 }
 
+/** In dev, pixel-agents source lives under vendor/. In release, under userData/. */
+function getPixelAgentsSourcePath(): string {
+  if (VITE_DEV_SERVER_URL) {
+    return path.join(__dirname, '../../vendor/pixel-agents')
+  }
+  return path.join(app.getPath('userData'), 'vendor', 'pixel-agents')
+}
+
+/** Resolve the directory serving the pixel-agents webview. */
 function getPixelAgentsDistPath(): string {
-  if (process.env['VITE_DEV_SERVER_URL']) {
+  if (VITE_DEV_SERVER_URL) {
     return path.join(__dirname, '../../vendor/pixel-agents/dist/webview')
+  }
+  // Runtime install goes to userData; bundled resources is the fallback
+  const userDataDist = path.join(app.getPath('userData'), 'pixel-agents')
+  if (fsSync.existsSync(path.join(userDataDist, 'index.html'))) {
+    return userDataDist
   }
   return path.join(process.resourcesPath, 'pixel-agents')
 }
@@ -160,7 +177,7 @@ async function isPixelAgentsInstalled(): Promise<boolean> {
 
 async function getPixelAgentsVersion(): Promise<string> {
   try {
-    const pkgPath = path.join(__dirname, '../../vendor/pixel-agents/package.json')
+    const pkgPath = path.join(getPixelAgentsSourcePath(), 'package.json')
     const content = await fs.readFile(pkgPath, 'utf-8')
     const pkg = JSON.parse(content) as { version?: string }
     return pkg.version || 'installed'
@@ -171,7 +188,7 @@ async function getPixelAgentsVersion(): Promise<string> {
 
 async function getLocalPixelAgentsCommit(): Promise<string | null> {
   try {
-    const repoPath = path.join(__dirname, '../../vendor/pixel-agents')
+    const repoPath = getPixelAgentsSourcePath()
     const { stdout } = await enrichedExecFile(
       'git', ['-C', repoPath, 'rev-parse', '--short=7', 'HEAD'], 5000,
     )
@@ -287,6 +304,55 @@ async function checkToolUpdates(): Promise<UpdateInfo[]> {
   return results
 }
 
+/** Recursively copy a directory. */
+async function copyDir(src: string, dest: string): Promise<void> {
+  await fs.mkdir(dest, { recursive: true })
+  const entries = await fs.readdir(src, { withFileTypes: true })
+  for (const entry of entries) {
+    const srcPath = path.join(src, entry.name)
+    const destPath = path.join(dest, entry.name)
+    if (entry.isDirectory()) {
+      await copyDir(srcPath, destPath)
+    } else {
+      await fs.copyFile(srcPath, destPath)
+    }
+  }
+}
+
+const PIXEL_AGENTS_SHIM = `<!-- pixel-agents-shim-start -->
+<script>
+window.acquireVsCodeApi = function() {
+  return {
+    postMessage: function(msg) {
+      window.parent.postMessage({ source: 'pixel-agents-webview', payload: msg }, '*');
+    },
+    getState: function() { return window.__paState || {}; },
+    setState: function(s) { window.__paState = s; }
+  };
+};
+new MutationObserver(function(_, obs) {
+  document.querySelectorAll('button').forEach(function(btn) {
+    if (btn.textContent && btn.textContent.trim() === '+ Agent' && btn.parentElement) {
+      btn.parentElement.style.display = 'none';
+      obs.disconnect();
+    }
+  });
+}).observe(document.body, { childList: true, subtree: true });
+</script>
+<!-- pixel-agents-shim-end -->`
+
+/** Inject the acquireVsCodeApi shim into the pixel-agents index.html. */
+async function patchPixelAgentsHtml(htmlPath: string): Promise<void> {
+  let html = await fs.readFile(htmlPath, 'utf-8')
+  // Remove any previously injected shim (idempotent)
+  html = html.replace(
+    /<!-- pixel-agents-shim-start -->[\s\S]*?<!-- pixel-agents-shim-end -->/,
+    '',
+  )
+  html = html.replace('</head>', `${PIXEL_AGENTS_SHIM}\n</head>`)
+  await fs.writeFile(htmlPath, html, 'utf-8')
+}
+
 export function registerUpdateHandlers(ipcMain: IpcMain): void {
   ipcMain.handle(IPC_CHANNELS.UPDATE_CHECK, async () => {
     return checkToolUpdates()
@@ -392,12 +458,57 @@ export function registerUpdateHandlers(ipcMain: IpcMain): void {
           }
           case 'pixel-agents': {
             sendStatus('installing', 10)
-            const projectRoot = path.join(__dirname, '../..')
-            await crossExecFile(
-              'bash',
-              [path.join(projectRoot, 'scripts/setup-pixel-agents.sh')],
-              { timeout: 300000, env: enrichedEnv(), maxBuffer: 50 * 1024 * 1024 },
-            )
+
+            if (VITE_DEV_SERVER_URL) {
+              // Dev mode: run the setup script from the project tree
+              const projectRoot = path.join(__dirname, '../..')
+              await crossExecFile(
+                'bash',
+                [path.join(projectRoot, 'scripts/setup-pixel-agents.sh')],
+                { timeout: 300000, env: enrichedEnv(), maxBuffer: 50 * 1024 * 1024 },
+              )
+            } else {
+              // Release mode: clone, build and deploy to userData
+              const sourcePath = getPixelAgentsSourcePath()
+              const targetDir = path.join(app.getPath('userData'), 'pixel-agents')
+
+              // Clone or pull
+              sendStatus('installing', 20)
+              const parentDir = path.dirname(sourcePath)
+              await fs.mkdir(parentDir, { recursive: true })
+              if (fsSync.existsSync(path.join(sourcePath, '.git'))) {
+                await crossExecFile('git', ['pull'], { cwd: sourcePath, timeout: 60000, env: enrichedEnv() })
+              } else {
+                await fs.rm(sourcePath, { recursive: true, force: true }).catch(() => {})
+                await crossExecFile(
+                  'git', ['clone', '--depth=1', 'https://github.com/pablodelucca/pixel-agents.git', sourcePath],
+                  { timeout: 60000, env: enrichedEnv() },
+                )
+              }
+
+              // Install webview-ui deps
+              sendStatus('installing', 40)
+              await crossExecFile(
+                'npm', ['install'],
+                { cwd: path.join(sourcePath, 'webview-ui'), timeout: 120000, env: enrichedEnv() },
+              )
+
+              // Build webview-ui
+              sendStatus('installing', 60)
+              await crossExecFile(
+                'npm', ['run', 'build'],
+                { cwd: path.join(sourcePath, 'webview-ui'), timeout: 120000, env: enrichedEnv() },
+              )
+
+              // Copy dist/webview to target
+              sendStatus('installing', 80)
+              await fs.rm(targetDir, { recursive: true, force: true }).catch(() => {})
+              await copyDir(path.join(sourcePath, 'dist', 'webview'), targetDir)
+
+              // Patch index.html with acquireVsCodeApi shim
+              await patchPixelAgentsHtml(path.join(targetDir, 'index.html'))
+            }
+
             sendStatus('completed', 100)
             return { success: true }
           }
@@ -451,8 +562,15 @@ export function registerUpdateHandlers(ipcMain: IpcMain): void {
             break
           }
           case 'pixel-agents': {
-            const vendorPath = path.join(__dirname, '../../vendor/pixel-agents')
-            await fs.rm(vendorPath, { recursive: true, force: true })
+            if (VITE_DEV_SERVER_URL) {
+              // Dev mode: remove from vendor/
+              const vendorPath = path.join(__dirname, '../../vendor/pixel-agents')
+              await fs.rm(vendorPath, { recursive: true, force: true })
+            } else {
+              // Release mode: remove source clone and deployed dist
+              await fs.rm(getPixelAgentsSourcePath(), { recursive: true, force: true }).catch(() => {})
+              await fs.rm(path.join(app.getPath('userData'), 'pixel-agents'), { recursive: true, force: true }).catch(() => {})
+            }
             sendStatus('completed')
             return { success: true }
           }

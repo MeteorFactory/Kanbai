@@ -161,7 +161,7 @@
         ]
       },
       {
-        "from": "vendor/pixel-agents/webview-ui/dist",
+        "from": "vendor/pixel-agents/dist/webview",
         "to": "pixel-agents",
         "filter": [
           "**/*"
