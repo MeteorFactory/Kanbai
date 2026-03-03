@@ -472,11 +472,11 @@ export function registerProjectHandlers(ipcMain: IpcMain): void {
     },
   )
 
-  // Load ignored TODOs list from .mirehub/ignored-todos.json
+  // Load ignored TODOs list from .kanbai/ignored-todos.json
   ipcMain.handle(
     IPC_CHANNELS.PROJECT_LOAD_IGNORED_TODOS,
     async (_event, { path: projectPath }: { path: string }) => {
-      const filePath = path.join(projectPath, '.mirehub', 'ignored-todos.json')
+      const filePath = path.join(projectPath, '.kanbai', 'ignored-todos.json')
       if (!fs.existsSync(filePath)) return []
       try {
         return JSON.parse(fs.readFileSync(filePath, 'utf-8'))
@@ -486,11 +486,11 @@ export function registerProjectHandlers(ipcMain: IpcMain): void {
     },
   )
 
-  // Save ignored TODOs list to .mirehub/ignored-todos.json
+  // Save ignored TODOs list to .kanbai/ignored-todos.json
   ipcMain.handle(
     IPC_CHANNELS.PROJECT_SAVE_IGNORED_TODOS,
     async (_event, { path: projectPath, ignoredKeys }: { path: string; ignoredKeys: string[] }) => {
-      const dir = path.join(projectPath, '.mirehub')
+      const dir = path.join(projectPath, '.kanbai')
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true })
       }
@@ -639,8 +639,8 @@ export function registerProjectHandlers(ipcMain: IpcMain): void {
     },
   )
 
-  // Project notes - stored in ~/.mirehub/notes/{projectId}.md
-  const NOTES_DIR = path.join(os.homedir(), '.mirehub', 'notes')
+  // Project notes - stored in ~/.kanbai/notes/{projectId}.md
+  const NOTES_DIR = path.join(os.homedir(), '.kanbai', 'notes')
 
   ipcMain.handle(
     IPC_CHANNELS.PROJECT_GET_NOTES,
@@ -664,8 +664,8 @@ export function registerProjectHandlers(ipcMain: IpcMain): void {
     },
   )
 
-  // Prompt templates - stored in ~/.mirehub/prompt-templates.json
-  const TEMPLATES_PATH = path.join(os.homedir(), '.mirehub', 'prompt-templates.json')
+  // Prompt templates - stored in ~/.kanbai/prompt-templates.json
+  const TEMPLATES_PATH = path.join(os.homedir(), '.kanbai', 'prompt-templates.json')
 
   type TemplateEntry = Omit<PromptTemplate, 'id' | 'createdAt'>
 
@@ -1046,7 +1046,7 @@ export function registerProjectHandlers(ipcMain: IpcMain): void {
             const hooks = parsed.hooks as Record<string, unknown[]> | undefined
             if (!hooks) return { installed: false }
 
-            const hookIdentifier = 'mirehub-activity.sh'
+            const hookIdentifier = 'kanbai-activity.sh'
             const preToolHooks = hooks.PreToolUse as Array<{ hooks?: Array<{ command?: string }> }> | undefined
             const stopHooks = hooks.Stop as Array<{ hooks?: Array<{ command?: string }> }> | undefined
 
@@ -1075,7 +1075,7 @@ export function registerProjectHandlers(ipcMain: IpcMain): void {
     IPC_CHANNELS.CLAUDE_REMOVE_HOOKS,
     async (_event, { projectPath, workspaceName }: { projectPath: string; workspaceName?: string }) => {
       try {
-        const hookIdentifiers = ['mirehub-activity.sh', 'mirehub-autoapprove.sh', 'kanban-done.sh']
+        const hookIdentifiers = ['kanbai-activity.sh', 'kanbai-autoapprove.sh', 'kanban-done.sh']
         for (const basePath of getAllSettingsPaths(projectPath, workspaceName)) {
           const localSettingsPath = path.join(basePath, '.claude', 'settings.local.json')
           if (!fs.existsSync(localSettingsPath)) continue
@@ -1120,10 +1120,10 @@ export function registerProjectHandlers(ipcMain: IpcMain): void {
             const preToolHooks = hooks.PreToolUse as Array<{ hooks?: Array<{ command?: string }> }> | undefined
             const stopHooks = hooks.Stop as Array<{ hooks?: Array<{ command?: string }> }> | undefined
             const hasPreTool = preToolHooks?.some((h) =>
-              h.hooks?.some((hk) => hk.command?.includes('mirehub-activity.sh'))
+              h.hooks?.some((hk) => hk.command?.includes('kanbai-activity.sh'))
             ) ?? false
             const hasStop = stopHooks?.some((h) =>
-              h.hooks?.some((hk) => hk.command?.includes('mirehub-activity.sh'))
+              h.hooks?.some((hk) => hk.command?.includes('kanbai-activity.sh'))
             ) ?? false
             if (hasPreTool && hasStop) installed = true
           } catch { /* ignore */ }
@@ -1132,8 +1132,8 @@ export function registerProjectHandlers(ipcMain: IpcMain): void {
         // Check upToDate: compare installed script content vs expected
         let upToDate = true
         if (installed) {
-          const hooksDir = path.join(os.homedir(), '.mirehub', 'hooks')
-          const scriptPath = path.join(hooksDir, 'mirehub-activity.sh')
+          const hooksDir = path.join(os.homedir(), '.kanbai', 'hooks')
+          const scriptPath = path.join(hooksDir, 'kanbai-activity.sh')
           if (!fs.existsSync(scriptPath)) {
             upToDate = false
           }
@@ -1204,17 +1204,17 @@ export function registerProjectHandlers(ipcMain: IpcMain): void {
 
       // Fix permissions: must be an object with allow/deny arrays.
       // If permissions was a string (e.g. "bypassPermissions" from old format),
-      // preserve it as _mirehubMode before resetting.
+      // preserve it as _kanbaiMode before resetting.
       if (typeof parsed.permissions === 'string') {
-        if (!parsed._mirehubMode) {
-          parsed._mirehubMode = parsed.permissions
+        if (!parsed._kanbaiMode) {
+          parsed._kanbaiMode = parsed.permissions
         }
         parsed.permissions = {}
       } else if (typeof parsed.permissions !== 'object' || parsed.permissions === null) {
         parsed.permissions = {}
       }
 
-      // Migrate top-level allow/deny into permissions (old Mirehub format)
+      // Migrate top-level allow/deny into permissions (old Kanbai format)
       if (Array.isArray(parsed.allow)) {
         parsed.permissions.allow = [
           ...new Set([...(parsed.permissions.allow ?? []), ...parsed.allow]),
@@ -1306,7 +1306,7 @@ export function registerProjectHandlers(ipcMain: IpcMain): void {
     if (workspaceName) {
       // Direct lookup using workspace name → env dir
       const sanitized = workspaceName.replace(/[/\\:*?"<>|]/g, '_')
-      const envDir = path.join(os.homedir(), '.mirehub', 'envs', sanitized)
+      const envDir = path.join(os.homedir(), '.kanbai', 'envs', sanitized)
       if (fs.existsSync(envDir) && envDir !== projectPath) {
         paths.push(envDir)
       }

@@ -22,7 +22,7 @@ export function AddAgentModal({ onCreateBlank, onCreateFromTemplate, onClose }: 
   const [profiles, setProfiles] = useState<DefaultProfile[]>([])
 
   useEffect(() => {
-    window.mirehub.claudeDefaults.profiles().then(setProfiles).catch(() => setProfiles([]))
+    window.kanbai.claudeDefaults.profiles().then(setProfiles).catch(() => setProfiles([]))
   }, [])
 
   return (

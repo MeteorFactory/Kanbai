@@ -172,7 +172,7 @@ export function DatabaseQueryArea({
 
       updateTabExecuting(connectionId, tid, true)
       try {
-        const result = await window.mirehub.database.executeQuery(
+        const result = await window.kanbai.database.executeQuery(
           connection.id,
           sql,
           queryLimit,
@@ -203,7 +203,7 @@ export function DatabaseQueryArea({
   const handleCancelQuery = useCallback(async () => {
     if (!connection) return
     try {
-      await window.mirehub.database.cancelQuery(connection.id)
+      await window.kanbai.database.cancelQuery(connection.id)
     } catch {
       // Ignore cancel errors
     }
@@ -263,7 +263,7 @@ export function DatabaseQueryArea({
       updateTabQuery(connectionId, tid, sql)
       updateTabExecuting(connectionId, tid, true)
       try {
-        const result = await window.mirehub.database.executeQuery(connection.id, sql, 100, 0)
+        const result = await window.kanbai.database.executeQuery(connection.id, sql, 100, 0)
         updateTabResults(connectionId, tid, result)
         return result
       } catch (err) {

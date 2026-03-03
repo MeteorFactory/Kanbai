@@ -4,8 +4,8 @@ import path from 'path'
 import os from 'os'
 import { createMockIpcMain } from '../mocks/electron'
 
-const TEST_DIR = path.join(os.tmpdir(), `.mirehub-claudeDefaults-ipc-test-${process.pid}-${Date.now()}`)
-const dataDir = path.join(TEST_DIR, '.mirehub')
+const TEST_DIR = path.join(os.tmpdir(), `.kanbai-claudeDefaults-ipc-test-${process.pid}-${Date.now()}`)
+const dataDir = path.join(TEST_DIR, '.kanbai')
 
 // Redirect StorageService homedir to temp directory so it does not touch real data
 vi.mock('os', async () => {

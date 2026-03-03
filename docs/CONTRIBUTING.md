@@ -99,7 +99,7 @@ src/
   main/           # Main Process (Node.js)
     ipc/          #   Handlers IPC (git, workspace, terminal...)
     services/     #   Services (storage, PTY, Claude session)
-  preload/        # Preload scripts (contextBridge → window.mirehub)
+  preload/        # Preload scripts (contextBridge → window.kanbai)
   renderer/       # Renderer Process (React)
     components/   #   Composants UI (GitPanel, KanbanBoard, Terminal...)
     lib/stores/   #   Stores Zustand (workspaceStore, etc.)
@@ -108,7 +108,7 @@ src/
     types/        #   Interfaces et constantes (IPC_CHANNELS)
 ```
 
-**Flux de communication** : Renderer → preload (`window.mirehub`) → IPC → Main Process
+**Flux de communication** : Renderer → preload (`window.kanbai`) → IPC → Main Process
 
 ---
 

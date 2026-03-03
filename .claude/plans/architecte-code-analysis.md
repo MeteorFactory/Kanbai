@@ -2,7 +2,7 @@
 
 ## 1. Vue d'ensemble
 
-Ajouter un onglet "Analysis" dans l'application Mirehub qui permet d'executer des outils SAST/SCA locaux (semgrep, eslint, bandit, graudit, bearer, osv-scanner, trivy) sur les projets, d'afficher les rapports, et de creer selectivement des tickets Kanban a partir des findings.
+Ajouter un onglet "Analysis" dans l'application Kanbai qui permet d'executer des outils SAST/SCA locaux (semgrep, eslint, bandit, graudit, bearer, osv-scanner, trivy) sur les projets, d'afficher les rapports, et de creer selectivement des tickets Kanban a partir des findings.
 
 ## 2. Types existants (deja dans shared/types/index.ts L498-552)
 
@@ -100,7 +100,7 @@ Tous ces parsers sont des fonctions pures dans le meme fichier. Pattern : normal
 
 ### 4.5 Stockage des rapports
 
-Les rapports sont stockes dans `~/.mirehub/analysis/<projectHash>/<reportId>.json`.
+Les rapports sont stockes dans `~/.kanbai/analysis/<projectHash>/<reportId>.json`.
 - `projectHash` = hash court du chemin du projet (pour eviter les caracteres speciaux)
 - Un fichier `index.json` liste les rapports (summaries sans findings) pour un chargement rapide
 - Chaque rapport complet est un fichier `<reportId>.json`
@@ -342,7 +342,7 @@ Traductions anglaises correspondantes.
 3. Creer `src/main/ipc/analysis.ts` avec :
    - Catalogue d'outils + detection d'installation
    - Execution d'outils + parsers de sortie (semgrep, eslint, bandit, bearer, osv-scanner, trivy, graudit)
-   - Stockage/lecture de rapports (~/.mirehub/analysis/)
+   - Stockage/lecture de rapports (~/.kanbai/analysis/)
    - Creation de tickets Kanban a partir des findings
 4. Enregistrer dans `src/main/index.ts`
 
@@ -367,7 +367,7 @@ Traductions anglaises correspondantes.
 
 1. **Un seul fichier IPC** (`analysis.ts`) plutot qu'un dossier services/ - coherent avec le pattern existant (kanban.ts, ssh.ts, etc.)
 2. **Parsers dans le meme fichier** - ce sont des fonctions pures simples, pas besoin de modules separes
-3. **Stockage fichier** (JSON dans `~/.mirehub/analysis/`) - coherent avec le kanban qui utilise `~/.mirehub/kanban/`
+3. **Stockage fichier** (JSON dans `~/.kanbai/analysis/`) - coherent avec le kanban qui utilise `~/.kanbai/kanban/`
 4. **Reutilisation du Kanban** pour la creation de tickets - on appelle les memes fonctions `readKanbanTasks/writeKanbanTasks` depuis le handler IPC
 5. **Selection explicite** des findings pour les tickets - jamais de creation automatique de masse
 6. **Groupement flexible** - l'utilisateur choisit comment grouper les findings en tickets

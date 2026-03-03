@@ -1,7 +1,7 @@
 {
-  "name": "mirehub",
-  "version": "0.1.0",
-  "description": "Mirehub - Environnement de developpement avec Claude AI",
+  "name": "kanbai",
+  "version": "1.0.0",
+  "description": "Kanbai - Environnement de developpement avec Claude AI",
   "main": "dist/main/index.js",
   "author": "Antony Kervazo Canut",
   "license": "SEE LICENSE IN LICENSE",
@@ -104,8 +104,8 @@
     }
   },
   "build": {
-    "appId": "com.akc.mirehub",
-    "productName": "Mirehub",
+    "appId": "com.akc.kanbai",
+    "productName": "Kanbai",
     "directories": {
       "buildResources": "build",
       "output": "release"
@@ -162,7 +162,7 @@
     "publish": {
       "provider": "github",
       "owner": "AntonyCanut",
-      "repo": "Mirehub"
+      "repo": "Kanbai"
     }
   }
 }

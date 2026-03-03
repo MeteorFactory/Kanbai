@@ -47,10 +47,10 @@ export function MemoryTab({ projectPath }: Props) {
 
   const load = useCallback(async () => {
     const [proj, user, local, managed] = await Promise.all([
-      window.mirehub.claudeMemory.readFile(filePaths.project),
-      window.mirehub.claudeMemory.readFile(filePaths.user),
-      window.mirehub.claudeMemory.readFile(filePaths.local),
-      window.mirehub.claudeMemory.readManaged(),
+      window.kanbai.claudeMemory.readFile(filePaths.project),
+      window.kanbai.claudeMemory.readFile(filePaths.user),
+      window.kanbai.claudeMemory.readFile(filePaths.local),
+      window.kanbai.claudeMemory.readManaged(),
     ])
     setProjectMd(proj)
     setUserMd(user)
@@ -61,24 +61,24 @@ export function MemoryTab({ projectPath }: Props) {
   useEffect(() => { load() }, [load])
 
   const handleSaveProject = useCallback(async (content: string) => {
-    await window.mirehub.claudeMemory.writeFile(filePaths.project, content)
+    await window.kanbai.claudeMemory.writeFile(filePaths.project, content)
     setProjectMd(content)
   }, [projectPath])
 
   const handleSaveUser = useCallback(async (content: string) => {
-    await window.mirehub.claudeMemory.writeFile(filePaths.user, content)
+    await window.kanbai.claudeMemory.writeFile(filePaths.user, content)
     setUserMd(content)
   }, [])
 
   const handleSaveLocal = useCallback(async (content: string) => {
-    await window.mirehub.claudeMemory.writeFile(filePaths.local, content)
+    await window.kanbai.claudeMemory.writeFile(filePaths.local, content)
     setLocalMd(content)
   }, [projectPath])
 
   const handleCreate = useCallback(async (tab: 'project' | 'user' | 'local') => {
     const template = FILE_TEMPLATES[tab] || ''
     const path = filePaths[tab]
-    await window.mirehub.claudeMemory.writeFile(path, template)
+    await window.kanbai.claudeMemory.writeFile(path, template)
     if (tab === 'project') setProjectMd(template)
     else if (tab === 'user') setUserMd(template)
     else if (tab === 'local') setLocalMd(template)

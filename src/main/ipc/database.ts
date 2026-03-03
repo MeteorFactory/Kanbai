@@ -9,7 +9,7 @@ import { encryptPassword, decryptPassword } from '../services/database/crypto'
 import { backupDatabase, listBackups, deleteBackup, restoreBackup } from '../services/database/backup'
 import { executeNlQuery, generateNlSql, interpretNlResults, cancelNlQuery, getSchemaContext } from '../services/database/nlQuery'
 
-const DB_DIR = path.join(os.homedir(), '.mirehub', 'databases')
+const DB_DIR = path.join(os.homedir(), '.kanbai', 'databases')
 
 /**
  * Get the path to the database connections file for a workspace.

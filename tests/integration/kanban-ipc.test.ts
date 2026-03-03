@@ -4,8 +4,8 @@ import path from 'path'
 import os from 'os'
 import { createMockIpcMain } from '../mocks/electron'
 
-const TEST_DIR = path.join(os.tmpdir(), `.mirehub-kanban-ipc-test-${process.pid}-${Date.now()}`)
-const dataDir = path.join(TEST_DIR, '.mirehub')
+const TEST_DIR = path.join(os.tmpdir(), `.kanbai-kanban-ipc-test-${process.pid}-${Date.now()}`)
+const dataDir = path.join(TEST_DIR, '.kanbai')
 
 vi.mock('os', async () => {
   const actual = await vi.importActual<typeof import('os')>('os')
@@ -161,7 +161,7 @@ describe('Kanban IPC Handlers', () => {
       priority: 'critical',
     })
 
-    const kanbanPath = path.join(TEST_DIR, '.mirehub', 'kanban', 'ws-1.json')
+    const kanbanPath = path.join(TEST_DIR, '.kanbai', 'kanban', 'ws-1.json')
     const raw = JSON.parse(fs.readFileSync(kanbanPath, 'utf-8'))
     expect(raw).toHaveLength(1)
     expect(raw[0].title).toBe('Persistante')

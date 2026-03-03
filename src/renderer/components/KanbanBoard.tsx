@@ -131,7 +131,7 @@ const PREDEFINED_TASKS: PredefinedTaskTemplate[] = [
 ]
 
 function getPredefinedDismissedKey(workspaceId: string): string {
-  return `mirehub-predefined-dismissed-${workspaceId}`
+  return `kanbai-predefined-dismissed-${workspaceId}`
 }
 
 function getDismissedPredefined(workspaceId: string): string[] {
@@ -263,7 +263,7 @@ export function KanbanBoard() {
   // Resolve the effective default AI provider for this workspace
   const [appDefaultAiProvider, setAppDefaultAiProvider] = useState<AiProviderId>('claude')
   useEffect(() => {
-    window.mirehub.settings.get().then((s) => {
+    window.kanbai.settings.get().then((s) => {
       if (s.defaultAiProvider) setAppDefaultAiProvider(s.defaultAiProvider as AiProviderId)
     }).catch(() => {})
   }, [])
@@ -289,8 +289,8 @@ export function KanbanBoard() {
   useEffect(() => {
     if (!activeWorkspaceId || !hasWorkingTasks) return
     // Start watching the kanban file for external changes (Claude, hooks)
-    window.mirehub.kanban.watch(activeWorkspaceId)
-    const unsubscribe = window.mirehub.kanban.onFileChanged(({ workspaceId }) => {
+    window.kanbai.kanban.watch(activeWorkspaceId)
+    const unsubscribe = window.kanbai.kanban.onFileChanged(({ workspaceId }) => {
       if (workspaceId === activeWorkspaceId) {
         syncTasksFromFile()
       }
@@ -300,14 +300,14 @@ export function KanbanBoard() {
     return () => {
       unsubscribe()
       clearInterval(fallback)
-      window.mirehub.kanban.watchRemove(activeWorkspaceId)
+      window.kanbai.kanban.watchRemove(activeWorkspaceId)
     }
   }, [activeWorkspaceId, hasWorkingTasks, syncTasksFromFile])
 
   // Load prompt templates when create form opens
   useEffect(() => {
     if (showCreateForm) {
-      window.mirehub.prompts.list().then(setPromptTemplates).catch(() => {})
+      window.kanbai.prompts.list().then(setPromptTemplates).catch(() => {})
     }
   }, [showCreateForm])
 
@@ -402,7 +402,7 @@ export function KanbanBoard() {
   )
 
   const handleSelectPendingFiles = useCallback(async () => {
-    const files = await window.mirehub.kanban.selectFiles()
+    const files = await window.kanbai.kanban.selectFiles()
     if (files && files.length > 0) {
       setPendingAttachments((prev) => [...prev, ...files])
     }
@@ -447,7 +447,7 @@ export function KanbanBoard() {
     if (newest && pendingAttachments.length > 0) {
       for (const filePath of pendingAttachments) {
         try {
-          await window.mirehub.kanban.attachFile(newest.id, activeWorkspaceId, filePath)
+          await window.kanbai.kanban.attachFile(newest.id, activeWorkspaceId, filePath)
         } catch { /* best-effort */ }
       }
     }
@@ -455,7 +455,7 @@ export function KanbanBoard() {
     if (newest && pendingClipboardImages.length > 0) {
       for (const img of pendingClipboardImages) {
         try {
-          await window.mirehub.kanban.attachFromClipboard(newest.id, activeWorkspaceId, img.dataBase64, img.filename, img.mimeType)
+          await window.kanbai.kanban.attachFromClipboard(newest.id, activeWorkspaceId, img.dataBase64, img.filename, img.mimeType)
         } catch { /* best-effort */ }
       }
     }

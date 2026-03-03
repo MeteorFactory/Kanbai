@@ -2,7 +2,7 @@
 
 ## Vue d'ensemble
 
-Ce plan couvre 8 axes d'amelioration pour Mirehub, organises par priorite d'implementation et dependances.
+Ce plan couvre 8 axes d'amelioration pour Kanbai, organises par priorite d'implementation et dependances.
 
 ---
 
@@ -55,7 +55,7 @@ writeFile: (filePath: string, content: string): Promise<{ success: boolean; erro
 - Remplacer `<pre><code>` par le composant Monaco Editor
 - Detecter le langage a partir de l'extension du fichier
 - Ajouter un indicateur "modifie" (dot sur le header)
-- Implementer Cmd+S pour sauvegarder via `window.mirehub.fs.writeFile()`
+- Implementer Cmd+S pour sauvegarder via `window.kanbai.fs.writeFile()`
 - Ajouter bouton "Enregistrer" dans le header
 - Mode lecture seule pour les fichiers > 5Mo (coherent avec la limite existante)
 
@@ -181,7 +181,7 @@ const handleClick = useCallback(() => {
 ## AXE 4 : Environnement virtuel du workspace
 
 ### Analyse
-`workspaceEnv.ts` est deja fonctionnel (cree des symlinks dans `~/.mirehub/envs/{workspaceId}/`).
+`workspaceEnv.ts` est deja fonctionnel (cree des symlinks dans `~/.kanbai/envs/{workspaceId}/`).
 L'integration manquante est :
 1. A la creation/import d'un workspace, appeler `setupWorkspaceEnv` automatiquement
 2. Le terminal doit naviguer dans l'env virtuel quand le workspace est active
@@ -504,7 +504,7 @@ interface ViewState {
 
 **Fichier**: `src/renderer/App.tsx` ou composant dedie
 - Quand `activeProjectId` change, scanner le projet pour detecter les fichiers declencheurs
-- Utiliser `window.mirehub.fs.readDir()` pour verifier l'existence de `package.json`
+- Utiliser `window.kanbai.fs.readDir()` pour verifier l'existence de `package.json`
 - Mettre a jour `availableMagicTabs` dans le viewStore
 
 ### CSS

@@ -20,7 +20,7 @@ import { IS_WIN, getDbToolPaths, PATH_SEP, shellEscape as platformShellEscape } 
 
 const execAsync = promisify(exec)
 
-const BACKUPS_DIR = path.join(os.homedir(), '.mirehub', 'databases', 'backups')
+const BACKUPS_DIR = path.join(os.homedir(), '.kanbai', 'databases', 'backups')
 
 /**
  * Extended PATH that includes common CLI tool locations on macOS.
@@ -173,7 +173,7 @@ function buildBackupCommand(
 
 /**
  * Backup a database using the appropriate CLI tool for each engine.
- * Writes the dump to ~/.mirehub/databases/backups/{connectionId}/ and updates the manifest.
+ * Writes the dump to ~/.kanbai/databases/backups/{connectionId}/ and updates the manifest.
  */
 export async function backupDatabase(
   connectionId: string,

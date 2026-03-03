@@ -1,6 +1,6 @@
-# Mirehub MCP Server
+# Kanbai MCP Server
 
-Serveur MCP (Model Context Protocol) qui expose les fonctionnalites Mirehub a Claude sous forme d'outils structures.
+Serveur MCP (Model Context Protocol) qui expose les fonctionnalites Kanbai a Claude sous forme d'outils structures.
 
 ## Architecture
 
@@ -56,12 +56,12 @@ Le serveur est automatiquement enregistre dans `.claude/settings.local.json` lor
 ```json
 {
   "mcpServers": {
-    "mirehub": {
+    "kanbai": {
       "command": "npx",
       "args": ["tsx", "/path/to/src/mcp-server/index.ts"],
       "env": {
-        "MIREHUB_WORKSPACE_ID": "<uuid>",
-        "MIREHUB_WORKSPACE_NAME": "Workspace"
+        "KANBAI_WORKSPACE_ID": "<uuid>",
+        "KANBAI_WORKSPACE_NAME": "Workspace"
       }
     }
   }
@@ -74,8 +74,8 @@ En production (app packagee), `command` est `node` et `args` pointe vers le JS c
 
 | Variable | Description |
 |----------|-------------|
-| `MIREHUB_WORKSPACE_ID` | UUID du workspace (requis) |
-| `MIREHUB_WORKSPACE_NAME` | Nom du workspace (requis) |
+| `KANBAI_WORKSPACE_ID` | UUID du workspace (requis) |
+| `KANBAI_WORKSPACE_NAME` | Nom du workspace (requis) |
 
 ## Regles metier
 
@@ -90,7 +90,7 @@ En production (app packagee), `command` est `node` et `args` pointe vers le JS c
 npm run build:mcp
 
 # Tester manuellement
-MIREHUB_WORKSPACE_ID=<uuid> MIREHUB_WORKSPACE_NAME=Workspace npx tsx src/mcp-server/index.ts
+KANBAI_WORKSPACE_ID=<uuid> KANBAI_WORKSPACE_NAME=Workspace npx tsx src/mcp-server/index.ts
 ```
 
 ## Test manuel

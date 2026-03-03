@@ -6,7 +6,7 @@ import { createMockIpcMain } from '../mocks/electron'
 
 const IS_WIN = process.platform === 'win32'
 
-const TEST_DIR = path.join(os.tmpdir(), `.mirehub-packages-ipc-test-${process.pid}-${Date.now()}`)
+const TEST_DIR = path.join(os.tmpdir(), `.kanbai-packages-ipc-test-${process.pid}-${Date.now()}`)
 
 // Mock crossExecFile from platform (instead of child_process directly)
 const mockExecFile = vi.fn()

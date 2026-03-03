@@ -69,15 +69,15 @@ export const useViewStore = create<ViewState>((set, get) => ({
   clipboardOperation: null,
   pendingDbProjectPath: null,
   pendingKanbanTaskId: null,
-  recentFiles: loadPersistedList('mirehub:recentFiles'),
-  bookmarks: loadPersistedList('mirehub:bookmarks'),
+  recentFiles: loadPersistedList('kanbai:recentFiles'),
+  bookmarks: loadPersistedList('kanbai:bookmarks'),
   setPendingDbProjectPath: (path) => set({ pendingDbProjectPath: path }),
   setViewMode: (mode) => set({ viewMode: mode }),
   navigateToKanbanTask: (taskId) => set({ viewMode: 'kanban', pendingKanbanTaskId: taskId }),
   openFile: (filePath, lineNumber?) => {
     const { recentFiles } = get()
     const updated = [filePath, ...recentFiles.filter((f) => f !== filePath)].slice(0, 20)
-    persistList('mirehub:recentFiles', updated)
+    persistList('kanbai:recentFiles', updated)
     set({
       viewMode: 'file',
       selectedFilePath: filePath,
@@ -120,7 +120,7 @@ export const useViewStore = create<ViewState>((set, get) => ({
     const updated = bookmarks.includes(filePath)
       ? bookmarks.filter((f) => f !== filePath)
       : [...bookmarks, filePath]
-    persistList('mirehub:bookmarks', updated)
+    persistList('kanbai:bookmarks', updated)
     set({ bookmarks: updated })
   },
 }))

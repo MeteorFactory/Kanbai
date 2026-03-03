@@ -391,7 +391,7 @@ export function registerClaudeMemoryHandlers(ipcMain: IpcMain): void {
 
   // Resolve templates directory (prefer synced cache over bundled)
   function getTemplatesDir(): string {
-    const cachedDir = path.join(os.homedir(), '.mirehub', 'cache', 'rule-templates')
+    const cachedDir = path.join(os.homedir(), '.kanbai', 'cache', 'rule-templates')
     if (fs.existsSync(cachedDir)) return cachedDir
     if (app.isPackaged) return path.join(process.resourcesPath, 'rule-templates')
     return path.join(__dirname, '..', '..', 'src', 'main', 'assets', 'rule-templates')
@@ -472,8 +472,8 @@ export function registerClaudeMemoryHandlers(ipcMain: IpcMain): void {
     },
   )
 
-  // Shared rules directory: ~/.mirehub/shared-rules/
-  const sharedRulesDir = path.join(os.homedir(), '.mirehub', 'shared-rules')
+  // Shared rules directory: ~/.kanbai/shared-rules/
+  const sharedRulesDir = path.join(os.homedir(), '.kanbai', 'shared-rules')
 
   // List shared rules (global)
   ipcMain.handle(
@@ -546,7 +546,7 @@ export function registerClaudeMemoryHandlers(ipcMain: IpcMain): void {
   ipcMain.handle(
     IPC_CHANNELS.CLAUDE_MEMORY_SYNC_AI_RULES,
     async (_event, { projectPath }: { projectPath: string }) => {
-      const syncScript = path.join(os.homedir(), '.mirehub', 'hooks', 'ai-rules-sync.sh')
+      const syncScript = path.join(os.homedir(), '.kanbai', 'hooks', 'ai-rules-sync.sh')
       if (!fs.existsSync(syncScript)) return { success: false, error: 'Sync script not found' }
 
       // Remove debounce timestamp so the script actually runs
@@ -567,7 +567,7 @@ export function registerClaudeMemoryHandlers(ipcMain: IpcMain): void {
   ipcMain.handle(
     IPC_CHANNELS.CLAUDE_MEMORY_CHECK_AI_RULES,
     async (_event, { projectPath: _projectPath }: { projectPath: string }) => {
-      const syncScript = path.join(os.homedir(), '.mirehub', 'hooks', 'ai-rules-sync.sh')
+      const syncScript = path.join(os.homedir(), '.kanbai', 'hooks', 'ai-rules-sync.sh')
       if (!fs.existsSync(syncScript)) return { success: false, error: 'Sync script not found' }
 
       return new Promise((resolve) => {

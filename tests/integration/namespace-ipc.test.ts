@@ -5,8 +5,8 @@ import os from 'os'
 import { createMockIpcMain } from '../mocks/electron'
 import type { Namespace } from '../../src/shared/types'
 
-const TEST_DIR = path.join(os.tmpdir(), `.mirehub-ns-test-${process.pid}-${Date.now()}`)
-const dataDir = path.join(TEST_DIR, '.mirehub')
+const TEST_DIR = path.join(os.tmpdir(), `.kanbai-ns-test-${process.pid}-${Date.now()}`)
+const dataDir = path.join(TEST_DIR, '.kanbai')
 
 // Mock os.homedir to use temp directory
 vi.mock('os', async () => {

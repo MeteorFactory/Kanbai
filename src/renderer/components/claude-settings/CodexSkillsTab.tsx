@@ -22,10 +22,10 @@ export function CodexSkillsTab({ projectPath }: Props) {
   } | null>(null)
 
   const loadAll = useCallback(async () => {
-    const skillList: SkillEntry[] = await window.mirehub.codexSkills.list(projectPath)
+    const skillList: SkillEntry[] = await window.kanbai.codexSkills.list(projectPath)
     const enriched = await Promise.all(
       skillList.map(async (s) => {
-        const content = await window.mirehub.codexSkills.read(projectPath, s.dirname)
+        const content = await window.kanbai.codexSkills.read(projectPath, s.dirname)
         const parsed = parseAgentFrontmatter(`${s.dirname}/SKILL.md`, content ?? '')
         return { ...parsed, name: s.dirname }
       }),
@@ -38,23 +38,23 @@ export function CodexSkillsTab({ projectPath }: Props) {
   const handleSave = useCallback(async (filename: string, content: string) => {
     if (!editing) return
     const dirname = filename.replace(/\/SKILL\.md$/, '').replace(/\.md$/, '')
-    await window.mirehub.codexSkills.write(projectPath, dirname, content)
+    await window.kanbai.codexSkills.write(projectPath, dirname, content)
     if (editing.skill && editing.skill.name && editing.skill.name !== dirname) {
-      await window.mirehub.codexSkills.delete(projectPath, editing.skill.name)
+      await window.kanbai.codexSkills.delete(projectPath, editing.skill.name)
     }
     setEditing(null)
     await loadAll()
   }, [editing, projectPath, loadAll])
 
   const handleDuplicate = useCallback(async (skill: EnrichedAgent) => {
-    const content = await window.mirehub.codexSkills.read(projectPath, skill.name)
+    const content = await window.kanbai.codexSkills.read(projectPath, skill.name)
     const newDirname = `${skill.name}-copy`
-    await window.mirehub.codexSkills.write(projectPath, newDirname, content ?? '')
+    await window.kanbai.codexSkills.write(projectPath, newDirname, content ?? '')
     await loadAll()
   }, [projectPath, loadAll])
 
   const handleDelete = useCallback(async (dirname: string) => {
-    await window.mirehub.codexSkills.delete(projectPath, dirname)
+    await window.kanbai.codexSkills.delete(projectPath, dirname)
     await loadAll()
   }, [projectPath, loadAll])
 

@@ -47,8 +47,8 @@ export const useHealthCheckStore = create<HealthCheckState>((set, get) => ({
   loadData: async (projectPath: string) => {
     set({ loading: true })
     try {
-      const data = await window.mirehub.healthcheck.load(projectPath)
-      const statuses = await window.mirehub.healthcheck.getStatuses(projectPath)
+      const data = await window.kanbai.healthcheck.load(projectPath)
+      const statuses = await window.kanbai.healthcheck.getStatuses(projectPath)
       const statusMap: Record<string, HealthCheckSchedulerStatus> = {}
       for (const s of statuses) {
         statusMap[s.checkId] = s
@@ -66,7 +66,7 @@ export const useHealthCheckStore = create<HealthCheckState>((set, get) => ({
 
   saveData: async (projectPath: string) => {
     const { data } = get()
-    await window.mirehub.healthcheck.save(projectPath, data)
+    await window.kanbai.healthcheck.save(projectPath, data)
   },
 
   addCheck: (projectPath: string) => {
@@ -86,7 +86,7 @@ export const useHealthCheckStore = create<HealthCheckState>((set, get) => ({
     }
     const updated = { ...data, checks: [...data.checks, newCheck] }
     set({ data: updated, selectedCheckId: newCheck.id })
-    window.mirehub.healthcheck.save(projectPath, updated)
+    window.kanbai.healthcheck.save(projectPath, updated)
   },
 
   updateCheck: (projectPath: string, checkId: string, updates: Partial<HealthCheckConfig>) => {
@@ -98,7 +98,7 @@ export const useHealthCheckStore = create<HealthCheckState>((set, get) => ({
       ),
     }
     set({ data: updated })
-    window.mirehub.healthcheck.save(projectPath, updated)
+    window.kanbai.healthcheck.save(projectPath, updated)
   },
 
   deleteCheck: (projectPath: string, checkId: string) => {
@@ -113,7 +113,7 @@ export const useHealthCheckStore = create<HealthCheckState>((set, get) => ({
       data: updated,
       selectedCheckId: selectedCheckId === checkId ? null : selectedCheckId,
     })
-    window.mirehub.healthcheck.save(projectPath, updated)
+    window.kanbai.healthcheck.save(projectPath, updated)
   },
 
   executeCheck: async (projectPath: string, checkId: string) => {
@@ -121,27 +121,27 @@ export const useHealthCheckStore = create<HealthCheckState>((set, get) => ({
     const check = data.checks.find((c) => c.id === checkId)
     if (!check) return null
 
-    const logEntry = await window.mirehub.healthcheck.execute(projectPath, check, data)
+    const logEntry = await window.kanbai.healthcheck.execute(projectPath, check, data)
     // Reload data after execution (scheduler updates it)
-    const freshData = await window.mirehub.healthcheck.load(projectPath)
+    const freshData = await window.kanbai.healthcheck.load(projectPath)
     set({ data: freshData })
     return logEntry
   },
 
   startScheduler: async (projectPath: string) => {
     const { data } = get()
-    await window.mirehub.healthcheck.startScheduler(projectPath, data)
+    await window.kanbai.healthcheck.startScheduler(projectPath, data)
     set({ schedulerRunning: true })
   },
 
   stopScheduler: async (projectPath: string) => {
-    await window.mirehub.healthcheck.stopScheduler(projectPath)
+    await window.kanbai.healthcheck.stopScheduler(projectPath)
     set({ schedulerRunning: false, statuses: {} })
   },
 
   updateInterval: async (projectPath: string, checkId: string) => {
     const { data } = get()
-    await window.mirehub.healthcheck.updateInterval(projectPath, checkId, data)
+    await window.kanbai.healthcheck.updateInterval(projectPath, checkId, data)
   },
 
   handleStatusUpdate: (_projectPath: string, statuses: HealthCheckSchedulerStatus[]) => {
@@ -154,7 +154,7 @@ export const useHealthCheckStore = create<HealthCheckState>((set, get) => ({
 
   refreshData: async (projectPath: string) => {
     try {
-      const freshData = await window.mirehub.healthcheck.load(projectPath)
+      const freshData = await window.kanbai.healthcheck.load(projectPath)
       set({ data: freshData })
     } catch {
       // Silently ignore — keep current data
@@ -164,7 +164,7 @@ export const useHealthCheckStore = create<HealthCheckState>((set, get) => ({
   clearHistory: async (projectPath: string) => {
     const { data } = get()
     const updated = { ...data, history: [] }
-    await window.mirehub.healthcheck.clearHistory(projectPath, updated)
+    await window.kanbai.healthcheck.clearHistory(projectPath, updated)
     set({ data: updated })
   },
 

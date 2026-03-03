@@ -19,7 +19,7 @@ export function AgentTemplateGallery({ onCreateFromTemplate }: Props) {
   const [profiles, setProfiles] = useState<DefaultProfile[]>([])
 
   useEffect(() => {
-    window.mirehub.claudeDefaults.profiles().then(setProfiles).catch(() => setProfiles([]))
+    window.kanbai.claudeDefaults.profiles().then(setProfiles).catch(() => setProfiles([]))
   }, [])
 
   if (profiles.length === 0) return null

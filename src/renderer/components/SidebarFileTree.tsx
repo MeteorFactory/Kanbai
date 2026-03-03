@@ -27,7 +27,7 @@ function FileNode({ entry, depth, onRefresh }: FileNodeProps) {
   const loadChildren = useCallback(async () => {
     setLoading(true)
     try {
-      const entries = await window.mirehub.fs.readDir(entry.path)
+      const entries = await window.kanbai.fs.readDir(entry.path)
       setChildren(entries)
     } catch {
       setChildren([])
@@ -66,7 +66,7 @@ function FileNode({ entry, depth, onRefresh }: FileNodeProps) {
     const trimmed = renameValue.trim()
     if (trimmed && trimmed !== entry.name) {
       const dir = entry.path.substring(0, entry.path.lastIndexOf('/'))
-      await window.mirehub.fs.rename(entry.path, dir + '/' + trimmed)
+      await window.kanbai.fs.rename(entry.path, dir + '/' + trimmed)
       onRefresh()
     }
     setIsRenaming(false)
@@ -98,26 +98,26 @@ function FileNode({ entry, depth, onRefresh }: FileNodeProps) {
     let destName = `${baseName} copie${ext}`
     let destPath = `${dir}/${destName}`
     let counter = 2
-    while (await window.mirehub.fs.exists(destPath)) {
+    while (await window.kanbai.fs.exists(destPath)) {
       destName = `${baseName} copie ${counter}${ext}`
       destPath = `${dir}/${destName}`
       counter++
     }
-    await window.mirehub.fs.copy(entry.path, destPath)
+    await window.kanbai.fs.copy(entry.path, destPath)
     onRefresh()
   }, [entry.path, entry.name, onRefresh])
 
   const handleDelete = useCallback(async () => {
     const confirmed = window.confirm(`Supprimer "${entry.name}" ?`)
     if (confirmed) {
-      await window.mirehub.fs.delete(entry.path)
+      await window.kanbai.fs.delete(entry.path)
       onRefresh()
     }
   }, [entry.path, entry.name, onRefresh])
 
   const handleNewFile = useCallback(async () => {
     const filePath = entry.path + '/nouveau_fichier'
-    await window.mirehub.fs.writeFile(filePath, '')
+    await window.kanbai.fs.writeFile(filePath, '')
     if (!expanded) {
       await loadChildren()
       setExpanded(true)
@@ -128,7 +128,7 @@ function FileNode({ entry, depth, onRefresh }: FileNodeProps) {
 
   const handleNewFolder = useCallback(async () => {
     const dirPath = entry.path + '/nouveau_dossier'
-    await window.mirehub.fs.mkdir(dirPath)
+    await window.kanbai.fs.mkdir(dirPath)
     if (!expanded) {
       await loadChildren()
       setExpanded(true)
@@ -143,13 +143,13 @@ function FileNode({ entry, depth, onRefresh }: FileNodeProps) {
     const name = clipboardPath.split(/[\\/]/).pop() ?? 'paste'
     let destPath = `${entry.path}/${name}`
     let counter = 2
-    while (await window.mirehub.fs.exists(destPath)) {
+    while (await window.kanbai.fs.exists(destPath)) {
       const ext = name.includes('.') ? '.' + name.split('.').pop() : ''
       const base = ext ? name.slice(0, -ext.length) : name
       destPath = `${entry.path}/${base} (${counter})${ext}`
       counter++
     }
-    await window.mirehub.fs.copy(clipboardPath, destPath)
+    await window.kanbai.fs.copy(clipboardPath, destPath)
     useViewStore.getState().clearClipboard()
     if (expanded) {
       await loadChildren()
@@ -283,7 +283,7 @@ export function SidebarFileTree({ projectPath }: SidebarFileTreeProps) {
       return
     }
     setLoading(true)
-    window.mirehub.fs
+    window.kanbai.fs
       .readDir(projectPath)
       .then(setEntries)
       .catch(() => setEntries([]))

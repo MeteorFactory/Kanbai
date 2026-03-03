@@ -46,7 +46,7 @@ function disposeTerminal(terminal: ManagedTerminal): void {
  *    "command not found: compdef" errors.
  */
 function ensureZshWrapper(): string {
-  const shellDir = path.join(os.homedir(), '.mirehub', 'shell')
+  const shellDir = path.join(os.homedir(), '.kanbai', 'shell')
   if (!fs.existsSync(shellDir)) {
     fs.mkdirSync(shellDir, { recursive: true })
   }

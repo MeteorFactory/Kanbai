@@ -6,7 +6,7 @@ import type { Workspace, Project, KanbanTask, AutoClauderTemplate } from '../../
 import { DEFAULT_SETTINGS } from '../../src/shared/constants/defaults'
 
 // We need to mock the DATA_DIR before importing StorageService
-const TEST_DIR = path.join(os.tmpdir(), `.mirehub-test-${process.pid}-${Date.now()}`)
+const TEST_DIR = path.join(os.tmpdir(), `.kanbai-test-${process.pid}-${Date.now()}`)
 
 vi.mock('os', async () => {
   const actual = await vi.importActual<typeof import('os')>('os')
@@ -25,7 +25,7 @@ const { StorageService, _resetForTesting } = await import('../../src/main/servic
 
 describe('StorageService', () => {
   let service: InstanceType<typeof StorageService>
-  const dataDir = path.join(TEST_DIR, '.mirehub')
+  const dataDir = path.join(TEST_DIR, '.kanbai')
   const dataPath = path.join(dataDir, 'data.json')
 
   beforeEach(() => {

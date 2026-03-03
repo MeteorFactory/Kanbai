@@ -53,7 +53,7 @@ function debouncedSave(workspaceId: string, connections: DbConnection[]) {
   if (saveTimers[workspaceId]) clearTimeout(saveTimers[workspaceId])
   saveTimers[workspaceId] = setTimeout(() => {
     const data: DbFile = { version: 1, connections }
-    window.mirehub.database.save(workspaceId, data)
+    window.kanbai.database.save(workspaceId, data)
     delete saveTimers[workspaceId]
   }, 500)
 }
@@ -74,7 +74,7 @@ export const useDatabaseStore = create<DatabaseStore>((set, get) => ({
 
     set({ loading: true })
     try {
-      const loaded: DbFile = await window.mirehub.database.load(workspaceId)
+      const loaded: DbFile = await window.kanbai.database.load(workspaceId)
       set((state) => ({
         connectionsByWorkspace: {
           ...state.connectionsByWorkspace,
@@ -134,7 +134,7 @@ export const useDatabaseStore = create<DatabaseStore>((set, get) => ({
     const { connectionStatuses, activeConnectionId, connectionsByWorkspace } = get()
     const status = connectionStatuses[id]
     if (status === 'connected' || status === 'connecting') {
-      window.mirehub.database.disconnect(id).catch(() => {})
+      window.kanbai.database.disconnect(id).catch(() => {})
     }
 
     // Find which workspace this connection belongs to
@@ -196,7 +196,7 @@ export const useDatabaseStore = create<DatabaseStore>((set, get) => ({
 
     get().setConnectionStatus(id, 'connecting')
     try {
-      await window.mirehub.database.connect(id, conn.config)
+      await window.kanbai.database.connect(id, conn.config)
       get().setConnectionStatus(id, 'connected')
       set({ activeConnectionId: id })
     } catch {
@@ -206,7 +206,7 @@ export const useDatabaseStore = create<DatabaseStore>((set, get) => ({
 
   disconnectDb: async (id: string) => {
     try {
-      await window.mirehub.database.disconnect(id)
+      await window.kanbai.database.disconnect(id)
     } catch {
       // Ignore disconnect errors
     }

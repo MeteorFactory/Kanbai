@@ -34,12 +34,12 @@ describe('Preload Contract (pre-upgrade baseline)', () => {
     await import('../../src/preload/index')
 
     expect(mockExposeInMainWorld).toHaveBeenCalledTimes(1)
-    expect(mockExposeInMainWorld).toHaveBeenCalledWith('mirehub', expect.any(Object))
+    expect(mockExposeInMainWorld).toHaveBeenCalledWith('kanbai', expect.any(Object))
     exposedApi = mockExposeInMainWorld.mock.calls[0][1] as Record<string, unknown>
   })
 
-  it('expose l API sous le nom "mirehub"', () => {
-    expect(mockExposeInMainWorld.mock.calls[0][0]).toBe('mirehub')
+  it('expose l API sous le nom "kanbai"', () => {
+    expect(mockExposeInMainWorld.mock.calls[0][0]).toBe('kanbai')
   })
 
   describe('Top-level API namespaces', () => {

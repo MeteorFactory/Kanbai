@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
-// Mock the window.mirehub API
+// Mock the window.kanbai API
 const mockKanbanUpdate = vi.fn()
 const mockKanbanList = vi.fn()
 const mockKanbanCreate = vi.fn()
@@ -15,7 +15,7 @@ const mockTerminalWrite = vi.fn()
 const mockWorkspaceEnvSetup = vi.fn()
 
 vi.stubGlobal('window', {
-  mirehub: {
+  kanbai: {
     terminal: {
       write: mockTerminalWrite,
     },
@@ -69,7 +69,7 @@ describe('Kanban → Claude Integration (PTY interactif)', () => {
     vi.useRealTimers()
     mockCreateTab.mockReturnValue('tab-new-1')
     mockWorkspaceEnvSetup.mockResolvedValue({ success: true, envPath: '/tmp/workspace-env' })
-    mockKanbanGetPath.mockResolvedValue('/Users/test/.mirehub/kanban/ws-1.json')
+    mockKanbanGetPath.mockResolvedValue('/Users/test/.kanbai/kanban/ws-1.json')
 
     useKanbanStore.setState({
       tasks: [],
@@ -236,8 +236,8 @@ describe('Kanban → Claude Integration (PTY interactif)', () => {
       expect(initialCommand).toContain('unset CLAUDECODE CLAUDE_CODE_ENTRYPOINT')
 
       // Command must set kanban env vars for the hook
-      expect(initialCommand).toContain('MIREHUB_KANBAN_TASK_ID="task-1"')
-      expect(initialCommand).toContain('MIREHUB_KANBAN_FILE=')
+      expect(initialCommand).toContain('KANBAI_KANBAN_TASK_ID="task-1"')
+      expect(initialCommand).toContain('KANBAI_KANBAN_FILE=')
 
       // Command must launch Claude with the prompt file reference
       expect(initialCommand).toContain('claude --dangerously-skip-permissions')
@@ -349,7 +349,7 @@ describe('Kanban → Claude Integration (PTY interactif)', () => {
       expect(writtenPrompt).toContain('question')
     })
 
-    it('set les variables d\'env MIREHUB_KANBAN dans la commande', async () => {
+    it('set les variables d\'env KANBAI_KANBAN dans la commande', async () => {
       const { useWorkspaceStore } = await import('../../src/renderer/lib/stores/workspaceStore')
       useWorkspaceStore.setState({
         activeWorkspaceId: 'ws-1',
@@ -366,9 +366,9 @@ describe('Kanban → Claude Integration (PTY interactif)', () => {
       await useKanbanStore.getState().sendToAi(task)
 
       const initialCommand = mockCreateTab.mock.calls[0]![3] as string
-      expect(initialCommand).toContain('MIREHUB_KANBAN_TASK_ID="task-1"')
-      expect(initialCommand).toContain('MIREHUB_KANBAN_FILE=')
-      expect(initialCommand).toContain('.mirehub/kanban/ws-1.json')
+      expect(initialCommand).toContain('KANBAI_KANBAN_TASK_ID="task-1"')
+      expect(initialCommand).toContain('KANBAI_KANBAN_FILE=')
+      expect(initialCommand).toContain('.kanbai/kanban/ws-1.json')
     })
 
     it('reste sur la vue courante (pas de navigation vers terminal)', async () => {

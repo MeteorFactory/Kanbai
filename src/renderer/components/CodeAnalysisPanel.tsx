@@ -184,7 +184,7 @@ export function CodeAnalysisPanel() {
     if (!activeProject) return
     setDetectingTools(true)
     try {
-      const detected = await window.mirehub.analysis.detectTools(activeProject.path)
+      const detected = await window.kanbai.analysis.detectTools(activeProject.path)
       setTools(detected)
     } catch {
       setTools([])
@@ -197,7 +197,7 @@ export function CodeAnalysisPanel() {
   const loadReports = useCallback(async () => {
     if (!activeProject) return
     try {
-      const loaded = await window.mirehub.analysis.loadReports(activeProject.path)
+      const loaded = await window.kanbai.analysis.loadReports(activeProject.path)
       if (loaded.length > 0) {
         setReports(loaded)
         setActiveReportId(ALL_REPORTS_ID)
@@ -211,7 +211,7 @@ export function CodeAnalysisPanel() {
   const loadProjectStats = useCallback(async () => {
     if (!activeProject) return
     try {
-      const stats = await window.mirehub.project.stats(activeProject.path)
+      const stats = await window.kanbai.project.stats(activeProject.path)
       setProjectStats(stats)
     } catch {
       setProjectStats(null)
@@ -233,7 +233,7 @@ export function CodeAnalysisPanel() {
 
   // Subscribe to progress events
   useEffect(() => {
-    const unsubscribe = window.mirehub.analysis.onProgress((data: AnalysisProgress) => {
+    const unsubscribe = window.kanbai.analysis.onProgress((data: AnalysisProgress) => {
       if (data.status === 'running') {
         setRunningTools((prev) => new Set(prev).add(data.toolId))
       } else {
@@ -249,7 +249,7 @@ export function CodeAnalysisPanel() {
 
   // Subscribe to install progress events
   useEffect(() => {
-    const unsub = window.mirehub.analysis.onInstallProgress((data) => {
+    const unsub = window.kanbai.analysis.onInstallProgress((data) => {
       setInstallOutput((prev) => ({
         ...prev,
         [data.toolId]: (prev[data.toolId] || '') + data.output,
@@ -287,7 +287,7 @@ export function CodeAnalysisPanel() {
     setInstallOutput((prev) => ({ ...prev, [toolId]: '' }))
     setActiveInstallTool(toolId)
     try {
-      const result = await window.mirehub.analysis.installTool(toolId)
+      const result = await window.kanbai.analysis.installTool(toolId)
       if (result.installed) {
         detectTools()
         setToastMessage(t('analysis.installSuccess'))
@@ -314,7 +314,7 @@ export function CodeAnalysisPanel() {
     setActiveInstallTool(null) // switch to reports view
     setRunningTools((prev) => new Set(prev).add(toolId))
     try {
-      const report = await window.mirehub.analysis.run({
+      const report = await window.kanbai.analysis.run({
         projectPath: activeProject.path,
         toolId,
       })
@@ -337,7 +337,7 @@ export function CodeAnalysisPanel() {
   // Cancel a running tool
   const cancelTool = useCallback(async (toolId: string) => {
     try {
-      await window.mirehub.analysis.cancel(toolId)
+      await window.kanbai.analysis.cancel(toolId)
       setRunningTools((prev) => {
         const next = new Set(prev)
         next.delete(toolId)
@@ -352,7 +352,7 @@ export function CodeAnalysisPanel() {
   const deleteReport = useCallback(async (reportId: string) => {
     if (!activeProject) return
     try {
-      await window.mirehub.analysis.deleteReport(activeProject.path, reportId)
+      await window.kanbai.analysis.deleteReport(activeProject.path, reportId)
       setReports((prev) => prev.filter((r) => r.id !== reportId))
       if (activeReportId === reportId) {
         setActiveReportId(null)
@@ -502,7 +502,7 @@ export function CodeAnalysisPanel() {
         }
         let totalTickets = 0
         for (const [reportId, findingIds] of grouped) {
-          const result = await window.mirehub.analysis.createTickets({
+          const result = await window.kanbai.analysis.createTickets({
             findingIds,
             reportId,
             workspaceId: activeWorkspaceId,
@@ -516,7 +516,7 @@ export function CodeAnalysisPanel() {
         setToastMessage(t('analysis.ticketsCreatedReanalyze', { count: String(totalTickets) }))
         setTimeout(() => setToastMessage(null), 5000)
       } else {
-        const result = await window.mirehub.analysis.createTickets({
+        const result = await window.kanbai.analysis.createTickets({
           findingIds: Array.from(selectedFindings),
           reportId: activeReport.id,
           workspaceId: activeWorkspaceId,

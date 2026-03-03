@@ -4,7 +4,7 @@ import path from 'path'
 import os from 'os'
 import { IS_WIN, IS_MAC } from '../helpers/platform'
 
-const TEST_DIR = path.join(os.tmpdir(), `.mirehub-hooks-test-${process.pid}-${Date.now()}`)
+const TEST_DIR = path.join(os.tmpdir(), `.kanbai-hooks-test-${process.pid}-${Date.now()}`)
 
 // Mock os.homedir to isolate all filesystem operations to a temp directory
 vi.mock('os', async () => {
@@ -46,18 +46,18 @@ const {
 const SCRIPT_EXT = IS_WIN ? '.ps1' : '.sh'
 
 describe('activityHooks', () => {
-  const hooksDir = path.join(TEST_DIR, '.mirehub', 'hooks')
-  const activityDir = path.join(TEST_DIR, '.mirehub', 'activity')
-  const envsDir = path.join(TEST_DIR, '.mirehub', 'envs')
+  const hooksDir = path.join(TEST_DIR, '.kanbai', 'hooks')
+  const activityDir = path.join(TEST_DIR, '.kanbai', 'activity')
+  const envsDir = path.join(TEST_DIR, '.kanbai', 'envs')
 
   beforeEach(() => {
     vi.clearAllMocks()
     mockGetSettings.mockReturnValue({ autoApprove: false })
 
-    // Clean up mirehub directory between tests
-    const mirehubDir = path.join(TEST_DIR, '.mirehub')
-    if (fs.existsSync(mirehubDir)) {
-      fs.rmSync(mirehubDir, { recursive: true, force: true })
+    // Clean up kanbai directory between tests
+    const kanbaiDir = path.join(TEST_DIR, '.kanbai')
+    if (fs.existsSync(kanbaiDir)) {
+      fs.rmSync(kanbaiDir, { recursive: true, force: true })
     }
   })
 
@@ -68,10 +68,10 @@ describe('activityHooks', () => {
   })
 
   describe('ensureActivityHookScript', () => {
-    it('cree le script dans ~/.mirehub/hooks/', () => {
+    it('cree le script dans ~/.kanbai/hooks/', () => {
       ensureActivityHookScript()
 
-      const scriptPath = path.join(hooksDir, `mirehub-activity${SCRIPT_EXT}`)
+      const scriptPath = path.join(hooksDir, `kanbai-activity${SCRIPT_EXT}`)
       expect(fs.existsSync(scriptPath)).toBe(true)
     })
 
@@ -84,7 +84,7 @@ describe('activityHooks', () => {
     it.skipIf(IS_WIN)('le script est executable (mode 0o755)', () => {
       ensureActivityHookScript()
 
-      const scriptPath = path.join(hooksDir, `mirehub-activity${SCRIPT_EXT}`)
+      const scriptPath = path.join(hooksDir, `kanbai-activity${SCRIPT_EXT}`)
       const stat = fs.statSync(scriptPath)
       // Check owner executable bit (0o100) is set
       const mode = stat.mode & 0o777
@@ -94,13 +94,13 @@ describe('activityHooks', () => {
     it('le script contient les bonnes variables et la logique de hash', () => {
       ensureActivityHookScript()
 
-      const scriptPath = path.join(hooksDir, `mirehub-activity${SCRIPT_EXT}`)
+      const scriptPath = path.join(hooksDir, `kanbai-activity${SCRIPT_EXT}`)
       const content = fs.readFileSync(scriptPath, 'utf-8')
 
-      expect(content).toContain('MIREHUB_NL_QUERY')
+      expect(content).toContain('KANBAI_NL_QUERY')
       if (IS_MAC) {
         expect(content).toContain('#!/bin/bash')
-        expect(content).toContain('STATUS_DIR="$HOME/.mirehub/activity"')
+        expect(content).toContain('STATUS_DIR="$HOME/.kanbai/activity"')
         expect(content).toContain('md5')
         expect(content).toContain('STATUS="${1:-working}"')
       }
@@ -113,7 +113,7 @@ describe('activityHooks', () => {
     it('le script contient la logique de throttle pour le status working', () => {
       ensureActivityHookScript()
 
-      const scriptPath = path.join(hooksDir, `mirehub-activity${SCRIPT_EXT}`)
+      const scriptPath = path.join(hooksDir, `kanbai-activity${SCRIPT_EXT}`)
       const content = fs.readFileSync(scriptPath, 'utf-8')
 
       expect(content.toLowerCase()).toContain('working')
@@ -122,7 +122,7 @@ describe('activityHooks', () => {
 
     it('est idempotent (peut etre appele plusieurs fois)', () => {
       ensureActivityHookScript()
-      const scriptPath = path.join(hooksDir, `mirehub-activity${SCRIPT_EXT}`)
+      const scriptPath = path.join(hooksDir, `kanbai-activity${SCRIPT_EXT}`)
       const firstContent = fs.readFileSync(scriptPath, 'utf-8')
 
       ensureActivityHookScript()
@@ -133,13 +133,13 @@ describe('activityHooks', () => {
   })
 
   describe('ensureAutoApproveScript', () => {
-    it('en mode kanban seulement, contient le check MIREHUB_KANBAN_TASK_ID', () => {
+    it('en mode kanban seulement, contient le check KANBAI_KANBAN_TASK_ID', () => {
       ensureAutoApproveScript(false)
 
-      const scriptPath = path.join(hooksDir, `mirehub-autoapprove${SCRIPT_EXT}`)
+      const scriptPath = path.join(hooksDir, `kanbai-autoapprove${SCRIPT_EXT}`)
       const content = fs.readFileSync(scriptPath, 'utf-8')
 
-      expect(content).toContain('MIREHUB_KANBAN_TASK_ID')
+      expect(content).toContain('KANBAI_KANBAN_TASK_ID')
       expect(content).toContain('exit 0')
       expect(content).toContain('permissionDecision')
       expect(content).toContain('"allow"')
@@ -148,10 +148,10 @@ describe('activityHooks', () => {
     it('en mode global, ne contient pas le check kanban', () => {
       ensureAutoApproveScript(true)
 
-      const scriptPath = path.join(hooksDir, `mirehub-autoapprove${SCRIPT_EXT}`)
+      const scriptPath = path.join(hooksDir, `kanbai-autoapprove${SCRIPT_EXT}`)
       const content = fs.readFileSync(scriptPath, 'utf-8')
 
-      expect(content).not.toContain('[ -z "$MIREHUB_KANBAN_TASK_ID" ] && exit 0')
+      expect(content).not.toContain('[ -z "$KANBAI_KANBAN_TASK_ID" ] && exit 0')
       expect(content).toContain('Global auto-approve enabled')
       expect(content).toContain('permissionDecision')
     })
@@ -159,7 +159,7 @@ describe('activityHooks', () => {
     it.skipIf(IS_WIN)('le script est executable', () => {
       ensureAutoApproveScript()
 
-      const scriptPath = path.join(hooksDir, `mirehub-autoapprove${SCRIPT_EXT}`)
+      const scriptPath = path.join(hooksDir, `kanbai-autoapprove${SCRIPT_EXT}`)
       const stat = fs.statSync(scriptPath)
       const mode = stat.mode & 0o777
       expect(mode & 0o111).toBeGreaterThan(0)
@@ -205,8 +205,8 @@ describe('activityHooks', () => {
       } else {
         expect(content).toContain("decision: 'block'")
       }
-      expect(content).toContain('MIREHUB_KANBAN_TASK_ID')
-      expect(content).toContain('MIREHUB_KANBAN_FILE')
+      expect(content).toContain('KANBAI_KANBAN_TASK_ID')
+      expect(content).toContain('KANBAI_KANBAN_FILE')
     })
 
     it('contient la logique PENDING pour CTO et non-CTO', () => {
@@ -232,7 +232,7 @@ describe('activityHooks', () => {
       const content = fs.readFileSync(scriptPath, 'utf-8')
 
       expect(content).toContain('FAILED')
-      expect(content).toContain(`mirehub-activity${SCRIPT_EXT}`)
+      expect(content).toContain(`kanbai-activity${SCRIPT_EXT}`)
     })
   })
 
@@ -274,8 +274,8 @@ describe('activityHooks', () => {
       const preToolHooks = settings.hooks.PreToolUse as Array<{ hooks: Array<{ command: string }> }>
 
       const commands = preToolHooks.flatMap((h) => h.hooks.map((hk) => hk.command))
-      expect(commands.some((cmd: string) => cmd.includes(`mirehub-activity${SCRIPT_EXT}`) && cmd.includes('working'))).toBe(true)
-      expect(commands.some((cmd: string) => cmd.includes(`mirehub-autoapprove${SCRIPT_EXT}`))).toBe(true)
+      expect(commands.some((cmd: string) => cmd.includes(`kanbai-activity${SCRIPT_EXT}`) && cmd.includes('working'))).toBe(true)
+      expect(commands.some((cmd: string) => cmd.includes(`kanbai-autoapprove${SCRIPT_EXT}`))).toBe(true)
     })
 
     it('PermissionRequest contient le hook activity "ask"', () => {
@@ -289,7 +289,7 @@ describe('activityHooks', () => {
       const permHooks = settings.hooks.PermissionRequest as Array<{ hooks: Array<{ command: string }> }>
 
       const commands = permHooks.flatMap((h) => h.hooks.map((hk) => hk.command))
-      expect(commands.some((cmd: string) => cmd.includes(`mirehub-activity${SCRIPT_EXT}`) && cmd.includes('ask'))).toBe(true)
+      expect(commands.some((cmd: string) => cmd.includes(`kanbai-activity${SCRIPT_EXT}`) && cmd.includes('ask'))).toBe(true)
     })
 
     it('Stop contient kanban-done et activity done', () => {
@@ -304,7 +304,7 @@ describe('activityHooks', () => {
 
       const commands = stopHooks.flatMap((h) => h.hooks.map((hk) => hk.command))
       expect(commands.some((cmd: string) => cmd.includes(`kanban-done${SCRIPT_EXT}`))).toBe(true)
-      expect(commands.some((cmd: string) => cmd.includes(`mirehub-activity${SCRIPT_EXT}`) && cmd.includes('done'))).toBe(true)
+      expect(commands.some((cmd: string) => cmd.includes(`kanbai-activity${SCRIPT_EXT}`) && cmd.includes('done'))).toBe(true)
     })
 
     it('kanban-done est en premier dans Stop (avant activity done)', () => {
@@ -354,9 +354,9 @@ describe('activityHooks', () => {
       const preToolHooks = settings.hooks.PreToolUse as Array<{ matcher: string; hooks: Array<{ command: string }> }>
       expect(preToolHooks.some((h) => h.matcher === 'custom')).toBe(true)
 
-      // Mirehub hooks were added
+      // Kanbai hooks were added
       const commands = preToolHooks.flatMap((h) => h.hooks.map((hk) => hk.command))
-      expect(commands.some((cmd: string) => cmd.includes(`mirehub-activity${SCRIPT_EXT}`))).toBe(true)
+      expect(commands.some((cmd: string) => cmd.includes(`kanbai-activity${SCRIPT_EXT}`))).toBe(true)
 
       // Other settings are preserved
       expect(settings.otherSetting).toBe('preserved')
@@ -376,12 +376,12 @@ describe('activityHooks', () => {
       // Each hook type should have the exact number of entries, not duplicates
       const preToolHooks = settings.hooks.PreToolUse as Array<{ hooks: Array<{ command: string }> }>
       const activityWorkingCount = preToolHooks.filter((h) =>
-        h.hooks.some((hk) => hk.command.includes(`mirehub-activity${SCRIPT_EXT}`)),
+        h.hooks.some((hk) => hk.command.includes(`kanbai-activity${SCRIPT_EXT}`)),
       ).length
       expect(activityWorkingCount).toBe(1)
 
       const autoApproveCount = preToolHooks.filter((h) =>
-        h.hooks.some((hk) => hk.command.includes(`mirehub-autoapprove${SCRIPT_EXT}`)),
+        h.hooks.some((hk) => hk.command.includes(`kanbai-autoapprove${SCRIPT_EXT}`)),
       ).length
       expect(autoApproveCount).toBe(1)
 
@@ -410,8 +410,8 @@ describe('activityHooks', () => {
 
       installActivityHooks(projectPath)
 
-      expect(fs.existsSync(path.join(hooksDir, `mirehub-activity${SCRIPT_EXT}`))).toBe(true)
-      expect(fs.existsSync(path.join(hooksDir, `mirehub-autoapprove${SCRIPT_EXT}`))).toBe(true)
+      expect(fs.existsSync(path.join(hooksDir, `kanbai-activity${SCRIPT_EXT}`))).toBe(true)
+      expect(fs.existsSync(path.join(hooksDir, `kanbai-autoapprove${SCRIPT_EXT}`))).toBe(true)
       expect(fs.existsSync(path.join(hooksDir, `kanban-done${SCRIPT_EXT}`))).toBe(true)
     })
   })
@@ -423,7 +423,7 @@ describe('activityHooks', () => {
       expect(() => syncAllWorkspaceEnvHooks()).not.toThrow()
     })
 
-    it('itere les repertoires ~/.mirehub/envs/ et installe les hooks', () => {
+    it('itere les repertoires ~/.kanbai/envs/ et installe les hooks', () => {
       // Create fake env directories
       const env1 = path.join(envsDir, 'project-alpha')
       const env2 = path.join(envsDir, 'project-beta')

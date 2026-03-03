@@ -50,7 +50,7 @@ export function TerminalArea() {
       setEnvCwd(activeProject?.path || '')
       return
     }
-    window.mirehub.workspaceEnv.setup(activeWorkspace.name, wsProjects.map((p) => p.path), activeWorkspaceId)
+    window.kanbai.workspaceEnv.setup(activeWorkspace.name, wsProjects.map((p) => p.path), activeWorkspaceId)
       .then((result: { success: boolean; envPath?: string }) => {
         if (result?.success && result.envPath) {
           setEnvCwd(result.envPath)

@@ -12,34 +12,34 @@ import {
 
 /**
  * Ensures a Claude Stop hook exists to auto-update kanban task status.
- * The hook reads MIREHUB_KANBAN_TASK_ID / MIREHUB_KANBAN_FILE env vars
+ * The hook reads KANBAI_KANBAN_TASK_ID / KANBAI_KANBAN_FILE env vars
  * (only set on kanban sessions) and updates the kanban.json file.
  */
 function ensureKanbanHook(projectPath: string): void {
-  const hooksDir = path.join(projectPath, '.mirehub', 'hooks')
+  const hooksDir = path.join(projectPath, '.kanbai', 'hooks')
   if (!fs.existsSync(hooksDir)) {
     fs.mkdirSync(hooksDir, { recursive: true })
   }
 
   const hookScriptPath = path.join(hooksDir, 'kanban-done.sh')
   const hookScript = `#!/bin/bash
-# Mirehub - Kanban task completion hook (auto-generated)
+# Kanbai - Kanban task completion hook (auto-generated)
 # Checks the kanban ticket status and writes the appropriate activity status.
 # PENDING + CTO → auto-approve: revert to TODO (unblock CTO cycle)
 # PENDING + regular → activity "waiting" (double bell in Electron)
 # FAILED  → activity "failed"  (quad bell in Electron)
 # WORKING → interrupted, revert to TODO (renderer handles re-launch)
-# DONE    → activity "done" (already written by mirehub-activity.sh)
-ACTIVITY_SCRIPT="$HOME/.mirehub/hooks/mirehub-activity.sh"
+# DONE    → activity "done" (already written by kanbai-activity.sh)
+ACTIVITY_SCRIPT="$HOME/.kanbai/hooks/kanbai-activity.sh"
 
-[ -z "$MIREHUB_KANBAN_TASK_ID" ] && exit 0
-[ -z "$MIREHUB_KANBAN_FILE" ] && exit 0
+[ -z "$KANBAI_KANBAN_TASK_ID" ] && exit 0
+[ -z "$KANBAI_KANBAN_FILE" ] && exit 0
 
 # Read ticket status and isCtoTicket flag
 read -r TICKET_STATUS IS_CTO <<< $(node -e "
 const fs = require('fs');
-const file = process.env.MIREHUB_KANBAN_FILE;
-const taskId = process.env.MIREHUB_KANBAN_TASK_ID;
+const file = process.env.KANBAI_KANBAN_FILE;
+const taskId = process.env.KANBAI_KANBAN_TASK_ID;
 try {
   const tasks = JSON.parse(fs.readFileSync(file, 'utf-8'));
   const task = tasks.find(t => t.id === taskId);
@@ -53,8 +53,8 @@ case "$TICKET_STATUS" in
       # CTO auto-approve: set back to TODO to unblock the CTO cycle
       node -e "
 const fs = require('fs');
-const file = process.env.MIREHUB_KANBAN_FILE;
-const taskId = process.env.MIREHUB_KANBAN_TASK_ID;
+const file = process.env.KANBAI_KANBAN_FILE;
+const taskId = process.env.KANBAI_KANBAN_TASK_ID;
 try {
   const tasks = JSON.parse(fs.readFileSync(file, 'utf-8'));
   const task = tasks.find(t => t.id === taskId);
@@ -76,8 +76,8 @@ try {
     # Claude was interrupted — revert to TODO
     node -e "
 const fs = require('fs');
-const file = process.env.MIREHUB_KANBAN_FILE;
-const taskId = process.env.MIREHUB_KANBAN_TASK_ID;
+const file = process.env.KANBAI_KANBAN_FILE;
+const taskId = process.env.KANBAI_KANBAN_TASK_ID;
 try {
   const tasks = JSON.parse(fs.readFileSync(file, 'utf-8'));
   const task = tasks.find(t => t.id === taskId);
@@ -139,7 +139,7 @@ esac
 }
 
 function getAttachmentsDir(taskId: string): string {
-  const dir = path.join(os.homedir(), '.mirehub', 'kanban', 'attachments', taskId)
+  const dir = path.join(os.homedir(), '.kanbai', 'kanban', 'attachments', taskId)
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true })
   }
@@ -173,7 +173,7 @@ function getMimeType(filePath: string): string {
 }
 
 function ensureWorkspacesDir(projectPath: string): string {
-  const dir = path.join(projectPath, '.mirehub')
+  const dir = path.join(projectPath, '.kanbai')
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true })
   }
@@ -430,7 +430,7 @@ export function registerKanbanHandlers(ipcMain: IpcMain): void {
   ipcMain.handle(
     IPC_CHANNELS.KANBAN_CLEANUP_PROMPT,
     async (_event, { projectPath, taskId }: { projectPath: string; taskId: string }) => {
-      const dir = path.join(projectPath, '.mirehub')
+      const dir = path.join(projectPath, '.kanbai')
       const promptPath = path.join(dir, `.kanban-prompt-${taskId}.md`)
       try {
         if (fs.existsSync(promptPath)) {

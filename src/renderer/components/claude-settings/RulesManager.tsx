@@ -29,7 +29,7 @@ export function RulesManager({ projectPath }: Props) {
   const loadRef = useRef(state.load)
   useEffect(() => { loadRef.current = state.load })
   const handleSyncAiRules = useCallback(async () => {
-    await window.mirehub.claudeMemory.syncAiRules(projectPath)
+    await window.kanbai.claudeMemory.syncAiRules(projectPath)
     await loadRef.current()
   }, [projectPath])
 

@@ -6,7 +6,7 @@ import { Workspace, Project, AppSettings, KanbanTask, AutoClauderTemplate, Sessi
 import { createDefaultSettings } from '../../shared/constants/defaults'
 import { getDefaultShell } from '../../shared/platform'
 
-const DATA_DIR = path.join(os.homedir(), '.mirehub')
+const DATA_DIR = path.join(os.homedir(), '.kanbai')
 
 interface AppData {
   workspaces: Workspace[]
@@ -33,6 +33,7 @@ export class StorageService {
     if (_instance) return _instance
     // Auto-migrate from old data directories
     const OLD_DIRS = [
+      path.join(os.homedir(), '.mirehub'),
       path.join(os.homedir(), '.tasks'),
       path.join(os.homedir(), '.theone'),
     ]
@@ -47,9 +48,36 @@ export class StorageService {
     if (!fs.existsSync(DATA_DIR)) {
       fs.mkdirSync(DATA_DIR, { recursive: true })
     }
+    // Migrate per-project .mirehub/ directories to .kanbai/
+    this.migrateProjectDirs()
     this.dataPath = path.join(DATA_DIR, 'data.json')
     this.data = this.load()
     _instance = this // eslint-disable-line @typescript-eslint/no-this-alias
+  }
+
+  private migrateProjectDirs(): void {
+    const envsDir = path.join(DATA_DIR, 'envs')
+    if (!fs.existsSync(envsDir)) return
+    try {
+      const entries = fs.readdirSync(envsDir, { withFileTypes: true })
+      for (const entry of entries) {
+        if (!entry.isDirectory() && !entry.isSymbolicLink()) continue
+        const envPath = path.join(envsDir, entry.name)
+        let resolvedPath = envPath
+        try {
+          resolvedPath = fs.realpathSync(envPath)
+        } catch {
+          continue
+        }
+        const oldDir = path.join(resolvedPath, '.mirehub')
+        const newDir = path.join(resolvedPath, '.kanbai')
+        if (fs.existsSync(oldDir) && !fs.existsSync(newDir)) {
+          fs.renameSync(oldDir, newDir)
+        }
+      }
+    } catch {
+      // Non-blocking: migration failure should not prevent app startup
+    }
   }
 
   private load(): AppData {

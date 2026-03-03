@@ -23,8 +23,8 @@ export function ClaudeDefaultsLibrary({ onDeploySuccess }: Props) {
   const loadData = useCallback(async () => {
     try {
       const [p, s] = await Promise.all([
-        window.mirehub.claudeDefaults.profiles(),
-        window.mirehub.claudeDefaults.skills(),
+        window.kanbai.claudeDefaults.profiles(),
+        window.kanbai.claudeDefaults.skills(),
       ])
       setProfiles(p as DefaultProfile[])
       setSkills(s as DefaultSkill[])
@@ -37,7 +37,7 @@ export function ClaudeDefaultsLibrary({ onDeploySuccess }: Props) {
   const checkDeployed = useCallback(async () => {
     if (!activeProject) return
     try {
-      const result = await window.mirehub.claudeDefaults.checkDeployed(activeProject.path)
+      const result = await window.kanbai.claudeDefaults.checkDeployed(activeProject.path)
       setDeployedProfiles(result.deployedProfiles)
       setDeployedSkills(result.deployedSkills)
     } catch {
@@ -58,7 +58,7 @@ export function ClaudeDefaultsLibrary({ onDeploySuccess }: Props) {
     if (!activeProject) return
     setDeploying(profileId)
     try {
-      await window.mirehub.claudeDefaults.deployProfile(activeProject.path, profileId)
+      await window.kanbai.claudeDefaults.deployProfile(activeProject.path, profileId)
       setDeployedProfiles((prev) => [...prev, profileId])
       onDeploySuccess?.()
     } catch { /* ignore */ }
@@ -69,7 +69,7 @@ export function ClaudeDefaultsLibrary({ onDeploySuccess }: Props) {
     if (!activeProject) return
     setDeploying(skillId)
     try {
-      await window.mirehub.claudeDefaults.deploySkill(activeProject.path, skillId)
+      await window.kanbai.claudeDefaults.deploySkill(activeProject.path, skillId)
       setDeployedSkills((prev) => [...prev, skillId])
       onDeploySuccess?.()
     } catch { /* ignore */ }
@@ -82,14 +82,14 @@ export function ClaudeDefaultsLibrary({ onDeploySuccess }: Props) {
     for (const p of profiles) {
       if (!deployedProfiles.includes(p.id)) {
         try {
-          await window.mirehub.claudeDefaults.deployProfile(activeProject.path, p.id)
+          await window.kanbai.claudeDefaults.deployProfile(activeProject.path, p.id)
         } catch { /* continue */ }
       }
     }
     for (const s of skills) {
       if (!deployedSkills.includes(s.id)) {
         try {
-          await window.mirehub.claudeDefaults.deploySkill(activeProject.path, s.id)
+          await window.kanbai.claudeDefaults.deploySkill(activeProject.path, s.id)
         } catch { /* continue */ }
       }
     }

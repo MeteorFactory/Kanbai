@@ -55,7 +55,7 @@ export function PromptTemplates() {
   const loadTemplates = useCallback(async () => {
     setLoading(true)
     try {
-      const result = await window.mirehub.prompts.list()
+      const result = await window.kanbai.prompts.list()
       setTemplates(result)
     } catch {
       // Ignore
@@ -118,7 +118,7 @@ export function PromptTemplates() {
     const sessionId = findClaudeSession(tab.paneTree)
       || findAnyTerminalSession(tab.paneTree)
     if (sessionId) {
-      window.mirehub.terminal.write(sessionId, content + '\r')
+      window.kanbai.terminal.write(sessionId, content + '\r')
       useViewStore.getState().setViewMode('terminal')
       setSent(true)
       setTimeout(() => setSent(false), 2000)
@@ -163,7 +163,7 @@ export function PromptTemplates() {
     if (!name) return
 
     if (editingId) {
-      const updated = await window.mirehub.prompts.update({
+      const updated = await window.kanbai.prompts.update({
         id: editingId,
         name,
         content,
@@ -174,7 +174,7 @@ export function PromptTemplates() {
         setDraftContent(content)
       }
     } else {
-      const created = await window.mirehub.prompts.create({ name, content, category: formCategory })
+      const created = await window.kanbai.prompts.create({ name, content, category: formCategory })
       if (created) {
         setTemplates((prev) => [...prev, created])
         setSelectedId(created.id)
@@ -186,7 +186,7 @@ export function PromptTemplates() {
 
   const handleDelete = useCallback(async () => {
     if (!selectedTemplate) return
-    await window.mirehub.prompts.delete(selectedTemplate.id)
+    await window.kanbai.prompts.delete(selectedTemplate.id)
     setTemplates((prev) => prev.filter((t) => t.id !== selectedTemplate.id))
     setSelectedId(null)
     setDraftContent('')

@@ -35,5 +35,5 @@ Commandes utiles :
 screencapture /tmp/security-audit-screenshot.png
 
 # Activer la fenetre
-osascript -e 'tell application "Mirehub" to activate'
+osascript -e 'tell application "Kanbai" to activate'
 ```

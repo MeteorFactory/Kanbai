@@ -102,7 +102,7 @@ export function McpPanel({ mcpServers, settings, projectPath, onServersChange }:
     }
     const newServers = { ...mcpServers, [entry.id]: newServer }
     const newSettings = { ...settings, mcpServers: newServers }
-    await window.mirehub.project.writeClaudeSettings(projectPath, newSettings)
+    await window.kanbai.project.writeClaudeSettings(projectPath, newSettings)
     onServersChange(newServers, newSettings)
     setInstallingEntry(null)
     setInstallEnvValues({})
@@ -165,7 +165,7 @@ export function McpPanel({ mcpServers, settings, projectPath, onServersChange }:
 
     const newServers = { ...mcpServers, [mcpNewName.trim()]: newServer }
     const newSettings = { ...settings, mcpServers: newServers }
-    await window.mirehub.project.writeClaudeSettings(projectPath, newSettings)
+    await window.kanbai.project.writeClaudeSettings(projectPath, newSettings)
     onServersChange(newServers, newSettings)
     setMcpNewName('')
     setMcpNewTransport('stdio')
@@ -187,7 +187,7 @@ export function McpPanel({ mcpServers, settings, projectPath, onServersChange }:
     } else {
       delete newSettings.mcpServers
     }
-    await window.mirehub.project.writeClaudeSettings(projectPath, newSettings)
+    await window.kanbai.project.writeClaudeSettings(projectPath, newSettings)
     onServersChange(newServers, newSettings)
   }, [mcpServers, settings, projectPath, onServersChange])
 

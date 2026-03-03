@@ -52,7 +52,7 @@ function FileTreeNode({ entry, depth, sortField, onRename, onRefreshParent: _onR
   const loadChildren = useCallback(async () => {
     setLoading(true)
     try {
-      const entries = await window.mirehub.fs.readDir(entry.path)
+      const entries = await window.kanbai.fs.readDir(entry.path)
       setChildren(entries)
     } catch {
       setChildren([])
@@ -104,7 +104,7 @@ function FileTreeNode({ entry, depth, sortField, onRename, onRefreshParent: _onR
   }, [entry.path])
 
   const handleOpenInFinder = useCallback(() => {
-    window.mirehub.fs.openInFinder(entry.path)
+    window.kanbai.fs.openInFinder(entry.path)
   }, [entry.path])
 
   const handleCreateFile = useCallback(() => {
@@ -135,9 +135,9 @@ function FileTreeNode({ entry, depth, sortField, onRename, onRefreshParent: _onR
     const newPath = `${entry.path}/${trimmed}`
     try {
       if (isCreating === 'file') {
-        await window.mirehub.fs.writeFile(newPath, '')
+        await window.kanbai.fs.writeFile(newPath, '')
       } else {
-        await window.mirehub.fs.mkdir(newPath)
+        await window.kanbai.fs.mkdir(newPath)
       }
       await loadChildren()
     } catch (err) {
@@ -308,7 +308,7 @@ export function FileExplorer() {
   const refreshEntries = useCallback(async () => {
     if (!activeProject) return
     try {
-      const refreshed = await window.mirehub.fs.readDir(activeProject.path)
+      const refreshed = await window.kanbai.fs.readDir(activeProject.path)
       setEntries(refreshed)
     } catch {
       setEntries([])
@@ -322,7 +322,7 @@ export function FileExplorer() {
     }
 
     setLoading(true)
-    window.mirehub.fs
+    window.kanbai.fs
       .readDir(activeProject.path)
       .then(setEntries)
       .catch(() => setEntries([]))
@@ -335,7 +335,7 @@ export function FileExplorer() {
       parts[parts.length - 1] = newName
       const newPath = parts.join('/')
       try {
-        await window.mirehub.fs.rename(oldPath, newPath)
+        await window.kanbai.fs.rename(oldPath, newPath)
         await refreshEntries()
       } catch (err) {
         // eslint-disable-next-line no-console
@@ -360,9 +360,9 @@ export function FileExplorer() {
     const newPath = `${activeProject.path}/${trimmed}`
     try {
       if (isCreating === 'file') {
-        await window.mirehub.fs.writeFile(newPath, '')
+        await window.kanbai.fs.writeFile(newPath, '')
       } else {
-        await window.mirehub.fs.mkdir(newPath)
+        await window.kanbai.fs.mkdir(newPath)
       }
       await refreshEntries()
     } catch (err) {
@@ -393,7 +393,7 @@ export function FileExplorer() {
         },
         {
           label: 'Open in Finder',
-          action: () => window.mirehub.fs.openInFinder(activeProject.path),
+          action: () => window.kanbai.fs.openInFinder(activeProject.path),
         },
         { label: '', action: () => {}, separator: true },
         {

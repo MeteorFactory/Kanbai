@@ -56,7 +56,7 @@ type WorkspaceStore = WorkspaceState & WorkspaceActions
 async function getWorkspaceCwd(workspaceName: string, workspaceProjects: Project[], workspaceId?: string): Promise<string> {
   if (workspaceProjects.length === 0) return '~'
   const paths = workspaceProjects.map((p) => p.path)
-  const result = await window.mirehub.workspaceEnv.setup(workspaceName, paths, workspaceId)
+  const result = await window.kanbai.workspaceEnv.setup(workspaceName, paths, workspaceId)
   if (result?.success && result.envPath) {
     return result.envPath
   }
@@ -95,18 +95,18 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
   },
 
   loadWorkspaces: async () => {
-    const workspaces: Workspace[] = await window.mirehub.workspace.list()
-    const projects: Project[] = await window.mirehub.project.list()
+    const workspaces: Workspace[] = await window.kanbai.workspace.list()
+    const projects: Project[] = await window.kanbai.project.list()
     set({ workspaces, projects })
   },
 
   loadNamespaces: async () => {
-    const namespaces: Namespace[] = await window.mirehub.namespace.list()
+    const namespaces: Namespace[] = await window.kanbai.namespace.list()
     set({ namespaces })
   },
 
   createNamespace: async (name: string, color?: string) => {
-    const namespace = await window.mirehub.namespace.create({ name, color })
+    const namespace = await window.kanbai.namespace.create({ name, color })
     if (namespace) {
       set((state) => ({ namespaces: [...state.namespaces, namespace] }))
     }
@@ -114,7 +114,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
   },
 
   updateNamespace: async (id: string, data: Partial<Namespace>) => {
-    await window.mirehub.namespace.update({ id, ...data })
+    await window.kanbai.namespace.update({ id, ...data })
     set((state) => ({
       namespaces: state.namespaces.map((n) => (n.id === id ? { ...n, ...data } : n)),
     }))
@@ -124,7 +124,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
     const { namespaces, activeNamespaceId } = get()
     const ns = namespaces.find((n) => n.id === id)
     if (!ns || ns.isDefault) return
-    await window.mirehub.namespace.delete(id)
+    await window.kanbai.namespace.delete(id)
     const defaultNs = namespaces.find((n) => n.isDefault)!
     set((state) => ({
       namespaces: state.namespaces.filter((n) => n.id !== id),
@@ -150,7 +150,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
 
   createWorkspace: async (name: string, color?: string) => {
     const { activeNamespaceId } = get()
-    const workspace = await window.mirehub.workspace.create({
+    const workspace = await window.kanbai.workspace.create({
       name,
       color: color ?? '#89b4fa',
       namespaceId: activeNamespaceId ?? undefined,
@@ -164,7 +164,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
   },
 
   createWorkspaceFromFolder: async () => {
-    const dirPath = await window.mirehub.project.selectDir()
+    const dirPath = await window.kanbai.project.selectDir()
     if (!dirPath) return null
     return get().createWorkspaceFromPath(dirPath)
   },
@@ -172,7 +172,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
   createWorkspaceFromPath: async (dirPath: string, aiProvider?: AiProviderId) => {
     try {
       const folderName = dirPath.split(/[\\/]/).pop() || dirPath
-      const workspace = await window.mirehub.workspace.create({
+      const workspace = await window.kanbai.workspace.create({
         name: folderName,
         color: '#89b4fa',
       })
@@ -184,13 +184,13 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
 
       // Init .workspaces directory for local project data
       try {
-        await window.mirehub.workspaceDir.init(dirPath)
+        await window.kanbai.workspaceDir.init(dirPath)
       } catch {
         // Non-blocking
       }
 
       // Automatically add the selected folder as a project
-      const project: Project = await window.mirehub.project.add({
+      const project: Project = await window.kanbai.project.add({
         workspaceId: workspace.id,
         path: dirPath,
       })
@@ -201,7 +201,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
         }
 
         try {
-          const scanResult = await window.mirehub.project.scanClaude(dirPath)
+          const scanResult = await window.kanbai.project.scanClaude(dirPath)
           if (scanResult?.hasClaude) {
             project.hasClaude = true
           }
@@ -242,7 +242,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
   },
 
   createWorkspaceFromNew: async (projectName: string, aiProvider?: AiProviderId) => {
-    const parentDir = await window.mirehub.project.selectDir()
+    const parentDir = await window.kanbai.project.selectDir()
     if (!parentDir) return null
     return get().createWorkspaceFromNewInDir(projectName, parentDir, aiProvider)
   },
@@ -250,14 +250,14 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
   createWorkspaceFromNewInDir: async (projectName: string, parentDir: string, aiProvider?: AiProviderId) => {
     try {
       const projectPath = parentDir + '/' + projectName
-      const exists = await window.mirehub.fs.exists(projectPath)
+      const exists = await window.kanbai.fs.exists(projectPath)
       if (exists) return null
 
       // Create directory
-      await window.mirehub.fs.mkdir(projectPath)
+      await window.kanbai.fs.mkdir(projectPath)
 
       // Create workspace
-      const workspace = await window.mirehub.workspace.create({
+      const workspace = await window.kanbai.workspace.create({
         name: projectName,
         color: '#89b4fa',
       })
@@ -268,7 +268,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
       }))
 
       // Add project
-      const project: Project = await window.mirehub.project.add({
+      const project: Project = await window.kanbai.project.add({
         workspaceId: workspace.id,
         path: projectPath,
       })
@@ -309,7 +309,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
   },
 
   deleteWorkspace: async (id: string) => {
-    await window.mirehub.workspace.delete(id)
+    await window.kanbai.workspace.delete(id)
     set((state) => ({
       workspaces: state.workspaces.filter((w) => w.id !== id),
       projects: state.projects.filter((p) => p.workspaceId !== id),
@@ -318,11 +318,11 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
   },
 
   checkDeletedWorkspace: async (name: string) => {
-    return window.mirehub.workspace.checkDeleted(name)
+    return window.kanbai.workspace.checkDeleted(name)
   },
 
   restoreWorkspace: async (id: string) => {
-    const workspace = await window.mirehub.workspace.restore(id)
+    const workspace = await window.kanbai.workspace.restore(id)
     if (workspace) {
       // Reload everything to get the restored workspace and its projects
       await get().loadWorkspaces()
@@ -332,17 +332,17 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
   },
 
   updateWorkspace: async (id: string, data: Partial<Workspace>) => {
-    await window.mirehub.workspace.update({ id, ...data })
+    await window.kanbai.workspace.update({ id, ...data })
     set((state) => ({
       workspaces: state.workspaces.map((w) => (w.id === id ? { ...w, ...data } : w)),
     }))
   },
 
   addProject: async (workspaceId: string) => {
-    const dirPath = await window.mirehub.project.selectDir()
+    const dirPath = await window.kanbai.project.selectDir()
     if (!dirPath) return null
 
-    const project: Project = await window.mirehub.project.add({
+    const project: Project = await window.kanbai.project.add({
       workspaceId,
       path: dirPath,
     })
@@ -350,7 +350,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
     if (project) {
       // Scan for .claude folder after adding the project
       try {
-        const scanResult = await window.mirehub.project.scanClaude(dirPath)
+        const scanResult = await window.kanbai.project.scanClaude(dirPath)
         if (scanResult?.hasClaude) {
           project.hasClaude = true
         }
@@ -375,7 +375,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
 
   removeProject: async (id: string) => {
     const project = get().projects.find((p) => p.id === id)
-    await window.mirehub.project.remove(id)
+    await window.kanbai.project.remove(id)
     set((state) => ({
       projects: state.projects.filter((p) => p.id !== id),
       workspaces: state.workspaces.map((w) =>
@@ -399,8 +399,8 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
     const sourceWorkspaceId = project.workspaceId
 
     // Remove from source workspace, add to target workspace
-    await window.mirehub.project.remove(projectId)
-    const newProject = await window.mirehub.project.add({
+    await window.kanbai.project.remove(projectId)
+    const newProject = await window.kanbai.project.add({
       workspaceId: targetWorkspaceId,
       path: project.path,
     })
@@ -433,7 +433,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
     const project = get().projects.find((p) => p.id === projectId)
     if (!project) return
     try {
-      const result = await window.mirehub.project.scanClaude(project.path)
+      const result = await window.kanbai.project.scanClaude(project.path)
       const hasClaude = result?.hasClaude ?? false
       if (hasClaude !== project.hasClaude) {
         set((state) => ({
@@ -454,7 +454,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
     await Promise.allSettled(
       projects.map(async (p) => {
         try {
-          const result = await window.mirehub.project.scanClaude(p.path)
+          const result = await window.kanbai.project.scanClaude(p.path)
           const hasClaude = result?.hasClaude ?? false
           if (hasClaude !== p.hasClaude) {
             updates.push({ id: p.id, hasClaude })
@@ -482,9 +482,9 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
     await Promise.allSettled(
       wsProjects.map(async (p) => {
         try {
-          const result = await window.mirehub.project.scanClaude(p.path)
+          const result = await window.kanbai.project.scanClaude(p.path)
           const hasClaude = result?.hasClaude ?? false
-          const hasGit = await window.mirehub.fs.exists(p.path + '/.git')
+          const hasGit = await window.kanbai.fs.exists(p.path + '/.git')
           if (hasClaude !== p.hasClaude || hasGit !== (p.hasGit ?? false)) {
             updates.push({ id: p.id, hasClaude, hasGit })
           }
@@ -512,7 +512,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
     const workspaceProjects = projects.filter((p) => p.workspaceId === workspaceId)
     if (workspaceProjects.length === 0) return null
     const paths = workspaceProjects.map((p) => p.path)
-    const result = await window.mirehub.workspaceEnv.setup(workspace.name, paths, workspaceId)
+    const result = await window.kanbai.workspaceEnv.setup(workspace.name, paths, workspaceId)
     return result?.envPath ?? null
   },
 

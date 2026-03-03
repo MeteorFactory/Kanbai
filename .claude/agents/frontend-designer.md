@@ -29,6 +29,6 @@ Tu peux lancer l'application et verifier visuellement le rendu de tes composants
 4. **Analyser** : Lire le screenshot avec Read (multimodal) pour verifier le rendu
 5. **Comparer** avec les specifications et le design attendu
 6. **Interagir** si necessaire :
-   - `osascript -e 'tell application "Mirehub" to activate'`
+   - `osascript -e 'tell application "Kanbai" to activate'`
    - `osascript -e 'tell application "System Events" to click at {x, y}'`
 7. **Re-screenshot** apres interaction : `screencapture /tmp/design-after.png`

@@ -39,7 +39,7 @@ type ClaudeStore = ClaudeState & ClaudeActions
 function loadSessionHistory(): ClaudeSession[] {
   try {
     if (typeof localStorage === 'undefined') return []
-    const stored = localStorage.getItem('mirehub:claudeSessionHistory')
+    const stored = localStorage.getItem('kanbai:claudeSessionHistory')
     return stored ? JSON.parse(stored) : []
   } catch {
     return []
@@ -49,7 +49,7 @@ function loadSessionHistory(): ClaudeSession[] {
 function persistSessionHistory(history: ClaudeSession[]): void {
   try {
     if (typeof localStorage !== 'undefined') {
-      localStorage.setItem('mirehub:claudeSessionHistory', JSON.stringify(history))
+      localStorage.setItem('kanbai:claudeSessionHistory', JSON.stringify(history))
     }
   } catch { /* ignore in non-browser environments */ }
 }
@@ -75,7 +75,7 @@ export const useClaudeStore = create<ClaudeStore>((set, get) => ({
 
   startSession: async (projectId, projectPath, terminalId, prompt, loopMode, loopDelay) => {
     try {
-      const session: ClaudeSession = await window.mirehub.claude.start({
+      const session: ClaudeSession = await window.kanbai.claude.start({
         projectId,
         projectPath,
         terminalId,
@@ -92,7 +92,7 @@ export const useClaudeStore = create<ClaudeStore>((set, get) => ({
 
   stopSession: async (sessionId) => {
     const session = get().sessions.find((s) => s.id === sessionId)
-    await window.mirehub.claude.stop(sessionId)
+    await window.kanbai.claude.stop(sessionId)
     set((state) => ({
       sessions: state.sessions.filter((s) => s.id !== sessionId),
     }))
@@ -123,7 +123,7 @@ export const useClaudeStore = create<ClaudeStore>((set, get) => ({
 
   refreshSessions: async () => {
     // The status endpoint returns all active sessions
-    const sessions: ClaudeSession[] = await (window.mirehub.claude as { status?: () => Promise<ClaudeSession[]> }).status?.() ?? []
+    const sessions: ClaudeSession[] = await (window.kanbai.claude as { status?: () => Promise<ClaudeSession[]> }).status?.() ?? []
     set({ sessions })
   },
 
@@ -164,7 +164,7 @@ export const useClaudeStore = create<ClaudeStore>((set, get) => ({
 
   initListeners: () => {
     // Listen for file-based activity events from hooks
-    const unsubActivity = window.mirehub.claude.onActivity(async (data: { path: string; status: string }) => {
+    const unsubActivity = window.kanbai.claude.onActivity(async (data: { path: string; status: string }) => {
       // Map the project path to a workspace (lazy import to avoid circular dependency)
       const { useWorkspaceStore } = await import('./workspaceStore')
       const { projects } = useWorkspaceStore.getState()
@@ -178,9 +178,9 @@ export const useClaudeStore = create<ClaudeStore>((set, get) => ({
         }
       }
 
-      // Check if path is a workspace env (e.g. ~/.mirehub/envs/WorkspaceName/...)
+      // Check if path is a workspace env (e.g. ~/.kanbai/envs/WorkspaceName/...)
       if (!workspaceId) {
-        const envsMarker = '/.mirehub/envs/'
+        const envsMarker = '/.kanbai/envs/'
         const envsIdx = data.path.indexOf(envsMarker)
         if (envsIdx >= 0) {
           const afterEnvs = data.path.slice(envsIdx + envsMarker.length)
@@ -247,7 +247,7 @@ export const useClaudeStore = create<ClaudeStore>((set, get) => ({
       }
     })
 
-    const unsub = window.mirehub.claude.onSessionEnd(async (data: { id: string; status: string }) => {
+    const unsub = window.kanbai.claude.onSessionEnd(async (data: { id: string; status: string }) => {
       // Find the session before updating to get projectId
       const session = get().sessions.find((s) => s.id === data.id)
 

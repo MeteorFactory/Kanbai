@@ -5,7 +5,7 @@ import os from 'os'
 import { createMockIpcMain } from '../mocks/electron'
 import { IS_WIN } from '../helpers/platform'
 
-const TEST_DIR = path.join(os.tmpdir(), `.mirehub-ssh-ipc-test-${process.pid}-${Date.now()}`)
+const TEST_DIR = path.join(os.tmpdir(), `.kanbai-ssh-ipc-test-${process.pid}-${Date.now()}`)
 const sshDir = path.join(TEST_DIR, '.ssh')
 
 // Mock os.homedir to use temp directory

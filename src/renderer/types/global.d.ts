@@ -1,7 +1,7 @@
-import type { MirehubAPI } from '../../preload/index'
+import type { KanbaiAPI } from '../../preload/index'
 
 declare global {
   interface Window {
-    mirehub: MirehubAPI
+    kanbai: KanbaiAPI
   }
 }

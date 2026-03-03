@@ -38,7 +38,7 @@ export function PermissionsTab({
   const denyList = useMemo(() => permsObj.deny ?? [], [permsObj])
   const askList = useMemo(() => permsObj.ask ?? [], [permsObj])
   const additionalDirs = useMemo(() => permsObj.additionalDirectories ?? [], [permsObj])
-  const permissionMode = permsObj.defaultMode ?? (settings as Record<string, unknown>)._mirehubMode as string ?? 'default'
+  const permissionMode = permsObj.defaultMode ?? (settings as Record<string, unknown>)._kanbaiMode as string ?? 'default'
   const disableBypass = permsObj.disableBypassPermissionsMode ?? false
 
   // Generate MCP tool names from mcpServerKeys
@@ -52,7 +52,7 @@ export function PermissionsTab({
   const handleModeChange = useCallback((mode: string) => {
     // Migrate to permissions.defaultMode
     const newSettings = { ...settings }
-    delete (newSettings as Record<string, unknown>)._mirehubMode
+    delete (newSettings as Record<string, unknown>)._kanbaiMode
     const newPerms = { ...permsObj, defaultMode: mode }
     newSettings.permissions = newPerms
     onSettingsChange(newSettings)

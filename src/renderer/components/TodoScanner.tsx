@@ -38,7 +38,7 @@ export function TodoScanner() {
   // Load ignored TODOs
   useEffect(() => {
     if (!activeProject) return
-    window.mirehub.project.loadIgnoredTodos(activeProject.path).then((keys) => {
+    window.kanbai.project.loadIgnoredTodos(activeProject.path).then((keys) => {
       setIgnoredKeys(new Set(keys))
     }).catch(() => {})
   }, [activeProject])
@@ -47,7 +47,7 @@ export function TodoScanner() {
     if (!activeProject) return
     setLoading(true)
     try {
-      const results = await window.mirehub.project.scanTodos(activeProject.path)
+      const results = await window.kanbai.project.scanTodos(activeProject.path)
       setEntries(results)
     } catch {
       setEntries([])
@@ -137,7 +137,7 @@ export function TodoScanner() {
     }
     setIgnoredKeys(newIgnored)
     setSelectedEntries(new Set())
-    await window.mirehub.project.saveIgnoredTodos(activeProject.path, [...newIgnored])
+    await window.kanbai.project.saveIgnoredTodos(activeProject.path, [...newIgnored])
   }, [activeProject, selectedEntries, ignoredKeys])
 
   const handleUnignore = useCallback(async (entry: TodoEntry) => {
@@ -146,7 +146,7 @@ export function TodoScanner() {
     const newIgnored = new Set(ignoredKeys)
     newIgnored.delete(key)
     setIgnoredKeys(newIgnored)
-    await window.mirehub.project.saveIgnoredTodos(activeProject.path, [...newIgnored])
+    await window.kanbai.project.saveIgnoredTodos(activeProject.path, [...newIgnored])
   }, [activeProject, ignoredKeys])
 
   const handleCreateTickets = useCallback(async () => {

@@ -6,7 +6,7 @@ import { app, BrowserWindow, Notification } from 'electron'
 import { StorageService } from './storage'
 import { IS_WIN, getPlaySoundCommand } from '../../shared/platform'
 
-const ASSETS_DIR = path.join(os.homedir(), '.mirehub', 'assets')
+const ASSETS_DIR = path.join(os.homedir(), '.kanbai', 'assets')
 const BELL_WAV_PATH = path.join(ASSETS_DIR, 'bell.wav')
 
 const storage = new StorageService()

@@ -84,7 +84,7 @@ export function AutoClauder() {
       if (!template) return
       setApplying(true)
       try {
-        await window.mirehub.settings.set({
+        await window.kanbai.settings.set({
           autoClauderEnabled: true,
           defaultAutoClauderTemplateId: template.id,
         })

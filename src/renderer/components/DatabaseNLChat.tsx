@@ -68,7 +68,7 @@ export function DatabaseNLChat({
   const handleCancel = useCallback(async () => {
     if (!connectionId) return
     try {
-      await window.mirehub.database.nlCancel(connectionId)
+      await window.kanbai.database.nlCancel(connectionId)
     } catch {
       // Ignore cancel errors
     }
@@ -105,7 +105,7 @@ export function DatabaseNLChat({
       const dbProvider = activeProject?.aiDefaults?.database ?? activeProject?.aiProvider ?? 'claude'
 
       // Step 1: Generate SQL
-      const genResponse = await window.mirehub.database.nlGenerateSql(
+      const genResponse = await window.kanbai.database.nlGenerateSql(
         connectionId,
         userQuestion,
         permissions,
@@ -135,7 +135,7 @@ export function DatabaseNLChat({
           { role: 'assistant', content: genResponse.explanation || '', sql },
         ]
 
-        const retryResponse = await window.mirehub.database.nlGenerateSql(
+        const retryResponse = await window.kanbai.database.nlGenerateSql(
           connectionId,
           `The previous query failed with error: "${result.error}". Fix the SQL query. Original question: ${userQuestion}`,
           permissions,
@@ -162,7 +162,7 @@ export function DatabaseNLChat({
       }
 
       // Step 3: Interpret results (human answer or refinement)
-      const interpretResponse = await window.mirehub.database.nlInterpret({
+      const interpretResponse = await window.kanbai.database.nlInterpret({
         connectionId,
         question: userQuestion,
         sql,
@@ -181,7 +181,7 @@ export function DatabaseNLChat({
         if (refinedResult && !refinedResult.error) {
           sql = refinedSql
 
-          const reinterpret = await window.mirehub.database.nlInterpret({
+          const reinterpret = await window.kanbai.database.nlInterpret({
             connectionId,
             question: userQuestion,
             sql: refinedSql,

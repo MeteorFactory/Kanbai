@@ -43,7 +43,7 @@ screencapture /tmp/integration-before.png
 ### 4. Interaction
 ```bash
 # Activer la fenetre de l'app
-osascript -e 'tell application "Mirehub" to activate'
+osascript -e 'tell application "Kanbai" to activate'
 
 # Simuler un clic a une position (x, y)
 osascript -e 'tell application "System Events" to click at {x, y}'

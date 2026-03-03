@@ -169,9 +169,9 @@ const [ticketModalOpen, setTicketModalOpen] = useState(false)
 
 - **Ouvrir fichier**: Clic sur un finding appelle `openFile(fullPath, line)` (pattern TodoScanner)
 - **Selection findings**: Checkboxes individuelles + "selectionner tout le fichier"
-- **Creation tickets**: Ouvre modal inline, appelle `window.mirehub.analysis.createTickets()`
+- **Creation tickets**: Ouvre modal inline, appelle `window.kanbai.analysis.createTickets()`
 - **Detection outils**: Au montage du composant (`useEffect` sur `activeProject`)
-- **Progression**: `useEffect` avec `window.mirehub.analysis.onProgress()`, cleanup au unmount
+- **Progression**: `useEffect` avec `window.kanbai.analysis.onProgress()`, cleanup au unmount
 
 ## 4. Plan CSS (`src/renderer/styles/analysis.css`)
 

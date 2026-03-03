@@ -59,7 +59,7 @@ export function GlobalSearch() {
 
       setSearching(true)
       try {
-        const r = await window.mirehub.fs.search(
+        const r = await window.kanbai.fs.search(
           activeProject.path,
           searchQuery,
           undefined,

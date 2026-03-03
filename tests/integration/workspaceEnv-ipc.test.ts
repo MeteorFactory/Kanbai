@@ -4,7 +4,7 @@ import path from 'path'
 import os from 'os'
 import { createMockIpcMain } from '../mocks/electron'
 
-const TEST_DIR = path.join(os.tmpdir(), `.mirehub-wsenv-ipc-test-${process.pid}-${Date.now()}`)
+const TEST_DIR = path.join(os.tmpdir(), `.kanbai-wsenv-ipc-test-${process.pid}-${Date.now()}`)
 const projectDir1 = path.join(TEST_DIR, 'projects', 'project-alpha')
 const projectDir2 = path.join(TEST_DIR, 'projects', 'project-beta')
 
@@ -27,8 +27,8 @@ describe('WorkspaceEnv IPC Handlers', () => {
     vi.resetModules()
 
     // Clean up
-    if (fs.existsSync(path.join(TEST_DIR, '.mirehub', 'envs'))) {
-      fs.rmSync(path.join(TEST_DIR, '.mirehub', 'envs'), { recursive: true, force: true })
+    if (fs.existsSync(path.join(TEST_DIR, '.kanbai', 'envs'))) {
+      fs.rmSync(path.join(TEST_DIR, '.kanbai', 'envs'), { recursive: true, force: true })
     }
 
     // Recreate clean project directories (remove and remake to clear stale Claude files)
@@ -48,8 +48,8 @@ describe('WorkspaceEnv IPC Handlers', () => {
   })
 
   afterEach(() => {
-    if (fs.existsSync(path.join(TEST_DIR, '.mirehub'))) {
-      fs.rmSync(path.join(TEST_DIR, '.mirehub'), { recursive: true, force: true })
+    if (fs.existsSync(path.join(TEST_DIR, '.kanbai'))) {
+      fs.rmSync(path.join(TEST_DIR, '.kanbai'), { recursive: true, force: true })
     }
   })
 
@@ -96,7 +96,7 @@ describe('WorkspaceEnv IPC Handlers', () => {
 
       expect(result.success).toBe(true)
       expect(result.envPath).toContain('Mon Projet')
-      expect(result.envPath).toContain(path.join('.mirehub', 'envs'))
+      expect(result.envPath).toContain(path.join('.kanbai', 'envs'))
     })
 
     it('sanitize les caracteres speciaux dans le nom', async () => {
@@ -109,7 +109,7 @@ describe('WorkspaceEnv IPC Handlers', () => {
       // Les caracteres speciaux doivent etre remplaces par _
       const dirName = path.basename(result.envPath)
       expect(dirName).toBe('test_invalid_name_')
-      expect(result.envPath).toContain(path.join('.mirehub', 'envs'))
+      expect(result.envPath).toContain(path.join('.kanbai', 'envs'))
     })
 
     it('gere les noms de dossiers dupliques', async () => {

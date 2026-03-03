@@ -1,12 +1,12 @@
 /* ========================================
-   Mirehub — Static Site Scripts
+   Kanbai — Static Site Scripts
    ======================================== */
 
 (function () {
   'use strict';
 
   // --- Language System ---
-  var LANG_KEY = 'mirehub-lang';
+  var LANG_KEY = 'kanbai-lang';
   var html = document.documentElement;
 
   function setLang(lang) {
@@ -145,16 +145,16 @@
       en: 'Stop juggling<br>your tools. <em class="hero-claudez">Claude this.</em>',
       subtitleFr: 'Ecrivez un ticket. Claude le resout. Vous reviewez. C\u2019est tout.',
       subtitleEn: 'Write a ticket. Claude solves it. You review. That\u2019s it.',
-      descFr: 'Le Kanban de Mirehub transforme chaque tache en action concrete pour Claude AI. Il code, il met a jour le ticket en temps reel, vous gardez le controle. Plus Terminal, Git et 8 autres outils \u2014 dans une seule fenetre.',
-      descEn: 'Mirehub\u2019s Kanban turns every task into a concrete action for Claude AI. It codes, it updates the ticket in real time, you stay in control. Plus Terminal, Git and 8 more tools \u2014 in a single window.'
+      descFr: 'Le Kanban de Kanbai transforme chaque tache en action concrete pour Claude AI. Il code, il met a jour le ticket en temps reel, vous gardez le controle. Plus Terminal, Git et 8 autres outils \u2014 dans une seule fenetre.',
+      descEn: 'Kanbai\u2019s Kanban turns every task into a concrete action for Claude AI. It codes, it updates the ticket in real time, you stay in control. Plus Terminal, Git and 8 more tools \u2014 in a single window.'
     },
     {
       fr: 'Arretez de coder<br>a la main. <em class="hero-codex">Codex.</em>',
       en: 'Stop hand-coding<br>everything. <em class="hero-codex">Codex.</em>',
       subtitleFr: 'Decrivez la tache. Codex genere le code. Vous mergez.',
       subtitleEn: 'Describe the task. Codex generates the code. You merge.',
-      descFr: 'Mirehub connecte OpenAI Codex a votre workflow. Chaque ticket devient du code fonctionnel \u2014 revise, teste, pret a merger. Terminal, Git et 8 autres outils dans une seule fenetre.',
-      descEn: 'Mirehub connects OpenAI Codex to your workflow. Every ticket becomes working code \u2014 reviewed, tested, ready to merge. Terminal, Git and 8 more tools in a single window.'
+      descFr: 'Kanbai connecte OpenAI Codex a votre workflow. Chaque ticket devient du code fonctionnel \u2014 revise, teste, pret a merger. Terminal, Git et 8 autres outils dans une seule fenetre.',
+      descEn: 'Kanbai connects OpenAI Codex to your workflow. Every ticket becomes working code \u2014 reviewed, tested, ready to merge. Terminal, Git and 8 more tools in a single window.'
     }
   ];
 
@@ -302,8 +302,8 @@
   }
 
   // --- GitHub Release (dynamic download) ---
-  var GITHUB_REPO = 'AntonyCanut/Mirehub';
-  var RELEASE_CACHE_KEY = 'mirehub-release';
+  var GITHUB_REPO = 'AntonyCanut/Kanbai';
+  var RELEASE_CACHE_KEY = 'kanbai-release';
   var RELEASE_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 
   function formatBytes(bytes) {

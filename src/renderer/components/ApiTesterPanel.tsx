@@ -96,7 +96,7 @@ export function ApiTesterPanel() {
   useEffect(() => {
     if (!activeProject) return
     setLoading(true)
-    window.mirehub.api.load(activeProject.path).then((loaded) => {
+    window.kanbai.api.load(activeProject.path).then((loaded) => {
       setData(loaded)
       setLoading(false)
     })
@@ -108,7 +108,7 @@ export function ApiTesterPanel() {
       if (!activeProject) return
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
       saveTimerRef.current = setTimeout(() => {
-        window.mirehub.api.save(activeProject.path, newData)
+        window.kanbai.api.save(activeProject.path, newData)
       }, 500)
     },
     [activeProject],
@@ -171,7 +171,7 @@ export function ApiTesterPanel() {
     setResponse(null)
     setTestResults([])
     try {
-      const result = await window.mirehub.api.execute(
+      const result = await window.kanbai.api.execute(
         {
           method: request.method,
           url: request.url,
@@ -324,15 +324,15 @@ export function ApiTesterPanel() {
 
   // Import/Export
   const handleExport = useCallback(async () => {
-    await window.mirehub.api.export(data)
+    await window.kanbai.api.export(data)
   }, [data])
 
   const handleImport = useCallback(async () => {
-    const result = await window.mirehub.api.import()
+    const result = await window.kanbai.api.import()
     if (result.success && result.data) {
       setData(result.data)
       if (activeProject) {
-        window.mirehub.api.save(activeProject.path, result.data)
+        window.kanbai.api.save(activeProject.path, result.data)
       }
     }
   }, [activeProject])

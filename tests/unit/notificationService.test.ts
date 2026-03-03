@@ -3,7 +3,7 @@ import path from 'path'
 import os from 'os'
 import fs from 'fs'
 
-const TEST_DIR = path.join(os.tmpdir(), `.mirehub-notif-test-${process.pid}-${Date.now()}`)
+const TEST_DIR = path.join(os.tmpdir(), `.kanbai-notif-test-${process.pid}-${Date.now()}`)
 
 // Mock os.homedir to isolate filesystem operations
 vi.mock('os', async () => {
@@ -53,7 +53,7 @@ const {
 const { Notification } = await import('electron')
 
 describe('notificationService', () => {
-  const assetsDir = path.join(TEST_DIR, '.mirehub', 'assets')
+  const assetsDir = path.join(TEST_DIR, '.kanbai', 'assets')
   const bellWavPath = path.join(assetsDir, 'bell.wav')
 
   beforeEach(() => {

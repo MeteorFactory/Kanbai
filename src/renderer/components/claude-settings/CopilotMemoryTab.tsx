@@ -33,8 +33,8 @@ export function CopilotMemoryTab({ projectPath }: Props) {
 
   const load = useCallback(async () => {
     const [proj, global] = await Promise.all([
-      window.mirehub.copilotMemory.readInstructions(projectPath),
-      window.mirehub.copilotMemory.readGlobalInstructions(),
+      window.kanbai.copilotMemory.readInstructions(projectPath),
+      window.kanbai.copilotMemory.readGlobalInstructions(),
     ])
     setProjectMd(proj)
     setGlobalMd(global)
@@ -43,22 +43,22 @@ export function CopilotMemoryTab({ projectPath }: Props) {
   useEffect(() => { load() }, [load])
 
   const handleSaveProject = useCallback(async (content: string) => {
-    await window.mirehub.copilotMemory.writeInstructions(projectPath, content)
+    await window.kanbai.copilotMemory.writeInstructions(projectPath, content)
     setProjectMd(content)
   }, [projectPath])
 
   const handleSaveGlobal = useCallback(async (content: string) => {
-    await window.mirehub.copilotMemory.writeGlobalInstructions(content)
+    await window.kanbai.copilotMemory.writeGlobalInstructions(content)
     setGlobalMd(content)
   }, [])
 
   const handleCreateProject = useCallback(async () => {
-    await window.mirehub.copilotMemory.writeInstructions(projectPath, PROJECT_TEMPLATE)
+    await window.kanbai.copilotMemory.writeInstructions(projectPath, PROJECT_TEMPLATE)
     setProjectMd(PROJECT_TEMPLATE)
   }, [projectPath])
 
   const handleCreateGlobal = useCallback(async () => {
-    await window.mirehub.copilotMemory.writeGlobalInstructions(GLOBAL_TEMPLATE)
+    await window.kanbai.copilotMemory.writeGlobalInstructions(GLOBAL_TEMPLATE)
     setGlobalMd(GLOBAL_TEMPLATE)
   }, [])
 

@@ -68,7 +68,7 @@ export function App() {
 
   // Check for saved session on startup
   useEffect(() => {
-    window.mirehub.session.load().then((session) => {
+    window.kanbai.session.load().then((session) => {
       if (session && session.tabs.length > 0) {
         setPendingSession(session)
       }
@@ -78,7 +78,7 @@ export function App() {
 
   // Load tutorial state and show welcome on first launch
   useEffect(() => {
-    window.mirehub.settings.get().then((s: AppSettings) => {
+    window.kanbai.settings.get().then((s: AppSettings) => {
       const completed = s.tutorialCompleted ?? false
       const seen = s.tutorialSeenSections ?? []
       setTutorialCompleted(completed)
@@ -109,14 +109,14 @@ export function App() {
       }
     }
 
-    window.mirehub.settings.get().then((s: AppSettings) => {
+    window.kanbai.settings.get().then((s: AppSettings) => {
       applyTheme(s?.theme || 'dark')
     })
 
     // Listen for system theme changes when using 'system' mode
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
     const handleSystemThemeChange = () => {
-      window.mirehub.settings.get().then((s: AppSettings) => {
+      window.kanbai.settings.get().then((s: AppSettings) => {
         if (s?.theme === 'system') {
           applyTheme('system')
         }
@@ -154,7 +154,7 @@ export function App() {
           savedAt: Date.now(),
         }
         // Use sendBeacon-style sync save via IPC
-        window.mirehub.session.save(session)
+        window.kanbai.session.save(session)
       }
     }
 
@@ -179,7 +179,7 @@ export function App() {
 
   // Listen for menu actions from main process
   useEffect(() => {
-    const unsubscribe = window.mirehub.onMenuAction((action: string) => {
+    const unsubscribe = window.kanbai.onMenuAction((action: string) => {
       if (action.startsWith('view:')) {
         const view = action.replace('view:', '')
         setViewMode(view as typeof viewMode)
@@ -191,13 +191,13 @@ export function App() {
         setCommandPaletteOpen(false)
       } else if (action === 'workspace:new') {
         // Dispatch a custom event for the sidebar to handle
-        window.dispatchEvent(new CustomEvent('mirehub:menu-action', { detail: action }))
+        window.dispatchEvent(new CustomEvent('kanbai:menu-action', { detail: action }))
       } else if (action === 'workspace:newFromFolder') {
-        window.dispatchEvent(new CustomEvent('mirehub:menu-action', { detail: action }))
+        window.dispatchEvent(new CustomEvent('kanbai:menu-action', { detail: action }))
       } else if (action === 'workspace:import') {
-        window.dispatchEvent(new CustomEvent('mirehub:menu-action', { detail: action }))
+        window.dispatchEvent(new CustomEvent('kanbai:menu-action', { detail: action }))
       } else if (action === 'workspace:export') {
-        window.dispatchEvent(new CustomEvent('mirehub:menu-action', { detail: action }))
+        window.dispatchEvent(new CustomEvent('kanbai:menu-action', { detail: action }))
       }
     })
     return unsubscribe
@@ -260,12 +260,12 @@ export function App() {
       setActiveProject(pendingSession.activeProjectId)
     }
 
-    window.mirehub.session.clear()
+    window.kanbai.session.clear()
     setPendingSession(null)
   }, [pendingSession])
 
   const handleClear = useCallback(() => {
-    window.mirehub.session.clear()
+    window.kanbai.session.clear()
     setPendingSession(null)
   }, [])
 
@@ -279,13 +279,13 @@ export function App() {
     const updated = [...tutorialSeenSections, tutorialSection]
     setTutorialSeenSections(updated)
     setTutorialSection(null)
-    window.mirehub.settings.set({ tutorialSeenSections: updated })
+    window.kanbai.settings.set({ tutorialSeenSections: updated })
   }, [tutorialSection, tutorialSeenSections])
 
   const handleTutorialDismissAll = useCallback(() => {
     setTutorialSection(null)
     setTutorialCompleted(true)
-    window.mirehub.settings.set({ tutorialCompleted: true })
+    window.kanbai.settings.set({ tutorialCompleted: true })
   }, [])
 
   // Sidebar resize handlers

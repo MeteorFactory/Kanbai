@@ -147,7 +147,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
     const cached = get().backgroundTasks[workspaceId]
     set({ isLoading: true, currentWorkspaceId: workspaceId, ...(cached ? { tasks: cached } : {}) })
     try {
-      const tasks: KanbanTask[] = await window.mirehub.kanban.list(workspaceId)
+      const tasks: KanbanTask[] = await window.kanbai.kanban.list(workspaceId)
       set({ tasks })
 
       // One-at-a-time scheduling: resume a WORKING without terminal, or pick next TODO
@@ -183,7 +183,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
     const { currentWorkspaceId, tasks: oldTasks, kanbanTabIds } = get()
     if (!currentWorkspaceId) return
     try {
-      const newTasks: KanbanTask[] = await window.mirehub.kanban.list(currentWorkspaceId)
+      const newTasks: KanbanTask[] = await window.kanbai.kanban.list(currentWorkspaceId)
 
       let taskFinished = false
       const tabsToClose: string[] = []
@@ -192,7 +192,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
       let autoCloseEnabled = false
       let autoCloseCtoEnabled = true
       try {
-        const settings = await window.mirehub.settings.get()
+        const settings = await window.kanbai.settings.get()
         autoCloseEnabled = settings.autoCloseCompletedTerminals ?? false
         autoCloseCtoEnabled = settings.autoCloseCtoTerminals ?? true
       } catch { /* default to false / true */ }
@@ -219,7 +219,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
         // CTO auto-approve: when a CTO-mode ticket transitions to PENDING, auto-set to TODO
         if (newTask.status === 'PENDING' && isCtoMode) {
           // Auto-approve by setting to TODO — unblocks the CTO cycle
-          window.mirehub.kanban.update({
+          window.kanbai.kanban.update({
             id: newTask.id,
             status: 'TODO',
             workspaceId: currentWorkspaceId!,
@@ -336,7 +336,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
   },
 
   createTask: async (workspaceId, title, description, priority, targetProjectId?, isCtoTicket?, labels?, aiProvider?) => {
-    const task: KanbanTask = await window.mirehub.kanban.create({
+    const task: KanbanTask = await window.kanbai.kanban.create({
       workspaceId,
       targetProjectId,
       title,
@@ -361,7 +361,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
   updateTaskStatus: async (taskId, status) => {
     const { currentWorkspaceId } = get()
     if (!currentWorkspaceId) return
-    await window.mirehub.kanban.update({ id: taskId, status, workspaceId: currentWorkspaceId })
+    await window.kanbai.kanban.update({ id: taskId, status, workspaceId: currentWorkspaceId })
     set((state) => ({
       tasks: state.tasks.map((t) => (t.id === taskId ? { ...t, status, updatedAt: Date.now() } : t)),
     }))
@@ -370,7 +370,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
   updateTask: async (taskId, data) => {
     const { currentWorkspaceId } = get()
     if (!currentWorkspaceId) return
-    await window.mirehub.kanban.update({ id: taskId, ...data, workspaceId: currentWorkspaceId })
+    await window.kanbai.kanban.update({ id: taskId, ...data, workspaceId: currentWorkspaceId })
     set((state) => ({
       tasks: state.tasks.map((t) => (t.id === taskId ? { ...t, ...data, updatedAt: Date.now() } : t)),
     }))
@@ -379,7 +379,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
   deleteTask: async (taskId) => {
     const { currentWorkspaceId } = get()
     if (!currentWorkspaceId) return
-    await window.mirehub.kanban.delete(taskId, currentWorkspaceId)
+    await window.kanbai.kanban.delete(taskId, currentWorkspaceId)
     set((state) => ({
       tasks: state.tasks.filter((t) => t.id !== taskId),
     }))
@@ -388,7 +388,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
   duplicateTask: async (task) => {
     const { currentWorkspaceId } = get()
     if (!currentWorkspaceId) return
-    const newTask: KanbanTask = await window.mirehub.kanban.create({
+    const newTask: KanbanTask = await window.kanbai.kanban.create({
       workspaceId: currentWorkspaceId,
       targetProjectId: task.targetProjectId,
       title: `Copy of ${task.title}`,
@@ -451,7 +451,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
         const workspace = workspaces.find((w) => w.id === workspaceId)
         if (workspace && workspaceProjects.length > 0) {
           try {
-            const envResult = await window.mirehub.workspaceEnv.setup(
+            const envResult = await window.kanbai.workspaceEnv.setup(
               workspace.name,
               workspaceProjects.map((p) => p.path),
               workspaceId,
@@ -471,9 +471,9 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
     // Get kanban file path via IPC
     let kanbanFilePath: string
     try {
-      kanbanFilePath = await window.mirehub.kanban.getPath(workspaceId)
+      kanbanFilePath = await window.kanbai.kanban.getPath(workspaceId)
     } catch {
-      kanbanFilePath = `~/.mirehub/kanban/${workspaceId}.json`
+      kanbanFilePath = `~/.kanbai/kanban/${workspaceId}.json`
     }
 
     const ticketLabel = task.ticketNumber != null ? `T-${String(task.ticketNumber).padStart(2, '0')}` : task.id.slice(0, 8)
@@ -601,7 +601,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
 
     // Write prompt to file — Claude will read it via a one-liner once initialized
     try {
-      await window.mirehub.kanban.writePrompt(cwd, task.id, prompt)
+      await window.kanbai.kanban.writePrompt(cwd, task.id, prompt)
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error('Failed to write prompt file for task:', task.id, err)
@@ -613,19 +613,19 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
     const isCtoMode = task.isCtoTicket || isChildOfCto(task, get().tasks)
 
     // Launch AI CLI — CTO uses direct non-interactive mode, regular uses interactive
-    const relativePromptPath = `.mirehub/.kanban-prompt-${task.id}.md`
+    const relativePromptPath = `.kanbai/.kanban-prompt-${task.id}.md`
     const unsetEnv = providerConfig.envVarsToUnset.length > 0
       ? `unset ${providerConfig.envVarsToUnset.join(' ')} && `
       : ''
-    const exportEnv = `export MIREHUB_KANBAN_TASK_ID="${task.id}" MIREHUB_KANBAN_FILE="${kanbanFilePath}" && `
+    const exportEnv = `export KANBAI_KANBAN_TASK_ID="${task.id}" KANBAI_KANBAN_FILE="${kanbanFilePath}" && `
     let initialCommand: string
     if (isCtoMode) {
       // CTO mode: direct invocation, no back-and-forth — prompt piped from file
-      initialCommand = `${unsetEnv}${exportEnv}cat "${relativePromptPath}" | ${providerConfig.cliCommand} ${providerConfig.nonInteractiveArgs.join(' ')} ; bash "$HOME/.mirehub/hooks/mirehub-terminal-recovery.sh"`
+      initialCommand = `${unsetEnv}${exportEnv}cat "${relativePromptPath}" | ${providerConfig.cliCommand} ${providerConfig.nonInteractiveArgs.join(' ')} ; bash "$HOME/.kanbai/hooks/kanbai-terminal-recovery.sh"`
     } else {
       // Regular tickets: interactive mode
       const escapedPrompt = `Lis et execute les instructions du fichier ${relativePromptPath}`
-      initialCommand = `${unsetEnv}${exportEnv}${providerConfig.cliCommand} ${providerConfig.interactiveArgs.join(' ')} "${escapedPrompt}" ; bash "$HOME/.mirehub/hooks/mirehub-terminal-recovery.sh"`
+      initialCommand = `${unsetEnv}${exportEnv}${providerConfig.cliCommand} ${providerConfig.interactiveArgs.join(' ')} "${escapedPrompt}" ; bash "$HOME/.kanbai/hooks/kanbai-terminal-recovery.sh"`
     }
 
     // Create an interactive terminal tab for this task
@@ -656,7 +656,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
 
     // Persist WORKING status to file
     try {
-      await window.mirehub.kanban.update({
+      await window.kanbai.kanban.update({
         id: task.id,
         status: 'WORKING',
         workspaceId,
@@ -672,14 +672,14 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
       const capturedWorkspaceId = workspaceId
       setTimeout(() => {
         try {
-          window.mirehub.kanban.cleanupPrompt(capturedCwd!, task.id)
+          window.kanbai.kanban.cleanupPrompt(capturedCwd!, task.id)
         } catch { /* best-effort */ }
       }, 120000)
 
       // Link the conversation JSONL file to the ticket for context recovery
       setTimeout(async () => {
         try {
-          await window.mirehub.kanban.linkConversation(capturedCwd!, task.id, capturedWorkspaceId!)
+          await window.kanbai.kanban.linkConversation(capturedCwd!, task.id, capturedWorkspaceId!)
         } catch { /* best-effort */ }
       }, 10000)
 
@@ -704,7 +704,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
 
   syncBackgroundWorkspace: async (wsId: string) => {
     try {
-      const newTasks: KanbanTask[] = await window.mirehub.kanban.list(wsId)
+      const newTasks: KanbanTask[] = await window.kanbai.kanban.list(wsId)
       const oldTasks = get().backgroundTasks[wsId] ?? []
       const { kanbanTabIds } = get()
 
@@ -715,7 +715,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
       let autoCloseEnabled = false
       let autoCloseCtoEnabled = true
       try {
-        const settings = await window.mirehub.settings.get()
+        const settings = await window.kanbai.settings.get()
         autoCloseEnabled = settings.autoCloseCompletedTerminals ?? false
         autoCloseCtoEnabled = settings.autoCloseCtoTerminals ?? true
       } catch { /* defaults */ }
@@ -733,7 +733,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
 
         // CTO auto-approve: PENDING → TODO
         if (newTask.status === 'PENDING' && isCtoMode) {
-          window.mirehub.kanban.update({
+          window.kanbai.kanban.update({
             id: newTask.id,
             status: 'TODO',
             workspaceId: wsId,
@@ -858,7 +858,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
       )
       set({ tasks: updatedTasks })
       // Persist to file
-      window.mirehub.kanban.update({
+      window.kanbai.kanban.update({
         id: taskId,
         status: 'PENDING',
         workspaceId: currentWorkspaceId,
@@ -869,11 +869,11 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
   attachFiles: async (taskId: string) => {
     const { currentWorkspaceId } = get()
     if (!currentWorkspaceId) return
-    const filePaths = await window.mirehub.kanban.selectFiles()
+    const filePaths = await window.kanbai.kanban.selectFiles()
     if (!filePaths || filePaths.length === 0) return
 
     for (const filePath of filePaths) {
-      const attachment = await window.mirehub.kanban.attachFile(taskId, currentWorkspaceId, filePath)
+      const attachment = await window.kanbai.kanban.attachFile(taskId, currentWorkspaceId, filePath)
       set((state) => ({
         tasks: state.tasks.map((t) => {
           if (t.id !== taskId) return t
@@ -886,7 +886,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
   attachFromClipboard: async (taskId: string, dataBase64: string, filename: string, mimeType: string) => {
     const { currentWorkspaceId } = get()
     if (!currentWorkspaceId) return
-    const attachment = await window.mirehub.kanban.attachFromClipboard(taskId, currentWorkspaceId, dataBase64, filename, mimeType)
+    const attachment = await window.kanbai.kanban.attachFromClipboard(taskId, currentWorkspaceId, dataBase64, filename, mimeType)
     set((state) => ({
       tasks: state.tasks.map((t) => {
         if (t.id !== taskId) return t
@@ -898,7 +898,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
   removeAttachment: async (taskId: string, attachmentId: string) => {
     const { currentWorkspaceId } = get()
     if (!currentWorkspaceId) return
-    await window.mirehub.kanban.removeAttachment(taskId, currentWorkspaceId, attachmentId)
+    await window.kanbai.kanban.removeAttachment(taskId, currentWorkspaceId, attachmentId)
     set((state) => ({
       tasks: state.tasks.map((t) => {
         if (t.id !== taskId) return t

@@ -30,7 +30,7 @@ export function callAiCli(
     for (const envVar of config.envVarsToUnset) {
       delete env[envVar]
     }
-    env.MIREHUB_NL_QUERY = '1'
+    env.KANBAI_NL_QUERY = '1'
 
     const proc = crossSpawn(config.cliCommand, config.nlQueryArgs, {
       env,

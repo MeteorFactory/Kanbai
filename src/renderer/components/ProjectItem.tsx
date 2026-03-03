@@ -57,7 +57,7 @@ export function ProjectItem({ project, isActive }: ProjectItemProps) {
 
   const handleDragStart = useCallback(
     (e: React.DragEvent) => {
-      e.dataTransfer.setData('application/mirehub-project', project.id)
+      e.dataTransfer.setData('application/kanbai-project', project.id)
       e.dataTransfer.effectAllowed = 'move'
     },
     [project.id],
@@ -76,11 +76,11 @@ export function ProjectItem({ project, isActive }: ProjectItemProps) {
   }, [project.name])
 
   const handleDeployClaude = useCallback(async () => {
-    const hasExisting = await window.mirehub.project.checkClaude(project.path)
+    const hasExisting = await window.kanbai.project.checkClaude(project.path)
     if (hasExisting) {
       setShowDeployConfirm(true)
     } else {
-      const result = await window.mirehub.project.deployClaude(project.path, false)
+      const result = await window.kanbai.project.deployClaude(project.path, false)
       if (result.success) {
         rescanClaude(project.id)
         launchClaudeInit(project.path)
@@ -89,7 +89,7 @@ export function ProjectItem({ project, isActive }: ProjectItemProps) {
   }, [project.path, project.id, rescanClaude, launchClaudeInit])
 
   const handleImportClaude = useCallback(async () => {
-    const result = await window.mirehub.project.deployClaude(project.path, false)
+    const result = await window.kanbai.project.deployClaude(project.path, false)
     setShowImportClaude(false)
     if (result.success) {
       rescanClaude(project.id)
@@ -98,7 +98,7 @@ export function ProjectItem({ project, isActive }: ProjectItemProps) {
   }, [project.path, project.id, rescanClaude, launchClaudeInit])
 
   const handleConfirmDeploy = useCallback(async () => {
-    const result = await window.mirehub.project.deployClaude(project.path, true)
+    const result = await window.kanbai.project.deployClaude(project.path, true)
     setShowDeployConfirm(false)
     if (result.success) {
       rescanClaude(project.id)
@@ -109,7 +109,7 @@ export function ProjectItem({ project, isActive }: ProjectItemProps) {
   const handleToggleNotes = useCallback(async () => {
     if (!showNotes && !notesLoaded) {
       try {
-        const content = await window.mirehub.project.getNotes(project.id)
+        const content = await window.kanbai.project.getNotes(project.id)
         setNotes(content)
         setNotesLoaded(true)
       } catch {
@@ -120,7 +120,7 @@ export function ProjectItem({ project, isActive }: ProjectItemProps) {
   }, [showNotes, notesLoaded, project.id])
 
   const handleNotesBlur = useCallback(async () => {
-    await window.mirehub.project.saveNotes(project.id, notes)
+    await window.kanbai.project.saveNotes(project.id, notes)
   }, [project.id, notes])
 
   const folderName = project.path.split(/[\\/]/).pop() ?? project.name

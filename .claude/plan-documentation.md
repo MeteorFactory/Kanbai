@@ -1,4 +1,4 @@
-# Plan de documentation - Mirehub
+# Plan de documentation - Kanbai
 
 ## Analyse de l'existant
 

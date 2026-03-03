@@ -799,7 +799,7 @@ export async function runTool(
 
 export function getReportDir(projectPath: string): string {
   const hash = crypto.createHash('md5').update(projectPath).digest('hex').slice(0, 12)
-  return path.join(os.homedir(), '.mirehub', 'analysis', hash)
+  return path.join(os.homedir(), '.kanbai', 'analysis', hash)
 }
 
 export function persistReport(report: AnalysisReport): void {

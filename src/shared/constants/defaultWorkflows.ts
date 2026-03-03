@@ -13,7 +13,7 @@ export interface DefaultWorkflow {
   sections: WorkflowSection[]
 }
 
-export const WORKFLOW_MARKER = '<!-- MIREHUB_WORKFLOW -->'
+export const WORKFLOW_MARKER = '<!-- KANBAI_WORKFLOW -->'
 
 const WORKFLOW_EN: DefaultWorkflow = {
   id: 'default-workflow',

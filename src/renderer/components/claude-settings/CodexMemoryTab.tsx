@@ -33,8 +33,8 @@ export function CodexMemoryTab({ projectPath }: Props) {
 
   const load = useCallback(async () => {
     const [proj, global] = await Promise.all([
-      window.mirehub.codexMemory.readAgentsMd(projectPath),
-      window.mirehub.codexMemory.readGlobalAgentsMd(),
+      window.kanbai.codexMemory.readAgentsMd(projectPath),
+      window.kanbai.codexMemory.readGlobalAgentsMd(),
     ])
     setProjectMd(proj)
     setGlobalMd(global)
@@ -43,22 +43,22 @@ export function CodexMemoryTab({ projectPath }: Props) {
   useEffect(() => { load() }, [load])
 
   const handleSaveProject = useCallback(async (content: string) => {
-    await window.mirehub.codexMemory.writeAgentsMd(projectPath, content)
+    await window.kanbai.codexMemory.writeAgentsMd(projectPath, content)
     setProjectMd(content)
   }, [projectPath])
 
   const handleSaveGlobal = useCallback(async (content: string) => {
-    await window.mirehub.codexMemory.writeGlobalAgentsMd(content)
+    await window.kanbai.codexMemory.writeGlobalAgentsMd(content)
     setGlobalMd(content)
   }, [])
 
   const handleCreateProject = useCallback(async () => {
-    await window.mirehub.codexMemory.writeAgentsMd(projectPath, PROJECT_TEMPLATE)
+    await window.kanbai.codexMemory.writeAgentsMd(projectPath, PROJECT_TEMPLATE)
     setProjectMd(PROJECT_TEMPLATE)
   }, [projectPath])
 
   const handleCreateGlobal = useCallback(async () => {
-    await window.mirehub.codexMemory.writeGlobalAgentsMd(GLOBAL_TEMPLATE)
+    await window.kanbai.codexMemory.writeGlobalAgentsMd(GLOBAL_TEMPLATE)
     setGlobalMd(GLOBAL_TEMPLATE)
   }, [])
 

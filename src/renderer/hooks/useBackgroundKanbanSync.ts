@@ -27,7 +27,7 @@ export function useBackgroundKanbanSync(): void {
         if (ws.id === activeWorkspaceId) continue
         if (ws.deletedAt) continue
         try {
-          const tasks: KanbanTask[] = await window.mirehub.kanban.list(ws.id)
+          const tasks: KanbanTask[] = await window.kanbai.kanban.list(ws.id)
           useKanbanStore.setState((state) => ({
             backgroundTasks: { ...state.backgroundTasks, [ws.id]: tasks },
           }))
@@ -47,7 +47,7 @@ export function useBackgroundKanbanSync(): void {
       for (const wsId of needed) {
         if (!watchedRef.current.has(wsId)) {
           watchedRef.current.add(wsId)
-          window.mirehub.kanban.watchAdd(wsId).catch(() => { /* best-effort */ })
+          window.kanbai.kanban.watchAdd(wsId).catch(() => { /* best-effort */ })
           // Polling fallback every 30s
           const timer = setInterval(() => {
             syncBackgroundWorkspace(wsId)
@@ -60,7 +60,7 @@ export function useBackgroundKanbanSync(): void {
       for (const wsId of watchedRef.current) {
         if (!needed.has(wsId) || wsId === activeWorkspaceId) {
           watchedRef.current.delete(wsId)
-          window.mirehub.kanban.watchRemove(wsId).catch(() => { /* best-effort */ })
+          window.kanbai.kanban.watchRemove(wsId).catch(() => { /* best-effort */ })
           const timer = pollTimersRef.current.get(wsId)
           if (timer) {
             clearInterval(timer)
@@ -107,7 +107,7 @@ export function useBackgroundKanbanSync(): void {
     }
 
     // Listen for file change events from non-active workspaces
-    const unsubscribe = window.mirehub.kanban.onFileChanged(({ workspaceId }) => {
+    const unsubscribe = window.kanbai.kanban.onFileChanged(({ workspaceId }) => {
       if (workspaceId !== activeWorkspaceId && watchedRef.current.has(workspaceId)) {
         syncBackgroundWorkspace(workspaceId)
       }
@@ -126,7 +126,7 @@ export function useBackgroundKanbanSync(): void {
       if (refreshTimerRef.current) clearInterval(refreshTimerRef.current)
       // Clean up all watchers and poll timers
       for (const wsId of watchedSet) {
-        window.mirehub.kanban.watchRemove(wsId).catch(() => { /* best-effort */ })
+        window.kanbai.kanban.watchRemove(wsId).catch(() => { /* best-effort */ })
       }
       watchedSet.clear()
       for (const timer of pollTimers.values()) {

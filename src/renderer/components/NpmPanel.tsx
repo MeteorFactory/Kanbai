@@ -23,7 +23,7 @@ export function NpmPanel() {
     setLoading(true)
     setError(null)
     try {
-      const result = await window.mirehub.project.checkPackages(activeProject.path)
+      const result = await window.kanbai.project.checkPackages(activeProject.path)
       setPackages(result.packages)
     } catch (err) {
       setError(String(err))
@@ -47,7 +47,7 @@ export function NpmPanel() {
     if (!activeProject) return
     setUpdatingPackages((prev) => new Set(prev).add(packageName))
     try {
-      const result = await window.mirehub.project.updatePackage(activeProject.path, packageName)
+      const result = await window.kanbai.project.updatePackage(activeProject.path, packageName)
       if (result.success) {
         setFeedback({ message: t('npm.updated', { name: packageName }), success: true })
       } else {
@@ -69,7 +69,7 @@ export function NpmPanel() {
     if (!activeProject) return
     setUpdateAllLoading(true)
     try {
-      const result = await window.mirehub.project.updatePackage(activeProject.path)
+      const result = await window.kanbai.project.updatePackage(activeProject.path)
       if (result.success) {
         setFeedback({ message: t('npm.allUpdated'), success: true })
       } else {

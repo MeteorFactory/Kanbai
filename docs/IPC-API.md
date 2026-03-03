@@ -1,16 +1,16 @@
-# Reference API IPC - Mirehub
+# Reference API IPC - Kanbai
 
 ## Introduction
 
-Mirehub utilise le systeme IPC (Inter-Process Communication) d'Electron pour communiquer entre le processus renderer (React) et le processus main (Node.js). L'architecture suit le modele de securite recommande par Electron :
+Kanbai utilise le systeme IPC (Inter-Process Communication) d'Electron pour communiquer entre le processus renderer (React) et le processus main (Node.js). L'architecture suit le modele de securite recommande par Electron :
 
 ```
 Renderer (React)  →  Preload (contextBridge)  →  Main Process (Node.js)
-window.mirehub.*        ipcRenderer.invoke()         ipcMain.handle()
+window.kanbai.*        ipcRenderer.invoke()         ipcMain.handle()
 ```
 
 - **contextIsolation** : active — le renderer n'a pas acces direct a Node.js
-- **contextBridge** : expose une API typee sous `window.mirehub`
+- **contextBridge** : expose une API typee sous `window.kanbai`
 - **Invoke/Handle** : la majorite des canaux utilisent le pattern requete/reponse (`invoke`/`handle`)
 - **Send/On** : les canaux unidirectionnels (input terminal, notifications, streaming de donnees) utilisent `send`/`on`
 
@@ -34,31 +34,31 @@ Tous les canaux IPC suivent le pattern `{domaine}:{action}` :
 
 Les constantes sont definies dans `src/shared/types/index.ts` via l'objet `IPC_CHANNELS`.
 
-## API Preload (`window.mirehub`)
+## API Preload (`window.kanbai`)
 
-L'API est exposee dans le renderer via `contextBridge.exposeInMainWorld('mirehub', api)` depuis `src/preload/index.ts`. Voici la surface complete organisee par domaine :
+L'API est exposee dans le renderer via `contextBridge.exposeInMainWorld('kanbai', api)` depuis `src/preload/index.ts`. Voici la surface complete organisee par domaine :
 
 ```typescript
-window.mirehub.terminal     // create, write, resize, close, onData, onClose
-window.mirehub.workspace    // list, create, update, delete
-window.mirehub.project      // list, selectDir, add, remove, scanClaude, scanInfo,
+window.kanbai.terminal     // create, write, resize, close, onData, onClose
+window.kanbai.workspace    // list, create, update, delete
+window.kanbai.project      // list, selectDir, add, remove, scanClaude, scanInfo,
                            // checkClaude, deployClaude, checkPackages, updatePackage,
                            // writeClaudeSettings, writeClaudeMd
-window.mirehub.fs           // readDir, readFile, writeFile, rename, delete, copy, mkdir, exists, readBase64
-window.mirehub.git          // init, status, log, branches, checkout, push, pull, commit, diff,
+window.kanbai.fs           // readDir, readFile, writeFile, rename, delete, copy, mkdir, exists, readBase64
+window.kanbai.git          // init, status, log, branches, checkout, push, pull, commit, diff,
                            // stash, stashPop, createBranch, deleteBranch, merge, fetch,
                            // stage, unstage, discard, show, stashList, renameBranch
-window.mirehub.claude       // start, stop, onSessionEnd
-window.mirehub.kanban       // list, create, update, delete, writePrompt, cleanupPrompt
-window.mirehub.workspaceDir // init
-window.mirehub.workspaceEnv // setup, getPath, delete
-window.mirehub.updates      // check, install, onStatus
-window.mirehub.settings     // get, set
-window.mirehub.session      // save, load, clear
-window.mirehub.notify       // (title, body) — fonction directe
+window.kanbai.claude       // start, stop, onSessionEnd
+window.kanbai.kanban       // list, create, update, delete, writePrompt, cleanupPrompt
+window.kanbai.workspaceDir // init
+window.kanbai.workspaceEnv // setup, getPath, delete
+window.kanbai.updates      // check, install, onStatus
+window.kanbai.settings     // get, set
+window.kanbai.session      // save, load, clear
+window.kanbai.notify       // (title, body) — fonction directe
 ```
 
-Le type TypeScript complet est exporte en tant que `MirehubAPI` depuis `src/preload/index.ts`.
+Le type TypeScript complet est exporte en tant que `KanbaiAPI` depuis `src/preload/index.ts`.
 
 ## Canaux par domaine
 
@@ -98,7 +98,7 @@ Gestion des projets, detection Claude Code, et audit de packages NPM.
 | `project:scanClaude` | `{ path: string }` | `{ hasClaude: boolean, claudeMd: string \| null, settings: object \| null }` | Scanne la config Claude d'un projet (CLAUDE.md + settings.json) |
 | `project:scanInfo` | `{ path: string }` | `ProjectInfo` | Detecte Makefile (+ targets), Git (+ branche courante) |
 | `project:checkClaude` | `{ path: string }` | `boolean` | Verifie si le dossier `.claude` existe dans le projet |
-| `project:deployClaude` | `{ targetPath: string, force: boolean }` | `{ success: boolean, error?: string, hasExisting?: boolean }` | Deploie la config `.claude` de Mirehub vers un projet cible |
+| `project:deployClaude` | `{ targetPath: string, force: boolean }` | `{ success: boolean, error?: string, hasExisting?: boolean }` | Deploie la config `.claude` de Kanbai vers un projet cible |
 | `project:checkPackages` | `{ path: string }` | `{ packages: NpmPackageInfo[] }` | Audite les packages NPM (via `npm outdated --json`) |
 | `project:updatePackage` | `{ projectPath: string, packageName?: string }` | `{ success: boolean, error?: string, output?: string }` | Met a jour un package NPM specifique ou tous |
 | `project:writeClaudeSettings` | `{ projectPath: string, settings: object }` | `{ success: boolean }` | Ecrit `.claude/settings.json` dans le projet |
@@ -224,15 +224,15 @@ Certains canaux fonctionnent en mode push : le processus main envoie des donnees
 
 | Canal | Payload | API Preload | Description |
 |-------|---------|-------------|-------------|
-| `terminal:data` | `{ id: string, data: string }` | `mirehub.terminal.onData(cb)` | Sortie du terminal (stdout/stderr du PTY) |
-| `terminal:close` | `{ id: string, exitCode: number, signal: number }` | `mirehub.terminal.onClose(cb)` | Fermeture du terminal (processus termine) |
-| `claude:sessionEnd` | `{ id: string, status: string }` | `mirehub.claude.onSessionEnd(cb)` | Fin d'une session Claude (completed/failed) |
-| `update:status` | `{ tool, scope, status, progress? }` | `mirehub.updates.onStatus(cb)` | Progression d'une installation de mise a jour |
+| `terminal:data` | `{ id: string, data: string }` | `kanbai.terminal.onData(cb)` | Sortie du terminal (stdout/stderr du PTY) |
+| `terminal:close` | `{ id: string, exitCode: number, signal: number }` | `kanbai.terminal.onClose(cb)` | Fermeture du terminal (processus termine) |
+| `claude:sessionEnd` | `{ id: string, status: string }` | `kanbai.claude.onSessionEnd(cb)` | Fin d'une session Claude (completed/failed) |
+| `update:status` | `{ tool, scope, status, progress? }` | `kanbai.updates.onStatus(cb)` | Progression d'une installation de mise a jour |
 
 **Pattern de cleanup** : chaque listener retourne une fonction de desinscription :
 
 ```typescript
-const cleanup = window.mirehub.terminal.onData((data) => {
+const cleanup = window.kanbai.terminal.onData((data) => {
   console.log(data.id, data.data)
 })
 // Plus tard :

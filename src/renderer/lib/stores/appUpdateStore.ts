@@ -39,7 +39,7 @@ export const useAppUpdateStore = create<AppUpdateStore>((set) => ({
   checkForUpdate: async () => {
     set({ status: 'checking', errorMessage: null })
     try {
-      await window.mirehub.appUpdate.check()
+      await window.kanbai.appUpdate.check()
     } catch {
       // Status will be updated via the listener
     }
@@ -48,14 +48,14 @@ export const useAppUpdateStore = create<AppUpdateStore>((set) => ({
   downloadUpdate: async () => {
     set({ status: 'downloading', downloadPercent: 0 })
     try {
-      await window.mirehub.appUpdate.download()
+      await window.kanbai.appUpdate.download()
     } catch {
       // Status will be updated via the listener
     }
   },
 
   installUpdate: () => {
-    window.mirehub.appUpdate.install()
+    window.kanbai.appUpdate.install()
   },
 
   dismissModal: () => {
@@ -63,7 +63,7 @@ export const useAppUpdateStore = create<AppUpdateStore>((set) => ({
   },
 
   initListener: () => {
-    return window.mirehub.appUpdate.onStatus((data) => {
+    return window.kanbai.appUpdate.onStatus((data) => {
       switch (data.status) {
         case 'checking':
           set({ status: 'checking' })

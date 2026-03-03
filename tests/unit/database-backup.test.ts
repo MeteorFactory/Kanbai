@@ -8,7 +8,7 @@ import { IS_WIN } from '../helpers/platform'
 const TEST_DIR = vi.hoisted(() => {
   const osMod = require('os')
   const pathMod = require('path')
-  return pathMod.join(osMod.tmpdir(), `.mirehub-backup-test-${process.pid}-${Date.now()}`)
+  return pathMod.join(osMod.tmpdir(), `.kanbai-backup-test-${process.pid}-${Date.now()}`)
 })
 
 // Mock os.homedir to use temp directory
@@ -60,7 +60,7 @@ vi.mock('electron', () => ({
 import { backupDatabase, listBackups, deleteBackup, restoreBackup } from '../../src/main/services/database/backup'
 import type { DbConnectionConfig, DbBackupEntry } from '../../src/shared/types'
 
-const backupsDir = path.join(TEST_DIR, '.mirehub', 'databases', 'backups')
+const backupsDir = path.join(TEST_DIR, '.kanbai', 'databases', 'backups')
 
 describe('Database Backup Service', () => {
   beforeEach(() => {

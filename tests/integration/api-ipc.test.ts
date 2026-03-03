@@ -6,7 +6,7 @@ import http from 'http'
 import { createMockIpcMain, createMockDialog } from '../mocks/electron'
 import type { ApiTestFile, ApiResponse, ApiTestResult } from '../../src/shared/types'
 
-const TEST_DIR = path.join(os.tmpdir(), `.mirehub-api-ipc-test-${process.pid}-${Date.now()}`)
+const TEST_DIR = path.join(os.tmpdir(), `.kanbai-api-ipc-test-${process.pid}-${Date.now()}`)
 
 const mockDialog = createMockDialog()
 
@@ -74,9 +74,9 @@ describe('API IPC Handlers', () => {
   })
 
   it('api:load returns default structure when file contains invalid JSON', async () => {
-    const mirehubDir = path.join(TEST_DIR, '.mirehub')
-    fs.mkdirSync(mirehubDir, { recursive: true })
-    fs.writeFileSync(path.join(mirehubDir, 'api-tests.json'), 'not-json{{{', 'utf-8')
+    const kanbaiDir = path.join(TEST_DIR, '.kanbai')
+    fs.mkdirSync(kanbaiDir, { recursive: true })
+    fs.writeFileSync(path.join(kanbaiDir, 'api-tests.json'), 'not-json{{{', 'utf-8')
 
     const result = await mockIpcMain._invoke<ApiTestFile>('api:load', {
       projectPath: TEST_DIR,
@@ -131,7 +131,7 @@ describe('API IPC Handlers', () => {
     expect(saveResult.success).toBe(true)
 
     // Verify file exists on disk
-    const filePath = path.join(TEST_DIR, '.mirehub', 'api-tests.json')
+    const filePath = path.join(TEST_DIR, '.kanbai', 'api-tests.json')
     expect(fs.existsSync(filePath)).toBe(true)
 
     // Load it back through the handler
@@ -142,7 +142,7 @@ describe('API IPC Handlers', () => {
     expect(loadedData).toEqual(testData)
   })
 
-  it('api:save creates .mirehub directory if it does not exist', async () => {
+  it('api:save creates .kanbai directory if it does not exist', async () => {
     const freshDir = path.join(TEST_DIR, 'fresh-project')
     fs.mkdirSync(freshDir, { recursive: true })
 
@@ -159,9 +159,9 @@ describe('API IPC Handlers', () => {
       data: testData,
     })
 
-    const mirehubDir = path.join(freshDir, '.mirehub')
-    expect(fs.existsSync(mirehubDir)).toBe(true)
-    expect(fs.existsSync(path.join(mirehubDir, 'api-tests.json'))).toBe(true)
+    const kanbaiDir = path.join(freshDir, '.kanbai')
+    expect(fs.existsSync(kanbaiDir)).toBe(true)
+    expect(fs.existsSync(path.join(kanbaiDir, 'api-tests.json'))).toBe(true)
   })
 
   // ---------------------------------------------------------------------------

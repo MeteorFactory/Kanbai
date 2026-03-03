@@ -23,8 +23,8 @@ export function DefaultAgentsSection({ projectPath, onCustomize, onRefresh }: Pr
 
   const load = useCallback(async () => {
     const [profs, deployed] = await Promise.all([
-      window.mirehub.claudeDefaults.profiles(),
-      window.mirehub.claudeDefaults.checkDeployed(projectPath),
+      window.kanbai.claudeDefaults.profiles(),
+      window.kanbai.claudeDefaults.checkDeployed(projectPath),
     ])
     setProfiles(profs)
     setDeployedIds(deployed.deployedProfiles ?? [])
@@ -36,10 +36,10 @@ export function DefaultAgentsSection({ projectPath, onCustomize, onRefresh }: Pr
     const isDeployed = deployedIds.includes(profile.id)
     if (isDeployed) {
       // Remove: delete the agent file
-      await window.mirehub.claudeAgents.delete(projectPath, profile.filename)
+      await window.kanbai.claudeAgents.delete(projectPath, profile.filename)
     } else {
       // Deploy
-      await window.mirehub.claudeDefaults.deployProfile(projectPath, profile.id)
+      await window.kanbai.claudeDefaults.deployProfile(projectPath, profile.id)
     }
     await load()
     onRefresh()

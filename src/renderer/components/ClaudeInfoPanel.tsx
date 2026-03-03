@@ -63,7 +63,7 @@ export function ClaudeInfoPanel({ projectPath, onClose }: ClaudeInfoPanelProps) 
     let cancelled = false
     async function load() {
       try {
-        const result: ScanResult = await window.mirehub.project.scanClaude(projectPath)
+        const result: ScanResult = await window.kanbai.project.scanClaude(projectPath)
         if (!cancelled) {
           setData(result)
           setLoading(false)

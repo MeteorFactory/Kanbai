@@ -5,7 +5,7 @@ import { v4 as uuid } from 'uuid'
 import type { KanbanTask, KanbanStatus } from '../../shared/types'
 
 export function getKanbanDir(): string {
-  const dir = path.join(os.homedir(), '.mirehub', 'kanban')
+  const dir = path.join(os.homedir(), '.kanbai', 'kanban')
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true })
   }

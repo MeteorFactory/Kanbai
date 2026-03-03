@@ -16,8 +16,8 @@ export function FileDiffViewer() {
     setLoading(true)
     setError(null)
     Promise.all([
-      window.mirehub.fs.readFile(diffFiles[0]),
-      window.mirehub.fs.readFile(diffFiles[1]),
+      window.kanbai.fs.readFile(diffFiles[0]),
+      window.kanbai.fs.readFile(diffFiles[1]),
     ])
       .then(([left, right]) => {
         if (left.error) {

@@ -13,7 +13,7 @@ export function RuleAuthorBadge({ author, authorUrl, coAuthors, onSync }: Props)
   const [syncing, setSyncing] = useState(false)
 
   const handleAuthorClick = (url: string) => {
-    window.mirehub.shell.openExternal(url)
+    window.kanbai.shell.openExternal(url)
   }
 
   const handleSync = async () => {

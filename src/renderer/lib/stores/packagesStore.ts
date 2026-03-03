@@ -125,7 +125,7 @@ export const usePackagesStore = create<PackagesStore>((set, get) => ({
 
   detectManagers: async (projects) => {
     try {
-      const detected = await window.mirehub.packages.detect(projects)
+      const detected = await window.kanbai.packages.detect(projects)
       set({ managers: detected })
     } catch {
       set({ managers: [] })
@@ -138,7 +138,7 @@ export const usePackagesStore = create<PackagesStore>((set, get) => ({
       loading: { ...state.loading, [key]: true },
     }))
     try {
-      const result = await window.mirehub.packages.list(projectPath, manager)
+      const result = await window.kanbai.packages.list(projectPath, manager)
       set((state) => ({
         packages: { ...state.packages, [key]: result.packages },
         loading: { ...state.loading, [key]: false },
@@ -157,7 +157,7 @@ export const usePackagesStore = create<PackagesStore>((set, get) => ({
 
   updatePackage: async (projectPath, manager, packageName) => {
     try {
-      const result = await window.mirehub.packages.update(
+      const result = await window.kanbai.packages.update(
         projectPath,
         manager,
         packageName,

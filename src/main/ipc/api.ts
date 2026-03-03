@@ -202,7 +202,7 @@ function defaultApiTestFile(): ApiTestFile {
  * Get the path to the API tests file for a project.
  */
 function getApiTestsPath(projectPath: string): string {
-  return path.join(projectPath, '.mirehub', 'api-tests.json')
+  return path.join(projectPath, '.kanbai', 'api-tests.json')
 }
 
 export function registerApiHandlers(ipcMain: IpcMain): void {
@@ -288,7 +288,7 @@ export function registerApiHandlers(ipcMain: IpcMain): void {
   ipcMain.handle(
     IPC_CHANNELS.API_SAVE,
     async (_event, { projectPath, data }: { projectPath: string; data: ApiTestFile }) => {
-      const dirPath = path.join(projectPath, '.mirehub')
+      const dirPath = path.join(projectPath, '.kanbai')
       if (!fs.existsSync(dirPath)) {
         fs.mkdirSync(dirPath, { recursive: true })
       }

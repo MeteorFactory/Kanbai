@@ -26,13 +26,13 @@ export function WorkflowTab({ projectPath, claudeMd: _claudeMd, workflowDeployed
   const handleDeploy = useCallback(async () => {
     setDeploying(true)
     try {
-      const result = await window.mirehub.project.scanClaude(projectPath)
+      const result = await window.kanbai.project.scanClaude(projectPath)
       const currentMd = result.claudeMd ?? ''
       if (!currentMd.includes(WORKFLOW_MARKER)) {
         const wf = DEFAULT_WORKFLOWS[locale] ?? DEFAULT_WORKFLOWS.fr
         const workflowMd = generateWorkflowMarkdown(wf)
         const newMd = currentMd.trim() ? currentMd.trim() + '\n\n' + workflowMd : workflowMd
-        await window.mirehub.project.writeClaudeMd(projectPath, newMd)
+        await window.kanbai.project.writeClaudeMd(projectPath, newMd)
         onClaudeMdChange(newMd)
         onWorkflowDeployedChange(true)
       }
@@ -43,12 +43,12 @@ export function WorkflowTab({ projectPath, claudeMd: _claudeMd, workflowDeployed
   const handleRemove = useCallback(async () => {
     setDeploying(true)
     try {
-      const result = await window.mirehub.project.scanClaude(projectPath)
+      const result = await window.kanbai.project.scanClaude(projectPath)
       const currentMd = result.claudeMd ?? ''
       if (currentMd.includes(WORKFLOW_MARKER)) {
         const markerIdx = currentMd.indexOf(WORKFLOW_MARKER)
         const newMd = currentMd.slice(0, markerIdx).trimEnd()
-        await window.mirehub.project.writeClaudeMd(projectPath, newMd)
+        await window.kanbai.project.writeClaudeMd(projectPath, newMd)
         onClaudeMdChange(newMd)
         onWorkflowDeployedChange(false)
       }
@@ -62,16 +62,16 @@ export function WorkflowTab({ projectPath, claudeMd: _claudeMd, workflowDeployed
     const workflowMd = generateWorkflowMarkdown(wf)
     for (const proj of claudeProjects) {
       try {
-        const result = await window.mirehub.project.scanClaude(proj.path)
+        const result = await window.kanbai.project.scanClaude(proj.path)
         const currentMd = result.claudeMd ?? ''
         if (!currentMd.includes(WORKFLOW_MARKER)) {
           const newMd = currentMd.trim() ? currentMd.trim() + '\n\n' + workflowMd : workflowMd
-          await window.mirehub.project.writeClaudeMd(proj.path, newMd)
+          await window.kanbai.project.writeClaudeMd(proj.path, newMd)
         }
       } catch { /* continue */ }
     }
     // Refresh current project state
-    const result = await window.mirehub.project.scanClaude(projectPath)
+    const result = await window.kanbai.project.scanClaude(projectPath)
     const md = result.claudeMd ?? ''
     onClaudeMdChange(md)
     onWorkflowDeployedChange(md.includes(WORKFLOW_MARKER))

@@ -99,7 +99,7 @@ export function SettingsPanel() {
     if (!nsId) return
     setGitLoading(true)
     try {
-      const config = await window.mirehub.gitConfig.get(nsId)
+      const config = await window.kanbai.gitConfig.get(nsId)
       setGitUserName(config.userName)
       setGitUserEmail(config.userEmail)
       setGitIsCustom(config.isCustom)
@@ -122,7 +122,7 @@ export function SettingsPanel() {
     if (!selectedNamespaceId) return
     setGitLoading(true)
     try {
-      const result = await window.mirehub.gitConfig.set(selectedNamespaceId, gitUserName, gitUserEmail)
+      const result = await window.kanbai.gitConfig.set(selectedNamespaceId, gitUserName, gitUserEmail)
       setGitIsCustom(result.isCustom)
       setGitSaved(true)
       setTimeout(() => setGitSaved(false), 2000)
@@ -137,7 +137,7 @@ export function SettingsPanel() {
     if (!selectedNamespaceId || !confirm(t('settings.gitResetConfirm'))) return
     setGitLoading(true)
     try {
-      await window.mirehub.gitConfig.delete(selectedNamespaceId)
+      await window.kanbai.gitConfig.delete(selectedNamespaceId)
       await loadGitConfig(selectedNamespaceId)
     } catch {
       // silently fail
@@ -150,7 +150,7 @@ export function SettingsPanel() {
     setSshLoading(true)
     setSshError(null)
     try {
-      const result = await window.mirehub.ssh.listKeys()
+      const result = await window.kanbai.ssh.listKeys()
       if (result.success) {
         setSshKeys(result.keys)
       } else {
@@ -165,17 +165,17 @@ export function SettingsPanel() {
 
   useEffect(() => {
     setLoading(true)
-    window.mirehub.settings.get().then((s: AppSettings) => {
+    window.kanbai.settings.get().then((s: AppSettings) => {
       setSettings({ ...DEFAULT_SETTINGS, ...s })
       if (s.locale) {
         setLocale(s.locale)
       }
       setLoading(false)
     })
-    window.mirehub.app.version().then(setAppVersion)
+    window.kanbai.app.version().then(setAppVersion)
     loadSshKeys()
     // Load namespaces for git config section
-    window.mirehub.namespace.list().then((nsList) => {
+    window.kanbai.namespace.list().then((nsList) => {
       setNamespaces(nsList)
       const defaultNs = nsList.find((ns) => ns.isDefault)
       if (defaultNs) {
@@ -187,7 +187,7 @@ export function SettingsPanel() {
 
   const updateSetting = useCallback(<K extends keyof AppSettings>(key: K, value: AppSettings[K]) => {
     setSettings((prev) => ({ ...prev, [key]: value }))
-    window.mirehub.settings.set({ [key]: value })
+    window.kanbai.settings.set({ [key]: value })
 
     if (key === 'theme') {
       const theme = value as string
@@ -210,7 +210,7 @@ export function SettingsPanel() {
     setGenLoading(true)
     setSshError(null)
     try {
-      const result = await window.mirehub.ssh.generateKey(genName.trim(), genType, genComment.trim())
+      const result = await window.kanbai.ssh.generateKey(genName.trim(), genType, genComment.trim())
       if (result.success) {
         setShowGenerateForm(false)
         setGenName('id_ed25519')
@@ -231,7 +231,7 @@ export function SettingsPanel() {
     if (!importName.trim() || !importPrivateKey.trim()) return
     setSshError(null)
     try {
-      const result = await window.mirehub.ssh.importKey(
+      const result = await window.kanbai.ssh.importKey(
         importName.trim(),
         importPrivateKey,
         importPublicKey || undefined,
@@ -253,7 +253,7 @@ export function SettingsPanel() {
   const handleSelectKeyFile = useCallback(async () => {
     setSshError(null)
     try {
-      const result = await window.mirehub.ssh.selectKeyFile()
+      const result = await window.kanbai.ssh.selectKeyFile()
       if (result.success && result.content && result.fileName) {
         setImportName(result.fileName)
         setImportPrivateKey(result.content)
@@ -267,7 +267,7 @@ export function SettingsPanel() {
   const handleCopyPublicKey = useCallback(async (key: SshKeyInfo) => {
     if (!key.publicKeyPath) return
     try {
-      const result = await window.mirehub.ssh.readPublicKey(key.publicKeyPath)
+      const result = await window.kanbai.ssh.readPublicKey(key.publicKeyPath)
       if (result.success) {
         await navigator.clipboard.writeText(result.content)
         setCopiedKeyId(key.id)
@@ -282,7 +282,7 @@ export function SettingsPanel() {
     if (!confirm(t('settings.sshDeleteConfirm'))) return
     setSshError(null)
     try {
-      const result = await window.mirehub.ssh.deleteKey(key.name)
+      const result = await window.kanbai.ssh.deleteKey(key.name)
       if (result.success) {
         await loadSshKeys()
       } else {
@@ -294,7 +294,7 @@ export function SettingsPanel() {
   }, [loadSshKeys, t])
 
   const handleOpenSshDir = useCallback(() => {
-    window.mirehub.ssh.openDirectory()
+    window.kanbai.ssh.openDirectory()
   }, [])
 
   if (loading) {
@@ -409,7 +409,7 @@ export function SettingsPanel() {
                       const nowCompleted = !settings.tutorialCompleted
                       if (!nowCompleted) {
                         setSettings((prev) => ({ ...prev, tutorialCompleted: false, tutorialSeenSections: [] }))
-                        window.mirehub.settings.set({ tutorialCompleted: false, tutorialSeenSections: [] })
+                        window.kanbai.settings.set({ tutorialCompleted: false, tutorialSeenSections: [] })
                       } else {
                         updateSetting('tutorialCompleted', true)
                       }
@@ -915,7 +915,7 @@ export function SettingsPanel() {
                 <div className="settings-about-header">
                   <span className="settings-about-icon">M</span>
                   <div>
-                    <div className="settings-about-name">{appVersion?.name ?? 'Mirehub'}</div>
+                    <div className="settings-about-name">{appVersion?.name ?? 'Kanbai'}</div>
                     <div className="settings-about-version">v{appVersion?.version ?? '—'}</div>
                   </div>
                 </div>

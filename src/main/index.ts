@@ -60,7 +60,7 @@ if (process.platform === 'darwin') {
 }
 
 // Set the app name for macOS menu bar (overrides default "Electron" in dev mode)
-app.name = 'Mirehub'
+app.name = 'Kanbai'
 
 // vite-plugin-electron sets VITE_DEV_SERVER_URL in dev mode
 const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
@@ -128,9 +128,9 @@ function buildApplicationMenu(): void {
     ...(IS_MAC
       ? [
           {
-            label: 'Mirehub',
+            label: 'Kanbai',
             submenu: [
-              { role: 'about' as const, label: isFr ? 'A propos de Mirehub' : 'About Mirehub' },
+              { role: 'about' as const, label: isFr ? 'A propos de Kanbai' : 'About Kanbai' },
               { type: 'separator' as const },
               {
                 label: isFr ? 'Preferences...' : 'Preferences...',
@@ -138,11 +138,11 @@ function buildApplicationMenu(): void {
                 click: () => sendMenuAction('view:settings'),
               },
               { type: 'separator' as const },
-              { role: 'hide' as const, label: isFr ? 'Masquer Mirehub' : 'Hide Mirehub' },
+              { role: 'hide' as const, label: isFr ? 'Masquer Kanbai' : 'Hide Kanbai' },
               { role: 'hideOthers' as const, label: isFr ? 'Masquer les autres' : 'Hide Others' },
               { role: 'unhide' as const, label: isFr ? 'Tout afficher' : 'Show All' },
               { type: 'separator' as const },
-              { role: 'quit' as const, label: isFr ? 'Quitter Mirehub' : 'Quit Mirehub' },
+              { role: 'quit' as const, label: isFr ? 'Quitter Kanbai' : 'Quit Kanbai' },
             ],
           } satisfies Electron.MenuItemConstructorOptions,
         ]
@@ -187,7 +187,7 @@ function buildApplicationMenu(): void {
         ...(!IS_MAC
           ? [
               { type: 'separator' as const },
-              { role: 'quit' as const, label: isFr ? 'Quitter Mirehub' : 'Quit Mirehub' },
+              { role: 'quit' as const, label: isFr ? 'Quitter Kanbai' : 'Quit Kanbai' },
             ]
           : []),
       ],
@@ -292,8 +292,8 @@ function buildApplicationMenu(): void {
         },
         { type: 'separator' },
         {
-          label: isFr ? 'Site web Mirehub' : 'Mirehub Website',
-          click: () => shell.openExternal('https://github.com/AntonyCanut/Mirehub'),
+          label: isFr ? 'Site web Kanbai' : 'Kanbai Website',
+          click: () => shell.openExternal('https://github.com/AntonyCanut/Kanbai'),
         },
       ],
     },

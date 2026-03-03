@@ -6,7 +6,7 @@ import { IPC_CHANNELS } from '../../shared/types'
 import { IS_WIN } from '../../shared/platform'
 import { installActivityHooks } from '../services/activityHooks'
 
-const ENVS_DIR = path.join(os.homedir(), '.mirehub', 'envs')
+const ENVS_DIR = path.join(os.homedir(), '.kanbai', 'envs')
 
 function ensureEnvsDir(): void {
   if (!fs.existsSync(ENVS_DIR)) {
@@ -83,8 +83,8 @@ function getMcpServerConfig(workspaceId: string, workspaceName: string): {
   env: Record<string, string>
 } {
   const env = {
-    MIREHUB_WORKSPACE_ID: workspaceId,
-    MIREHUB_WORKSPACE_NAME: workspaceName,
+    KANBAI_WORKSPACE_ID: workspaceId,
+    KANBAI_WORKSPACE_NAME: workspaceName,
   }
 
   if (!app.isPackaged) {
@@ -109,7 +109,7 @@ function getMcpServerConfig(workspaceId: string, workspaceName: string): {
 }
 
 /**
- * Register the Mirehub MCP server in Claude's settings.local.json
+ * Register the Kanbai MCP server in Claude's settings.local.json
  * so Claude automatically has access to kanban, analysis, and project tools.
  */
 function installMcpServer(
@@ -136,7 +136,7 @@ function installMcpServer(
   const servers = settings.mcpServers as Record<string, unknown>
 
   const config = getMcpServerConfig(workspaceId, workspaceName)
-  servers['mirehub'] = config
+  servers['kanbai'] = config
 
   fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2), 'utf-8')
 }
@@ -207,7 +207,7 @@ export function registerWorkspaceEnvHandlers(ipcMain: IpcMain): void {
           }
         }
 
-        // Register the Mirehub MCP server so Claude gets kanban/analysis/project tools
+        // Register the Kanbai MCP server so Claude gets kanban/analysis/project tools
         if (workspaceId) {
           try {
             installMcpServer(envDir, workspaceId, workspaceName)

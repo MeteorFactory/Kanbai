@@ -90,7 +90,7 @@ export function HealthCheckPanel() {
   // IPC listener for real-time status updates
   useEffect(() => {
     if (!projectPath) return
-    const unsubscribe = window.mirehub.healthcheck.onStatusUpdate(
+    const unsubscribe = window.kanbai.healthcheck.onStatusUpdate(
       (payload: { projectPath: string; statuses: HealthCheckSchedulerStatus[] }) => {
         if (payload.projectPath === projectPath) {
           handleStatusUpdate(projectPath, payload.statuses)
@@ -206,13 +206,13 @@ export function HealthCheckPanel() {
   }, [projectPath, clearHistory])
 
   const handleExport = useCallback(async () => {
-    await window.mirehub.healthcheck.export(data)
+    await window.kanbai.healthcheck.export(data)
   }, [data])
 
   const handleImport = useCallback(async () => {
-    const result = await window.mirehub.healthcheck.import()
+    const result = await window.kanbai.healthcheck.import()
     if (result.success && result.data && projectPath) {
-      await window.mirehub.healthcheck.save(projectPath, result.data)
+      await window.kanbai.healthcheck.save(projectPath, result.data)
       await loadData(projectPath)
     }
   }, [projectPath, loadData])

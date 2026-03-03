@@ -62,7 +62,7 @@ export function DatabaseExplorer() {
 
   // Subscribe to backup log events
   useEffect(() => {
-    const unsubscribe = window.mirehub.database.onBackupLog((entry: DbBackupLogEntry) => {
+    const unsubscribe = window.kanbai.database.onBackupLog((entry: DbBackupLogEntry) => {
       appendBackupLog(entry)
       setLogPanelOpen(true)
     })
@@ -118,14 +118,14 @@ export function DatabaseExplorer() {
       const conn = connections.find((c) => c.id === id)
       if (!conn) return
       try {
-        const result = await window.mirehub.database.backup(id, conn.name, conn.config, undefined, conn.environmentTag)
+        const result = await window.kanbai.database.backup(id, conn.name, conn.config, undefined, conn.environmentTag)
         if (result.success) {
-          window.mirehub.notify(t('db.backup'), t('db.backupSuccess').replace('{path}', result.filePath || ''))
+          window.kanbai.notify(t('db.backup'), t('db.backupSuccess').replace('{path}', result.filePath || ''))
         } else {
-          window.mirehub.notify(t('db.backup'), t('db.backupError').replace('{error}', result.error || ''))
+          window.kanbai.notify(t('db.backup'), t('db.backupError').replace('{error}', result.error || ''))
         }
       } catch (err) {
-        window.mirehub.notify(t('db.backup'), t('db.backupError').replace('{error}', String(err)))
+        window.kanbai.notify(t('db.backup'), t('db.backupError').replace('{error}', String(err)))
       }
     },
     [connections, t],
@@ -142,7 +142,7 @@ export function DatabaseExplorer() {
   const handleDeleteBackup = useCallback(
     async (connectionId: string, backupId: string) => {
       try {
-        await window.mirehub.database.backupDelete(connectionId, backupId)
+        await window.kanbai.database.backupDelete(connectionId, backupId)
       } catch {
         // Delete error handled silently
       }
@@ -153,17 +153,17 @@ export function DatabaseExplorer() {
   const handleRestoreBackup = useCallback(
     async (entry: DbBackupEntry, targetConnection: DbConnection) => {
       try {
-        const result = await window.mirehub.database.restore(entry, targetConnection.config)
+        const result = await window.kanbai.database.restore(entry, targetConnection.config)
         if (result.success) {
           const msg = result.warnings
             ? t('db.restoreSuccessWarnings').replace('{count}', String(result.warnings))
             : t('db.restoreSuccess')
-          window.mirehub.notify(t('common.restore'), msg)
+          window.kanbai.notify(t('common.restore'), msg)
         } else {
-          window.mirehub.notify(t('common.restore'), t('db.restoreError').replace('{error}', result.error || ''))
+          window.kanbai.notify(t('common.restore'), t('db.restoreError').replace('{error}', result.error || ''))
         }
       } catch (err) {
-        window.mirehub.notify(t('common.restore'), t('db.restoreError').replace('{error}', String(err)))
+        window.kanbai.notify(t('common.restore'), t('db.restoreError').replace('{error}', String(err)))
       }
     },
     [t],

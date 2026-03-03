@@ -8,15 +8,15 @@ import { StorageService } from './storage'
 import { IS_WIN } from '../../shared/platform'
 import type { AiProviderId } from '../../shared/types/ai-provider'
 
-const ACTIVITY_DIR = path.join(os.homedir(), '.mirehub', 'activity')
-const HOOKS_DIR = path.join(os.homedir(), '.mirehub', 'hooks')
-const ENVS_DIR = path.join(os.homedir(), '.mirehub', 'envs')
-const HOOK_SCRIPT_NAME = IS_WIN ? 'mirehub-activity.ps1' : 'mirehub-activity.sh'
-const AUTOAPPROVE_SCRIPT_NAME = IS_WIN ? 'mirehub-autoapprove.ps1' : 'mirehub-autoapprove.sh'
+const ACTIVITY_DIR = path.join(os.homedir(), '.kanbai', 'activity')
+const HOOKS_DIR = path.join(os.homedir(), '.kanbai', 'hooks')
+const ENVS_DIR = path.join(os.homedir(), '.kanbai', 'envs')
+const HOOK_SCRIPT_NAME = IS_WIN ? 'kanbai-activity.ps1' : 'kanbai-activity.sh'
+const AUTOAPPROVE_SCRIPT_NAME = IS_WIN ? 'kanbai-autoapprove.ps1' : 'kanbai-autoapprove.sh'
 const KANBAN_DONE_SCRIPT_NAME = IS_WIN ? 'kanban-done.ps1' : 'kanban-done.sh'
 
 /**
- * Ensures the global activity hook script exists at ~/.mirehub/hooks/mirehub-activity.sh
+ * Ensures the global activity hook script exists at ~/.kanbai/hooks/kanbai-activity.sh
  */
 export function ensureActivityHookScript(): void {
   if (!fs.existsSync(HOOKS_DIR)) {
@@ -29,13 +29,13 @@ export function ensureActivityHookScript(): void {
   const scriptPath = path.join(HOOKS_DIR, HOOK_SCRIPT_NAME)
 
   if (IS_WIN) {
-    const script = `# Mirehub Claude Activity Hook (auto-generated)
-# Signals Claude activity status to Mirehub via status files
+    const script = `# Kanbai Claude Activity Hook (auto-generated)
+# Signals Claude activity status to Kanbai via status files
 
 # Skip activity tracking for NL database queries
-if ($env:MIREHUB_NL_QUERY) { exit 0 }
+if ($env:KANBAI_NL_QUERY) { exit 0 }
 
-$StatusDir = "$env:USERPROFILE\\.mirehub\\activity"
+$StatusDir = "$env:USERPROFILE\\.kanbai\\activity"
 if (!(Test-Path $StatusDir)) { New-Item -ItemType Directory -Path $StatusDir -Force | Out-Null }
 
 $Hash = [System.BitConverter]::ToString(
@@ -64,13 +64,13 @@ Set-Content -Path $File -Value $json -NoNewline
     fs.writeFileSync(scriptPath, script)
   } else {
     const script = `#!/bin/bash
-# Mirehub Claude Activity Hook (auto-generated)
-# Signals Claude activity status to Mirehub via status files
+# Kanbai Claude Activity Hook (auto-generated)
+# Signals Claude activity status to Kanbai via status files
 
 # Skip activity tracking for NL database queries (no bell sound)
-[ -n "$MIREHUB_NL_QUERY" ] && exit 0
+[ -n "$KANBAI_NL_QUERY" ] && exit 0
 
-STATUS_DIR="$HOME/.mirehub/activity"
+STATUS_DIR="$HOME/.kanbai/activity"
 mkdir -p "$STATUS_DIR"
 
 # Hash the project path for unique filename
@@ -106,9 +106,9 @@ printf '{"status":"%s","path":"%s","timestamp":%s}\\n' "$STATUS" "$PWD" "$(date 
 }
 
 /**
- * Ensures the auto-approve hook script exists at ~/.mirehub/hooks/mirehub-autoapprove.sh
+ * Ensures the auto-approve hook script exists at ~/.kanbai/hooks/kanbai-autoapprove.sh
  * When globalAutoApprove is true: auto-approves ALL tool permissions.
- * When globalAutoApprove is false: only auto-approves during kanban sessions (MIREHUB_KANBAN_TASK_ID).
+ * When globalAutoApprove is false: only auto-approves during kanban sessions (KANBAI_KANBAN_TASK_ID).
  */
 export function ensureAutoApproveScript(globalAutoApprove = false): void {
   if (!fs.existsSync(HOOKS_DIR)) {
@@ -118,27 +118,27 @@ export function ensureAutoApproveScript(globalAutoApprove = false): void {
   const scriptPath = path.join(HOOKS_DIR, AUTOAPPROVE_SCRIPT_NAME)
 
   if (IS_WIN) {
-    const kanbanCheck = globalAutoApprove ? '# Global auto-approve enabled' : 'if (-not $env:MIREHUB_KANBAN_TASK_ID) { exit 0 }'
-    const script = `# Mirehub - Auto-approve hook (auto-generated)
+    const kanbanCheck = globalAutoApprove ? '# Global auto-approve enabled' : 'if (-not $env:KANBAI_KANBAN_TASK_ID) { exit 0 }'
+    const script = `# Kanbai - Auto-approve hook (auto-generated)
 ${kanbanCheck}
 $null = $input | Out-Null
-Write-Output '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow","permissionDecisionReason":"Mirehub auto-approve"}}'
+Write-Output '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow","permissionDecisionReason":"Kanbai auto-approve"}}'
 `
     fs.writeFileSync(scriptPath, script)
   } else {
-    const kanbanOnlyCheck = '[ -z "$MIREHUB_KANBAN_TASK_ID" ] && exit 0'
+    const kanbanOnlyCheck = '[ -z "$KANBAI_KANBAN_TASK_ID" ] && exit 0'
     const script = `#!/bin/bash
-# Mirehub - Auto-approve hook (auto-generated)
+# Kanbai - Auto-approve hook (auto-generated)
 ${globalAutoApprove ? '# Global auto-approve enabled' : kanbanOnlyCheck}
 cat > /dev/null
-printf '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow","permissionDecisionReason":"Mirehub auto-approve"}}'
+printf '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow","permissionDecisionReason":"Kanbai auto-approve"}}'
 `
     fs.writeFileSync(scriptPath, script, { mode: 0o755 })
   }
 }
 
 /**
- * Ensures the kanban-done hook script exists at ~/.mirehub/hooks/kanban-done.sh
+ * Ensures the kanban-done hook script exists at ~/.kanbai/hooks/kanban-done.sh
  * Handles ticket status transitions on Claude Stop event.
  */
 export function ensureKanbanDoneScript(): void {
@@ -149,16 +149,16 @@ export function ensureKanbanDoneScript(): void {
   const scriptPath = path.join(HOOKS_DIR, KANBAN_DONE_SCRIPT_NAME)
 
   if (IS_WIN) {
-    const script = `# Mirehub - Kanban task completion hook (auto-generated)
-if (-not $env:MIREHUB_KANBAN_TASK_ID) { exit 0 }
-if (-not $env:MIREHUB_KANBAN_FILE) { exit 0 }
+    const script = `# Kanbai - Kanban task completion hook (auto-generated)
+if (-not $env:KANBAI_KANBAN_TASK_ID) { exit 0 }
+if (-not $env:KANBAI_KANBAN_FILE) { exit 0 }
 
-$ActivityScript = "$env:USERPROFILE\\.mirehub\\hooks\\${HOOK_SCRIPT_NAME}"
+$ActivityScript = "$env:USERPROFILE\\.kanbai\\hooks\\${HOOK_SCRIPT_NAME}"
 
 $result = node -e @"
 const fs = require('fs');
-const file = process.env.MIREHUB_KANBAN_FILE;
-const taskId = process.env.MIREHUB_KANBAN_TASK_ID;
+const file = process.env.KANBAI_KANBAN_FILE;
+const taskId = process.env.KANBAI_KANBAN_TASK_ID;
 try {
   const tasks = JSON.parse(fs.readFileSync(file, 'utf-8'));
   const task = tasks.find(t => t.id === taskId);
@@ -183,8 +183,8 @@ if ($result) {
       if ($isCto -eq 'true') {
         node -e @"
 const fs = require('fs');
-const file = process.env.MIREHUB_KANBAN_FILE;
-const taskId = process.env.MIREHUB_KANBAN_TASK_ID;
+const file = process.env.KANBAI_KANBAN_FILE;
+const taskId = process.env.KANBAI_KANBAN_TASK_ID;
 try {
   const tasks = JSON.parse(fs.readFileSync(file, 'utf-8'));
   const task = tasks.find(t => t.id === taskId);
@@ -212,7 +212,7 @@ try {
     fs.writeFileSync(scriptPath, script)
   } else {
     const script = `#!/bin/bash
-# Mirehub - Kanban task completion hook (auto-generated)
+# Kanbai - Kanban task completion hook (auto-generated)
 # Runs on Claude Code Stop event to check if the kanban ticket was updated.
 #
 # Behavior:
@@ -220,17 +220,17 @@ try {
 # - PENDING + CTO → auto-approve: revert to TODO (unblock CTO cycle)
 # - PENDING + regular → activity "waiting" (double bell in Electron)
 # - FAILED  → activity "failed" (quad bell in Electron)
-# - DONE    → no-op (activity "done" already written by mirehub-activity.sh)
-ACTIVITY_SCRIPT="$HOME/.mirehub/hooks/mirehub-activity.sh"
+# - DONE    → no-op (activity "done" already written by kanbai-activity.sh)
+ACTIVITY_SCRIPT="$HOME/.kanbai/hooks/kanbai-activity.sh"
 
-[ -z "$MIREHUB_KANBAN_TASK_ID" ] && exit 0
-[ -z "$MIREHUB_KANBAN_FILE" ] && exit 0
+[ -z "$KANBAI_KANBAN_TASK_ID" ] && exit 0
+[ -z "$KANBAI_KANBAN_FILE" ] && exit 0
 
 # Read ticket status, isCtoTicket flag, and title
 read -r TICKET_STATUS IS_CTO TICKET_TITLE <<< $(node -e "
 const fs = require('fs');
-const file = process.env.MIREHUB_KANBAN_FILE;
-const taskId = process.env.MIREHUB_KANBAN_TASK_ID;
+const file = process.env.KANBAI_KANBAN_FILE;
+const taskId = process.env.KANBAI_KANBAN_TASK_ID;
 try {
   const tasks = JSON.parse(fs.readFileSync(file, 'utf-8'));
   const task = tasks.find(t => t.id === taskId);
@@ -251,8 +251,8 @@ case "$TICKET_STATUS" in
       # CTO auto-approve: set back to TODO to unblock the CTO cycle
       node -e "
 const fs = require('fs');
-const file = process.env.MIREHUB_KANBAN_FILE;
-const taskId = process.env.MIREHUB_KANBAN_TASK_ID;
+const file = process.env.KANBAI_KANBAN_FILE;
+const taskId = process.env.KANBAI_KANBAN_TASK_ID;
 try {
   const tasks = JSON.parse(fs.readFileSync(file, 'utf-8'));
   const task = tasks.find(t => t.id === taskId);
@@ -274,8 +274,8 @@ try {
     # Claude forgot to update the ticket — block and remind
     node -e "
 const reason = 'RAPPEL: Tu n as pas mis a jour le ticket kanban !\\n'
-  + 'Fichier: ' + process.env.MIREHUB_KANBAN_FILE + '\\n'
-  + 'Ticket ID: ' + process.env.MIREHUB_KANBAN_TASK_ID + '\\n\\n'
+  + 'Fichier: ' + process.env.KANBAI_KANBAN_FILE + '\\n'
+  + 'Ticket ID: ' + process.env.KANBAI_KANBAN_TASK_ID + '\\n\\n'
   + 'Tu DOIS editer le fichier kanban pour mettre a jour ce ticket:\\n'
   + '- Change status a DONE (succes), FAILED (echec), ou PENDING (question)\\n'
   + '- Ajoute result, error, ou question selon le cas\\n'
@@ -292,7 +292,7 @@ esac
 
 /**
  * Installs PreToolUse + Stop hooks in a project's settings.local.json
- * to signal Claude activity back to Mirehub.
+ * to signal Claude activity back to Kanbai.
  * Merges with existing hooks (e.g. kanban hooks) without overwriting.
  */
 export async function installActivityHooks(
@@ -341,8 +341,8 @@ export async function installActivityHooks(
     ? (scriptPath: string, ...scriptArgs: string[]) => `powershell -ExecutionPolicy Bypass -File "${scriptPath}" ${scriptArgs.join(' ')}`
     : (scriptPath: string, ...scriptArgs: string[]) => `bash "${scriptPath}" ${scriptArgs.join(' ')}`
 
-  const activityScriptIncludes = IS_WIN ? 'mirehub-activity.ps1' : 'mirehub-activity.sh'
-  const autoApproveScriptIncludes = IS_WIN ? 'mirehub-autoapprove.ps1' : 'mirehub-autoapprove.sh'
+  const activityScriptIncludes = IS_WIN ? 'kanbai-activity.ps1' : 'kanbai-activity.sh'
+  const autoApproveScriptIncludes = IS_WIN ? 'kanbai-autoapprove.ps1' : 'kanbai-autoapprove.sh'
   const kanbanDoneScriptIncludes = IS_WIN ? 'kanban-done.ps1' : 'kanban-done.sh'
 
   // === PreToolUse hooks ===
@@ -446,7 +446,7 @@ async function installCodexActivityHooks(
     fs.mkdirSync(codexDir, { recursive: true })
   }
 
-  const hookScriptPath = path.join(os.homedir(), '.mirehub', 'hooks', 'mirehub-activity.sh')
+  const hookScriptPath = path.join(os.homedir(), '.kanbai', 'hooks', 'kanbai-activity.sh')
   const configPath = path.join(codexDir, 'config.toml')
 
   let existingConfig = ''
@@ -455,7 +455,7 @@ async function installCodexActivityHooks(
   }
 
   // Only add if not already present
-  if (!existingConfig.includes('mirehub-activity')) {
+  if (!existingConfig.includes('kanbai-activity')) {
     const notifyLine = `notify = ["bash", "${hookScriptPath}", "working"]`
     if (existingConfig.trim()) {
       fs.writeFileSync(configPath, `${existingConfig.trimEnd()}\n${notifyLine}\n`, 'utf-8')
@@ -480,7 +480,7 @@ async function installCopilotActivityHooks(
     fs.mkdirSync(copilotDir, { recursive: true })
   }
 
-  const hookScriptPath = path.join(os.homedir(), '.mirehub', 'hooks', 'mirehub-activity.sh')
+  const hookScriptPath = path.join(os.homedir(), '.kanbai', 'hooks', 'kanbai-activity.sh')
   const configPath = path.join(copilotDir, 'config.json')
 
   let existingConfig: Record<string, unknown> = {}
@@ -497,7 +497,7 @@ async function installCopilotActivityHooks(
 }
 
 /**
- * Iterates all existing workspace env directories (~/.mirehub/envs/*)
+ * Iterates all existing workspace env directories (~/.kanbai/envs/*)
  * and ensures hooks are installed in each one.
  * Called at app startup to keep all envs in sync.
  */
@@ -518,7 +518,7 @@ export function syncAllWorkspaceEnvHooks(): void {
 }
 
 /**
- * Watches ~/.mirehub/activity/ for status file changes.
+ * Watches ~/.kanbai/activity/ for status file changes.
  * Broadcasts CLAUDE_ACTIVITY events to all renderer windows.
  */
 export function startActivityWatcher(): () => void {

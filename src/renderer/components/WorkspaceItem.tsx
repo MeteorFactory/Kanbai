@@ -106,7 +106,7 @@ export function WorkspaceItem({ workspace, projects, isActive }: WorkspaceItemPr
 
   useEffect(() => {
     if (workspaceClaudeStatus === 'working' || workspaceClaudeStatus === 'ask' || workspaceClaudeStatus === 'waiting' || workspaceClaudeStatus === 'failed') {
-      window.mirehub.kanban.getWorkingTicket(workspace.id).then((result) => {
+      window.kanbai.kanban.getWorkingTicket(workspace.id).then((result) => {
         setWorkingTicketInfo(result ? { ticketNumber: result.ticketNumber, isCtoTicket: result.isCtoTicket } : null)
       }).catch(() => setWorkingTicketInfo(null))
     } else {
@@ -166,22 +166,22 @@ export function WorkspaceItem({ workspace, projects, isActive }: WorkspaceItemPr
     setCreateError(null)
 
     // Pick parent directory
-    const parentDir = await window.mirehub.project.selectDir()
+    const parentDir = await window.kanbai.project.selectDir()
     if (!parentDir) return
 
     const projectPath = parentDir + '/' + name
     // Check if directory already exists
-    const exists = await window.mirehub.fs.exists(projectPath)
+    const exists = await window.kanbai.fs.exists(projectPath)
     if (exists) {
       setCreateError(t('workspace.folderExists'))
       return
     }
 
     // Create directory
-    await window.mirehub.fs.mkdir(projectPath)
+    await window.kanbai.fs.mkdir(projectPath)
 
     // Add as project
-    const project = await window.mirehub.project.add({
+    const project = await window.kanbai.project.add({
       workspaceId: workspace.id,
       path: projectPath,
     })
@@ -210,11 +210,11 @@ export function WorkspaceItem({ workspace, projects, isActive }: WorkspaceItemPr
   }, [showCreateModal])
 
   const handleExportWorkspace = useCallback(async () => {
-    await window.mirehub.workspace.export(workspace.id)
+    await window.kanbai.workspace.export(workspace.id)
   }, [workspace.id])
 
   const handleImportWorkspace = useCallback(async () => {
-    const result = await window.mirehub.workspace.import()
+    const result = await window.kanbai.workspace.import()
     if (result.success) {
       // Reload workspaces to pick up the imported one
       const { loadWorkspaces } = useWorkspaceStore.getState()
@@ -240,7 +240,7 @@ export function WorkspaceItem({ workspace, projects, isActive }: WorkspaceItemPr
 
   // Drag & drop handlers
   const handleDragOver = useCallback((e: React.DragEvent) => {
-    if (e.dataTransfer.types.includes('application/mirehub-project')) {
+    if (e.dataTransfer.types.includes('application/kanbai-project')) {
       e.preventDefault()
       e.dataTransfer.dropEffect = 'move'
       setIsDragOver(true)
@@ -255,7 +255,7 @@ export function WorkspaceItem({ workspace, projects, isActive }: WorkspaceItemPr
     (e: React.DragEvent) => {
       e.preventDefault()
       setIsDragOver(false)
-      const projectId = e.dataTransfer.getData('application/mirehub-project')
+      const projectId = e.dataTransfer.getData('application/kanbai-project')
       if (projectId) {
         moveProject(projectId, workspace.id)
       }

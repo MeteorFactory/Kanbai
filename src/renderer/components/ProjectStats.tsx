@@ -61,7 +61,7 @@ export function ProjectStats() {
     if (!activeProject) return
     setLoading(true)
     try {
-      const result = await window.mirehub.project.stats(activeProject.path)
+      const result = await window.kanbai.project.stats(activeProject.path)
       setStats(result)
     } catch {
       setStats(null)

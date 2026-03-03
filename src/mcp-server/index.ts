@@ -9,7 +9,7 @@ import { registerProjectTools } from './tools/project.js'
 const ctx = resolveWorkspaceContext()
 
 const server = new McpServer({
-  name: 'mirehub',
+  name: 'kanbai',
   version: '1.0.0',
 })
 

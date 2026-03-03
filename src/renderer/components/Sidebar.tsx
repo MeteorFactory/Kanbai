@@ -37,7 +37,7 @@ export function Sidebar() {
 
   const handleCreateFromFolder = useCallback(async () => {
     // Select directory first to know the workspace name
-    const dirPath = await window.mirehub.project.selectDir()
+    const dirPath = await window.kanbai.project.selectDir()
     if (!dirPath) return
 
     const folderName = dirPath.split(/[\\/]/).pop() || dirPath
@@ -61,7 +61,7 @@ export function Sidebar() {
     if (deleted) {
       setDeletedWorkspace(deleted)
       setPendingCreateAction(() => async () => {
-        const parentDir = await window.mirehub.project.selectDir()
+        const parentDir = await window.kanbai.project.selectDir()
         if (!parentDir) return
         await createWorkspaceFromNewInDir(name, parentDir, newProjectAiProvider)
         setShowNewProjectModal(false)
@@ -89,7 +89,7 @@ export function Sidebar() {
   const handleStartFresh = useCallback(async () => {
     if (!deletedWorkspace) return
     // Permanently delete the old workspace and env directory, then proceed with creation
-    await window.mirehub.workspace.permanentDelete(deletedWorkspace.id)
+    await window.kanbai.workspace.permanentDelete(deletedWorkspace.id)
     setShowRestoreModal(false)
     setDeletedWorkspace(null)
     if (pendingCreateAction) {
@@ -100,7 +100,7 @@ export function Sidebar() {
 
   useEffect(() => {
     init()
-    window.mirehub.settings.get().then((s: AppSettings) => {
+    window.kanbai.settings.get().then((s: AppSettings) => {
       if (s.defaultAiProvider) {
         setNewProjectAiProvider(s.defaultAiProvider as AiProviderId)
       }
@@ -139,18 +139,18 @@ export function Sidebar() {
       } else if (action === 'workspace:newFromFolder') {
         handleCreateFromFolder()
       } else if (action === 'workspace:import') {
-        window.mirehub.workspace.import().then((result) => {
+        window.kanbai.workspace.import().then((result) => {
           if (result.success) init()
         })
       } else if (action === 'workspace:export') {
         const ws = useWorkspaceStore.getState()
         if (ws.activeWorkspaceId) {
-          window.mirehub.workspace.export(ws.activeWorkspaceId)
+          window.kanbai.workspace.export(ws.activeWorkspaceId)
         }
       }
     }
-    window.addEventListener('mirehub:menu-action', handleMenuAction)
-    return () => window.removeEventListener('mirehub:menu-action', handleMenuAction)
+    window.addEventListener('kanbai:menu-action', handleMenuAction)
+    return () => window.removeEventListener('kanbai:menu-action', handleMenuAction)
   }, [handleCreateFromFolder, init])
 
   // Close create menu on click outside

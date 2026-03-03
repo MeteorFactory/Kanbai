@@ -43,13 +43,13 @@ export function AgentsSkillsTab({ projectPath, onDeploySuccess }: Props) {
 
   const loadAll = useCallback(async () => {
     const [agentList, skillList] = await Promise.all([
-      window.mirehub.claudeAgents.list(projectPath),
-      window.mirehub.claudeSkills.list(projectPath),
+      window.kanbai.claudeAgents.list(projectPath),
+      window.kanbai.claudeSkills.list(projectPath),
     ])
 
     const enrichedA = await Promise.all(
       agentList.map(async (a: AgentFile) => {
-        const content = await window.mirehub.claudeAgents.read(projectPath, a.filename)
+        const content = await window.kanbai.claudeAgents.read(projectPath, a.filename)
         return parseAgentFrontmatter(a.filename, content ?? '')
       })
     )
@@ -57,7 +57,7 @@ export function AgentsSkillsTab({ projectPath, onDeploySuccess }: Props) {
 
     const enrichedS = await Promise.all(
       skillList.map(async (s: AgentFile) => {
-        const content = await window.mirehub.claudeSkills.read(projectPath, s.filename)
+        const content = await window.kanbai.claudeSkills.read(projectPath, s.filename)
         return parseAgentFrontmatter(s.filename, content ?? '')
       })
     )
@@ -68,7 +68,7 @@ export function AgentsSkillsTab({ projectPath, onDeploySuccess }: Props) {
 
   const handleSave = useCallback(async (filename: string, content: string) => {
     if (!editing) return
-    const api = editing.type === 'agent' ? window.mirehub.claudeAgents : window.mirehub.claudeSkills
+    const api = editing.type === 'agent' ? window.kanbai.claudeAgents : window.kanbai.claudeSkills
     await api.write(projectPath, filename, content)
     if (editing.agent && editing.agent.filename && editing.agent.filename !== filename) {
       await api.delete(projectPath, editing.agent.filename)
@@ -78,7 +78,7 @@ export function AgentsSkillsTab({ projectPath, onDeploySuccess }: Props) {
   }, [editing, projectPath, loadAll])
 
   const handleDuplicate = useCallback(async (type: 'agent' | 'skill', agent: EnrichedAgent) => {
-    const api = type === 'agent' ? window.mirehub.claudeAgents : window.mirehub.claudeSkills
+    const api = type === 'agent' ? window.kanbai.claudeAgents : window.kanbai.claudeSkills
     const content = await api.read(projectPath, agent.filename)
     const newFilename = agent.name + '-copy.md'
     await api.write(projectPath, newFilename, content ?? '')
@@ -86,13 +86,13 @@ export function AgentsSkillsTab({ projectPath, onDeploySuccess }: Props) {
   }, [projectPath, loadAll])
 
   const handleDelete = useCallback(async (type: 'agent' | 'skill', filename: string) => {
-    const api = type === 'agent' ? window.mirehub.claudeAgents : window.mirehub.claudeSkills
+    const api = type === 'agent' ? window.kanbai.claudeAgents : window.kanbai.claudeSkills
     await api.delete(projectPath, filename)
     await loadAll()
   }, [projectPath, loadAll])
 
   const handleToggle = useCallback(async (type: 'agent' | 'skill', agent: EnrichedAgent) => {
-    const api = type === 'agent' ? window.mirehub.claudeAgents : window.mirehub.claudeSkills
+    const api = type === 'agent' ? window.kanbai.claudeAgents : window.kanbai.claudeSkills
     const isDisabled = agent.disabled ?? false
     const newFilename = isDisabled
       ? agent.filename.replace(/\.md\.disabled$/, '.md')
@@ -115,7 +115,7 @@ export function AgentsSkillsTab({ projectPath, onDeploySuccess }: Props) {
   const handleCustomizeDefault = useCallback(async (profile: DefaultProfile, isDeployed: boolean) => {
     let initial: EnrichedAgent | null = null
     if (isDeployed) {
-      const content = await window.mirehub.claudeAgents.read(projectPath, profile.filename)
+      const content = await window.kanbai.claudeAgents.read(projectPath, profile.filename)
       if (content) initial = parseAgentFrontmatter(profile.filename, content)
     }
     if (!initial) {
@@ -131,7 +131,7 @@ export function AgentsSkillsTab({ projectPath, onDeploySuccess }: Props) {
 
   const handleRestoreDefault = useCallback(async () => {
     if (!editing?.defaultContent || !editing.agent) return
-    await window.mirehub.claudeAgents.write(projectPath, editing.agent.filename, editing.defaultContent)
+    await window.kanbai.claudeAgents.write(projectPath, editing.agent.filename, editing.defaultContent)
     setEditing(null)
     await loadAll()
   }, [editing, projectPath, loadAll])

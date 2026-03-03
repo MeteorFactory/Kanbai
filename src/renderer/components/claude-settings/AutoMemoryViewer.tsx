@@ -14,7 +14,7 @@ export function AutoMemoryViewer({ projectPath }: Props) {
   const [topicContent, setTopicContent] = useState('')
 
   const load = useCallback(async () => {
-    const result = await window.mirehub.claudeMemory.readAuto(projectPath)
+    const result = await window.kanbai.claudeMemory.readAuto(projectPath)
     setContent(result.content)
     setTopicFiles(result.topicFiles)
   }, [projectPath])
@@ -23,7 +23,7 @@ export function AutoMemoryViewer({ projectPath }: Props) {
 
   const handleSelectTopic = useCallback(async (topicPath: string) => {
     setSelectedTopic(topicPath)
-    const c = await window.mirehub.claudeMemory.readFile(topicPath)
+    const c = await window.kanbai.claudeMemory.readFile(topicPath)
     setTopicContent(c ?? '')
   }, [])
 

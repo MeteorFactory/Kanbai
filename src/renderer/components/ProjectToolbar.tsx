@@ -50,7 +50,7 @@ export function ProjectToolbar() {
     Promise.all(
       workspaceProjects.map(async (proj) => {
         try {
-          const info: ProjectInfo = await window.mirehub.project.scanInfo(proj.path)
+          const info: ProjectInfo = await window.kanbai.project.scanInfo(proj.path)
           const targets = info.hasMakefile
             ? info.makeTargets.filter((t) => !t.startsWith('_') && t !== '.PHONY')
             : []
@@ -80,7 +80,7 @@ export function ProjectToolbar() {
       const sessionId = findTerminalSession(tab.paneTree, tab.activePaneId)
       if (sessionId) {
         const escapedPath = projectPath.replace(/'/g, "'\\''")
-        window.mirehub.terminal.write(sessionId, `cd '${escapedPath}' && make ${target}\n`)
+        window.kanbai.terminal.write(sessionId, `cd '${escapedPath}' && make ${target}\n`)
       }
     },
     [activeTabId, tabs],

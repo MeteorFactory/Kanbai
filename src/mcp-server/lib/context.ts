@@ -11,20 +11,20 @@ export interface WorkspaceContext {
 }
 
 export function resolveWorkspaceContext(): WorkspaceContext {
-  const workspaceId = process.env.MIREHUB_WORKSPACE_ID
-  const workspaceName = process.env.MIREHUB_WORKSPACE_NAME
+  const workspaceId = process.env.KANBAI_WORKSPACE_ID
+  const workspaceName = process.env.KANBAI_WORKSPACE_NAME
 
   if (!workspaceId) {
-    throw new Error('MIREHUB_WORKSPACE_ID env var is required')
+    throw new Error('KANBAI_WORKSPACE_ID env var is required')
   }
   if (!workspaceName) {
-    throw new Error('MIREHUB_WORKSPACE_NAME env var is required')
+    throw new Error('KANBAI_WORKSPACE_NAME env var is required')
   }
 
   const home = os.homedir()
-  const kanbanDir = path.join(home, '.mirehub', 'kanban')
-  const analysisDir = path.join(home, '.mirehub', 'analysis')
-  const envsDir = path.join(home, '.mirehub', 'envs')
+  const kanbanDir = path.join(home, '.kanbai', 'kanban')
+  const analysisDir = path.join(home, '.kanbai', 'analysis')
+  const envsDir = path.join(home, '.kanbai', 'envs')
   const sanitized = workspaceName.replace(/[/\\:*?"<>|]/g, '_')
   const envPath = path.join(envsDir, sanitized)
 

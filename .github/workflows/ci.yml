@@ -83,25 +83,15 @@ jobs:
       - name: Determine next version
         id: version
         run: |
-          LATEST=$(git tag -l 'v*' --sort=-v:refname | head -n1)
-          if [ -z "$LATEST" ]; then
-            CURRENT=$(node -p "require('./package.json').version")
-            MAJOR=$(echo "$CURRENT" | cut -d. -f1)
-            MINOR=$(echo "$CURRENT" | cut -d. -f2)
-            PATCH=$(echo "$CURRENT" | cut -d. -f3)
-            PATCH=$((PATCH + 1))
-            NEXT="v${MAJOR}.${MINOR}.${PATCH}"
-          else
-            MAJOR=$(echo "$LATEST" | sed 's/v//' | cut -d. -f1)
-            MINOR=$(echo "$LATEST" | sed 's/v//' | cut -d. -f2)
-            PATCH=$(echo "$LATEST" | sed 's/v//' | cut -d. -f3)
-            PATCH=$((PATCH + 1))
-            NEXT="v${MAJOR}.${MINOR}.${PATCH}"
+          VERSION=$(node -p "require('./package.json').version")
+          TAG="v${VERSION}"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "::error::Tag $TAG already exists. Bump the version in package.json before merging."
+            exit 1
           fi
-          VERSION="${NEXT#v}"
-          echo "tag=$NEXT" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "Next version: $NEXT"
+          echo "Next version: $TAG"
 
       - name: Create and push tag
         run: |

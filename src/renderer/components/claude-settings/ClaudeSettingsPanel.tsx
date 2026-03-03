@@ -60,15 +60,15 @@ export function ClaudeSettingsPanel() {
     if (!activeProject) return
     setLoading(true)
     try {
-      const result = await window.mirehub.project.scanClaude(activeProject.path)
+      const result = await window.kanbai.project.scanClaude(activeProject.path)
       if (result.settings) {
         const s = result.settings as Record<string, unknown>
-        if (s._mirehubMode && typeof s.permissions === 'object' && s.permissions !== null) {
+        if (s._kanbaiMode && typeof s.permissions === 'object' && s.permissions !== null) {
           const perms = s.permissions as Record<string, unknown>
           if (!perms.defaultMode) {
-            perms.defaultMode = s._mirehubMode
-            delete s._mirehubMode
-            await window.mirehub.project.writeClaudeSettings(activeProject.path, s)
+            perms.defaultMode = s._kanbaiMode
+            delete s._kanbaiMode
+            await window.kanbai.project.writeClaudeSettings(activeProject.path, s)
           }
         }
         setSettings(s)
@@ -81,7 +81,7 @@ export function ClaudeSettingsPanel() {
       setLocalSettings(result.localSettings ?? null)
       setUserSettings(result.userSettings ?? null)
       try {
-        const managed = await window.mirehub.project.readManagedSettings()
+        const managed = await window.kanbai.project.readManagedSettings()
         setManagedSettings(managed)
       } catch { setManagedSettings(null) }
 
@@ -90,9 +90,9 @@ export function ClaudeSettingsPanel() {
       setWorkflowDeployed(md.includes(WORKFLOW_MARKER))
 
       const wsName = activeWorkspace?.name
-      const validation = await window.mirehub.claude.validateSettings(activeProject.path, wsName)
+      const validation = await window.kanbai.claude.validateSettings(activeProject.path, wsName)
       setSettingsErrors(validation.errors)
-      const hs = await window.mirehub.claude.checkHooksStatus(activeProject.path, wsName)
+      const hs = await window.kanbai.claude.checkHooksStatus(activeProject.path, wsName)
       setHooksStatus(hs)
     } catch {
       setSettings({})
@@ -108,16 +108,16 @@ export function ClaudeSettingsPanel() {
     if (!activeProject) return
     setSettings(newSettings)
     if (settingsTarget === 'local') {
-      await window.mirehub.project.writeClaudeLocalSettings(activeProject.path, newSettings)
+      await window.kanbai.project.writeClaudeLocalSettings(activeProject.path, newSettings)
     } else {
-      await window.mirehub.project.writeClaudeSettings(activeProject.path, newSettings)
+      await window.kanbai.project.writeClaudeSettings(activeProject.path, newSettings)
     }
   }, [activeProject, settingsTarget])
 
   const handleFixSettings = useCallback(async () => {
     if (!activeProject) return
     setFixingSettings(true)
-    await window.mirehub.claude.fixSettings(activeProject.path, activeWorkspace?.name)
+    await window.kanbai.claude.fixSettings(activeProject.path, activeWorkspace?.name)
     await loadData()
     setFixingSettings(false)
   }, [activeProject, activeWorkspace, loadData])
@@ -125,8 +125,8 @@ export function ClaudeSettingsPanel() {
   const handleInstallHooks = useCallback(async () => {
     if (!activeProject) return
     setInstallingHooks(true)
-    await window.mirehub.claude.installHooks(activeProject.path, activeWorkspace?.name)
-    const hs = await window.mirehub.claude.checkHooksStatus(activeProject.path, activeWorkspace?.name)
+    await window.kanbai.claude.installHooks(activeProject.path, activeWorkspace?.name)
+    const hs = await window.kanbai.claude.checkHooksStatus(activeProject.path, activeWorkspace?.name)
     setHooksStatus(hs)
     setInstallingHooks(false)
   }, [activeProject, activeWorkspace])
@@ -134,8 +134,8 @@ export function ClaudeSettingsPanel() {
   const handleUpdateHooks = useCallback(async () => {
     if (!activeProject) return
     setInstallingHooks(true)
-    await window.mirehub.claude.installHooks(activeProject.path, activeWorkspace?.name)
-    const hs = await window.mirehub.claude.checkHooksStatus(activeProject.path, activeWorkspace?.name)
+    await window.kanbai.claude.installHooks(activeProject.path, activeWorkspace?.name)
+    const hs = await window.kanbai.claude.checkHooksStatus(activeProject.path, activeWorkspace?.name)
     setHooksStatus(hs)
     setInstallingHooks(false)
   }, [activeProject, activeWorkspace])
@@ -143,20 +143,20 @@ export function ClaudeSettingsPanel() {
   const handleRemoveHooks = useCallback(async () => {
     if (!activeProject) return
     setRemovingHooks(true)
-    await window.mirehub.claude.removeHooks(activeProject.path, activeWorkspace?.name)
-    const hs = await window.mirehub.claude.checkHooksStatus(activeProject.path, activeWorkspace?.name)
+    await window.kanbai.claude.removeHooks(activeProject.path, activeWorkspace?.name)
+    const hs = await window.kanbai.claude.checkHooksStatus(activeProject.path, activeWorkspace?.name)
     setHooksStatus(hs)
     setRemovingHooks(false)
   }, [activeProject, activeWorkspace])
 
   const handleExportConfig = useCallback(async () => {
     if (!activeProject) return
-    await window.mirehub.project.exportClaudeConfig(activeProject.path)
+    await window.kanbai.project.exportClaudeConfig(activeProject.path)
   }, [activeProject])
 
   const handleImportConfig = useCallback(async () => {
     if (!activeProject) return
-    const result = await window.mirehub.project.importClaudeConfig(activeProject.path)
+    const result = await window.kanbai.project.importClaudeConfig(activeProject.path)
     if (result.success) await loadData()
   }, [activeProject, loadData])
 
@@ -167,7 +167,7 @@ export function ClaudeSettingsPanel() {
 
   const handleSaveClaudeMd = useCallback(async (content: string) => {
     if (!activeProject) return
-    await window.mirehub.project.writeClaudeMd(activeProject.path, content)
+    await window.kanbai.project.writeClaudeMd(activeProject.path, content)
     setClaudeMd(content)
     setWorkflowDeployed(content.includes(WORKFLOW_MARKER))
   }, [activeProject])

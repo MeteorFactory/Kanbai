@@ -1,8 +1,8 @@
-# Mirehub - Architecture Globale
+# Kanbai - Architecture Globale
 
 ## 1. Vue d'ensemble
 
-**Mirehub** est un terminal macOS enrichi par l'IA, construit avec Electron. Il combine un émulateur de terminal complet (xterm.js + node-pty), une gestion de workspaces/projets, l'intégration native de Claude Code, et un tableau Kanban avec assignation d'agents IA.
+**Kanbai** est un terminal macOS enrichi par l'IA, construit avec Electron. Il combine un émulateur de terminal complet (xterm.js + node-pty), une gestion de workspaces/projets, l'intégration native de Claude Code, et un tableau Kanban avec assignation d'agents IA.
 
 ### Principes directeurs
 
@@ -10,7 +10,7 @@
 - **Context Isolation** obligatoire, nodeIntegration désactivé
 - **Architecture plate** dans le renderer (composants dans `src/renderer/components/`, stores dans `src/renderer/lib/stores/`)
 - **État centralisé** avec Zustand (léger, TypeScript-first, pas de boilerplate Redux)
-- **Persistance locale** via fichier JSON (`~/.mirehub/data.json`) gere par `StorageService`
+- **Persistance locale** via fichier JSON (`~/.kanbai/data.json`) gere par `StorageService`
 
 ---
 
@@ -42,7 +42,7 @@
 │  └──────────┘  └──────────┘  └───────────────┘         │
 │                                                          │
 │  ┌──────────────────────────────────────────┐           │
-│  │ StorageService (JSON: ~/.mirehub/data.json)│           │
+│  │ StorageService (JSON: ~/.kanbai/data.json)│           │
 │  └──────────────────────────────────────────┘           │
 │                                                          │
 ├──────────────── contextBridge / preload ─────────────────┤
@@ -79,7 +79,7 @@
 | Service / Handler IPC | Responsabilite |
 |---------|---------------|
 | **AppLifecycle** (`src/main/index.ts`) | Gestion du cycle de vie Electron (ready, activate, quit, window-all-closed) |
-| **StorageService** (`src/main/services/storage.ts`) | Persistance JSON (`~/.mirehub/data.json`), singleton, CRUD workspaces/projects/kanban/settings/templates/sessions |
+| **StorageService** (`src/main/services/storage.ts`) | Persistance JSON (`~/.kanbai/data.json`), singleton, CRUD workspaces/projects/kanban/settings/templates/sessions |
 | **terminal.ts** (IPC handler) | Creation et gestion des pseudo-terminaux via node-pty |
 | **claude.ts** (IPC handler) | Lancement/arret des processus Claude Code (child_process) |
 | **workspace.ts** (IPC handler) | CRUD workspaces via StorageService |
@@ -484,7 +484,7 @@ Workspaces/
 │   │       └── storage.ts            # StorageService (singleton, JSON file)
 │   │
 │   ├── preload/                       # --- PRELOAD SCRIPTS ---
-│   │   └── index.ts                   # contextBridge: expose window.mirehub (API par domaine)
+│   │   └── index.ts                   # contextBridge: expose window.kanbai (API par domaine)
 │   │
 │   ├── renderer/                      # --- RENDERER PROCESS (React) ---
 │   │   ├── main.tsx                   # React entry point
@@ -530,7 +530,7 @@ Workspaces/
 │   │   │       └── viewStore.ts       # Etat de l'UI (panels, vues)
 │   │   │
 │   │   ├── types/
-│   │   │   └── global.d.ts           # Declaration window.mirehub
+│   │   │   └── global.d.ts           # Declaration window.kanbai
 │   │   │
 │   │   └── styles/                    # CSS (pas de Tailwind)
 │   │       ├── global.css             # Styles globaux + variables CSS
@@ -606,7 +606,7 @@ Workspaces/
 | Rejetee | Raison |
 |---------|--------|
 | Redux Toolkit | Trop de boilerplate pour ce projet, Zustand suffit |
-| better-sqlite3 | Overhead inutile, un fichier JSON (`~/.mirehub/data.json`) suffit pour le volume de donnees |
+| better-sqlite3 | Overhead inutile, un fichier JSON (`~/.kanbai/data.json`) suffit pour le volume de donnees |
 | Tailwind CSS | Non necessaire, CSS natif avec variables suffit |
 | Playwright / Spectron | Non installe, pas de tests E2E pour le moment |
 | Zod | Non installe, validation manuelle dans les handlers IPC |
@@ -645,11 +645,11 @@ img-src 'self' data:;
 
 ### 7.3 Preload - API structuree par domaine
 
-Le preload expose une API structuree par domaine via `contextBridge.exposeInMainWorld('mirehub', api)`. Le nom est **`window.mirehub`** (minuscule). Aucun module Node.js n'est expose directement.
+Le preload expose une API structuree par domaine via `contextBridge.exposeInMainWorld('kanbai', api)`. Le nom est **`window.kanbai`** (minuscule). Aucun module Node.js n'est expose directement.
 
 ```typescript
 // preload/index.ts - Structure de l'API exposee
-contextBridge.exposeInMainWorld('mirehub', {
+contextBridge.exposeInMainWorld('kanbai', {
   terminal: {
     create: (options) => ipcRenderer.invoke('terminal:create', options),
     write: (id, data) => ipcRenderer.send('terminal:input', { id, data }),
@@ -699,7 +699,7 @@ contextBridge.exposeInMainWorld('mirehub', {
 
 ### 8.1 Fichier JSON (`StorageService`)
 
-**Emplacement**: `~/.mirehub/data.json`
+**Emplacement**: `~/.kanbai/data.json`
 
 **Implementation**: `src/main/services/storage.ts` — singleton TypeScript qui charge le fichier JSON au demarrage et le persiste a chaque modification.
 
@@ -716,7 +716,7 @@ interface AppData {
 ```
 
 **Fonctionnement** :
-- Au demarrage, `StorageService` lit `~/.mirehub/data.json` et stocke les donnees en memoire
+- Au demarrage, `StorageService` lit `~/.kanbai/data.json` et stocke les donnees en memoire
 - Chaque operation CRUD modifie les donnees en memoire puis appelle `save()` qui ecrit le fichier JSON complet
 - Pattern singleton : toutes les instances partagent le meme etat en memoire
 - Si le fichier n'existe pas, un etat par defaut est cree avec `DEFAULT_SETTINGS`
@@ -823,7 +823,7 @@ User action → React component → Zustand action → IPC invoke → Main servi
 - **`tests/mocks/electron.ts`**: `createMockIpcMain()` simule `ipcMain` d'Electron avec `handle`/`on`/`_invoke`/`_emit` + mocks pour `BrowserWindow`, `dialog`, `Notification`
 - **`tests/helpers/storage.ts`**: repertoire temporaire et utilitaires fichiers pour isoler `StorageService`
 - **`tests/setup.ts`**: nettoyage global (`vi.restoreAllMocks` apres chaque test)
-- **Mock preload**: `vi.stubGlobal('window', { mirehub: { ... } })` pour tester les stores renderer
+- **Mock preload**: `vi.stubGlobal('window', { kanbai: { ... } })` pour tester les stores renderer
 
 ---
 
@@ -901,8 +901,8 @@ KanbanBoard "Envoyer a Claude"
    - Le hook est configure une seule fois (verifie `alreadyConfigured`)
 
 2. **Variables d'environnement** :
-   - `MIREHUB_KANBAN_TASK_ID` : ID de la tache Kanban en cours
-   - `MIREHUB_KANBAN_FILE` : Chemin absolu vers `kanban.json`
+   - `KANBAI_KANBAN_TASK_ID` : ID de la tache Kanban en cours
+   - `KANBAI_KANBAN_FILE` : Chemin absolu vers `kanban.json`
    - Ces variables sont definies uniquement pour les sessions lancees depuis le Kanban
 
 3. **Script `kanban-done.sh`** :

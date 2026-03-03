@@ -7,7 +7,7 @@ L'application utilise **Zustand 5** pour la gestion d'etat dans le processus ren
 ```
 Main Process (source de verite)  ← IPC →  Renderer (cache + etat UI)
        StorageService                         Zustand stores
-       (~/.mirehub/data.json)                  (en memoire)
+       (~/.kanbai/data.json)                  (en memoire)
 ```
 
 **Principe** : le main process est la source de verite pour les donnees persistees. Les stores Zustand agissent comme un cache synchronise via IPC et gerent l'etat UI ephemere.
@@ -309,5 +309,5 @@ termStore.createTab(workspaceId, cwd, label, command)
 
 ```typescript
 const mockApi = { list: vi.fn(), create: vi.fn() }
-vi.stubGlobal('window', { mirehub: { workspace: mockApi } })
+vi.stubGlobal('window', { kanbai: { workspace: mockApi } })
 ```

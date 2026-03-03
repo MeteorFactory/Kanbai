@@ -157,7 +157,7 @@ export function FileViewer() {
     setJsonError(null)
 
     if (isImageFile(selectedFilePath) || isPdfFile(selectedFilePath)) {
-      window.mirehub.fs
+      window.kanbai.fs
         .readBase64(selectedFilePath)
         .then((result: { data: string | null; error: string | null }) => {
           if (result.error) {
@@ -169,7 +169,7 @@ export function FileViewer() {
         .catch((err: unknown) => setError(String(err)))
         .finally(() => setLoading(false))
     } else {
-      window.mirehub.fs
+      window.kanbai.fs
         .readFile(selectedFilePath)
         .then((result: { content: string | null; error: string | null }) => {
           if (result.error) {
@@ -199,7 +199,7 @@ export function FileViewer() {
     const value = editorRef.current.getValue()
     setSaving(true)
     try {
-      const result = await window.mirehub.fs.writeFile(selectedFilePath, value)
+      const result = await window.kanbai.fs.writeFile(selectedFilePath, value)
       if (result.success) {
         setEditorDirty(false)
         setContent(value)

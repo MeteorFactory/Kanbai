@@ -174,7 +174,7 @@ export function DatabaseSidebar({
 
       try {
         // Try loading schemas first (PostgreSQL, MSSQL)
-        const schemas = await window.mirehub.database.listSchemas(connectionId)
+        const schemas = await window.kanbai.database.listSchemas(connectionId)
         if (schemas.length > 0) {
           setTreeData((prev) => {
             const next = new Map(prev)
@@ -191,7 +191,7 @@ export function DatabaseSidebar({
           // Load tables for each schema
           for (const schema of schemas) {
             try {
-              const tables = await window.mirehub.database.listTables(connectionId, schema)
+              const tables = await window.kanbai.database.listTables(connectionId, schema)
               setTreeData((prev) => {
                 const next = new Map(prev)
                 const node = next.get(connectionId)
@@ -208,7 +208,7 @@ export function DatabaseSidebar({
           }
         } else {
           // Flat table list (MySQL, SQLite, MongoDB)
-          const tables = await window.mirehub.database.listTables(connectionId)
+          const tables = await window.kanbai.database.listTables(connectionId)
           setTreeData((prev) => {
             const next = new Map(prev)
             const node = next.get(connectionId)
@@ -239,7 +239,7 @@ export function DatabaseSidebar({
   // Load backups for a connection
   const loadBackupsForConnection = useCallback(async (connectionId: string) => {
     try {
-      const result = await window.mirehub.database.backupList(connectionId)
+      const result = await window.kanbai.database.backupList(connectionId)
       if (result.success) {
         setBackupsByConnection((prev) => ({ ...prev, [connectionId]: result.entries }))
       }

@@ -207,7 +207,7 @@ Les vues principales sont controlees par `viewStore.viewMode`. Le terminal est t
 
 ### SettingsPanel.tsx
 - **Fichier** : `src/renderer/components/SettingsPanel.tsx`
-- **Role** : Panneau de preferences. Sections : Apparence (theme sombre/clair/systeme, taille et famille de police), Terminal (shell par defaut, scrollback), Claude (couleur de detection, auto-clauder), Notifications (son, verification MAJ au lancement). Persistence via IPC `window.mirehub.settings`.
+- **Role** : Panneau de preferences. Sections : Apparence (theme sombre/clair/systeme, taille et famille de police), Terminal (shell par defaut, scrollback), Claude (couleur de detection, auto-clauder), Notifications (son, verification MAJ au lancement). Persistence via IPC `window.kanbai.settings`.
 - **Stores** : aucun (etat local, persistance IPC)
 
 ### NotificationCenter.tsx

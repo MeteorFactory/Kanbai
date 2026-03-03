@@ -46,7 +46,7 @@ export function GeneralTab({
   const handleAutoMemoryToggle = useCallback(async () => {
     const next = !autoMemoryEnabled
     onSettingsChange({ ...settings, autoMemoryEnabled: next })
-    await window.mirehub.claudeMemory.toggleAuto(projectPath, next)
+    await window.kanbai.claudeMemory.toggleAuto(projectPath, next)
   }, [autoMemoryEnabled, settings, projectPath, onSettingsChange])
 
   const permsObj = useMemo(() => {
@@ -54,7 +54,7 @@ export function GeneralTab({
     return (typeof p === 'object' && p !== null) ? p as { defaultMode?: string; disableBypassPermissionsMode?: boolean; autoApprove?: boolean } : {}
   }, [settings.permissions])
 
-  const permissionMode = permsObj.defaultMode ?? (settings as Record<string, unknown>)._mirehubMode as string ?? 'default'
+  const permissionMode = permsObj.defaultMode ?? (settings as Record<string, unknown>)._kanbaiMode as string ?? 'default'
   const disableBypass = permsObj.disableBypassPermissionsMode ?? false
   const autoApprove = permsObj.autoApprove ?? false
   const model = (settings.model as string) ?? ''
@@ -77,7 +77,7 @@ export function GeneralTab({
 
   const handleModeChange = useCallback((mode: string) => {
     const newSettings = { ...settings }
-    delete (newSettings as Record<string, unknown>)._mirehubMode
+    delete (newSettings as Record<string, unknown>)._kanbaiMode
     newSettings.permissions = { ...permsObj, defaultMode: mode }
     onSettingsChange(newSettings)
   }, [settings, permsObj, onSettingsChange])

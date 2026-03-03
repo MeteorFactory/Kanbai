@@ -5,7 +5,7 @@ import os from 'os'
 import { execSync } from 'child_process'
 import { createMockIpcMain } from '../mocks/electron'
 
-const TEST_DIR = path.join(os.tmpdir(), `.mirehub-git-ipc-test-${process.pid}-${Date.now()}`)
+const TEST_DIR = path.join(os.tmpdir(), `.kanbai-git-ipc-test-${process.pid}-${Date.now()}`)
 const repoDir = path.join(TEST_DIR, 'test-repo')
 
 function gitExec(cmd: string, cwd: string = repoDir): string {

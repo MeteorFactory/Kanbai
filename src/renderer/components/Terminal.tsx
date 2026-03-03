@@ -53,7 +53,7 @@ export function Terminal({ cwd, shell, initialCommand, externalSessionId, isVisi
     try {
       fitAddon.fit()
       if (sessionId) {
-        window.mirehub.terminal.resize(sessionId, xterm.cols, xterm.rows)
+        window.kanbai.terminal.resize(sessionId, xterm.cols, xterm.rows)
       }
     } catch {
       // Ignore fit errors when terminal is not yet visible
@@ -164,7 +164,7 @@ export function Terminal({ cwd, shell, initialCommand, externalSessionId, isVisi
 
       xterm.write('\x1b[90m[Session Claude - lecture seule]\x1b[0m\r\n\r\n')
 
-      const unsubData = window.mirehub.terminal.onData(
+      const unsubData = window.kanbai.terminal.onData(
         (payload: { id: string; data: string }) => {
           if (payload.id === externalSessionId) {
             xterm.write(payload.data)
@@ -177,7 +177,7 @@ export function Terminal({ cwd, shell, initialCommand, externalSessionId, isVisi
       cleanupDataRef.current = unsubData
 
       // Listen for Claude session end
-      const unsubClose = window.mirehub.claude.onSessionEnd(
+      const unsubClose = window.kanbai.claude.onSessionEnd(
         (_data: { id: string; status: string }) => {
           // Session end detection handled by kanban store
         },
@@ -195,7 +195,7 @@ export function Terminal({ cwd, shell, initialCommand, externalSessionId, isVisi
       xterm.attachCustomKeyEventHandler((e: KeyboardEvent) => {
         if (e.type === 'keydown' && e.key === 'Enter' && e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey) {
           if (sessionIdRef.current) {
-            window.mirehub.terminal.write(sessionIdRef.current, '\x1b[13;2u')
+            window.kanbai.terminal.write(sessionIdRef.current, '\x1b[13;2u')
           }
           return false // prevent xterm from also sending \r
         }
@@ -205,18 +205,18 @@ export function Terminal({ cwd, shell, initialCommand, externalSessionId, isVisi
       // Handle user keyboard input
       xterm.onData((data: string) => {
         if (sessionIdRef.current) {
-          window.mirehub.terminal.write(sessionIdRef.current, data)
+          window.kanbai.terminal.write(sessionIdRef.current, data)
         }
       })
 
       // Create PTY session
-      window.mirehub.terminal.create({ cwd, shell }).then(
+      window.kanbai.terminal.create({ cwd, shell }).then(
         (result: { id: string; pid: number }) => {
           sessionIdRef.current = result.id
           onSessionCreatedRef.current?.(result.id)
 
           // Listen for data from PTY
-          const unsubData = window.mirehub.terminal.onData(
+          const unsubData = window.kanbai.terminal.onData(
             (payload: { id: string; data: string }) => {
               if (payload.id === sessionIdRef.current) {
                 xterm.write(payload.data)
@@ -229,7 +229,7 @@ export function Terminal({ cwd, shell, initialCommand, externalSessionId, isVisi
           cleanupDataRef.current = unsubData
 
           // Listen for PTY close
-          const unsubClose = window.mirehub.terminal.onClose(
+          const unsubClose = window.kanbai.terminal.onClose(
             (payload: { id: string; exitCode: number; signal: number }) => {
               if (payload.id === sessionIdRef.current) {
                 xterm.write('\r\n\x1b[90m[Process exited]\x1b[0m\r\n')
@@ -256,12 +256,12 @@ export function Terminal({ cwd, shell, initialCommand, externalSessionId, isVisi
               if (debounceTimer) clearTimeout(debounceTimer)
               unsubReady()
               // Send text first, then Enter separately (like a physical keypress)
-              window.mirehub.terminal.write(result.id, initialCommand)
+              window.kanbai.terminal.write(result.id, initialCommand)
               setTimeout(() => {
-                window.mirehub.terminal.write(result.id, '\r')
+                window.kanbai.terminal.write(result.id, '\r')
               }, 100)
             }
-            const unsubReady = window.mirehub.terminal.onData(
+            const unsubReady = window.kanbai.terminal.onData(
               (payload: { id: string; data: string }) => {
                 if (payload.id !== result.id || commandSent) return
                 if (debounceTimer) clearTimeout(debounceTimer)
@@ -286,7 +286,7 @@ export function Terminal({ cwd, shell, initialCommand, externalSessionId, isVisi
       cleanupDataRef.current?.()
       cleanupCloseRef.current?.()
       if (!externalSessionId && sessionIdRef.current) {
-        window.mirehub.terminal.close(sessionIdRef.current)
+        window.kanbai.terminal.close(sessionIdRef.current)
       }
       xterm.dispose()
     }

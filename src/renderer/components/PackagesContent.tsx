@@ -266,7 +266,7 @@ export function PackagesContent() {
                 <button
                   className="packages-row-name packages-row-link"
                   onClick={() =>
-                    window.mirehub.shell.openExternal(
+                    window.kanbai.shell.openExternal(
                       REGISTRY_URLS[selectedManager](pkg.name),
                     )
                   }

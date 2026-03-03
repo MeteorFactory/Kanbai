@@ -5,7 +5,7 @@ import os from 'os'
 import { createMockIpcMain } from '../mocks/electron'
 import { IS_WIN } from '../helpers/platform'
 
-const TEST_DIR = path.join(os.tmpdir(), `.mirehub-claudememory-ipc-test-${process.pid}-${Date.now()}`)
+const TEST_DIR = path.join(os.tmpdir(), `.kanbai-claudememory-ipc-test-${process.pid}-${Date.now()}`)
 const projectDir = path.join(TEST_DIR, 'test-project')
 
 // Mock os.homedir to isolate tests from real home directory
@@ -995,7 +995,7 @@ coAuthors:
     })
 
     it('liste les regles partagees', async () => {
-      const sharedDir = path.join(TEST_DIR, '.mirehub', 'shared-rules')
+      const sharedDir = path.join(TEST_DIR, '.kanbai', 'shared-rules')
       fs.mkdirSync(sharedDir, { recursive: true })
       fs.writeFileSync(path.join(sharedDir, 'shared-a.md'), '# Shared A', 'utf-8')
       fs.writeFileSync(path.join(sharedDir, 'shared-b.md'), '# Shared B', 'utf-8')
@@ -1012,7 +1012,7 @@ coAuthors:
     })
 
     it('ignore les fichiers non-md', async () => {
-      const sharedDir = path.join(TEST_DIR, '.mirehub', 'shared-rules')
+      const sharedDir = path.join(TEST_DIR, '.kanbai', 'shared-rules')
       fs.mkdirSync(sharedDir, { recursive: true })
       fs.writeFileSync(path.join(sharedDir, 'rule.md'), '# Rule', 'utf-8')
       fs.writeFileSync(path.join(sharedDir, 'data.json'), '{}', 'utf-8')
@@ -1033,12 +1033,12 @@ coAuthors:
 
       expect(result).toEqual({ success: true })
 
-      const sharedPath = path.join(TEST_DIR, '.mirehub', 'shared-rules', 'my-shared.md')
+      const sharedPath = path.join(TEST_DIR, '.kanbai', 'shared-rules', 'my-shared.md')
       expect(fs.readFileSync(sharedPath, 'utf-8')).toBe('# My Shared Rule')
     })
 
     it('cree le repertoire shared-rules si inexistant', async () => {
-      const sharedDir = path.join(TEST_DIR, '.mirehub', 'shared-rules')
+      const sharedDir = path.join(TEST_DIR, '.kanbai', 'shared-rules')
       expect(fs.existsSync(sharedDir)).toBe(false)
 
       await mockIpcMain._invoke('claude:memoryWriteSharedRule', {
@@ -1052,7 +1052,7 @@ coAuthors:
 
   describe('claude:memoryDeleteSharedRule', () => {
     it('supprime une regle partagee', async () => {
-      const sharedDir = path.join(TEST_DIR, '.mirehub', 'shared-rules')
+      const sharedDir = path.join(TEST_DIR, '.kanbai', 'shared-rules')
       fs.mkdirSync(sharedDir, { recursive: true })
       const filePath = path.join(sharedDir, 'to-delete.md')
       fs.writeFileSync(filePath, '# To Delete', 'utf-8')
@@ -1080,7 +1080,7 @@ coAuthors:
 
   describe('claude:memoryLinkSharedRule', () => {
     it.skipIf(IS_WIN)('cree un symlink vers une regle partagee', async () => {
-      const sharedDir = path.join(TEST_DIR, '.mirehub', 'shared-rules')
+      const sharedDir = path.join(TEST_DIR, '.kanbai', 'shared-rules')
       fs.mkdirSync(sharedDir, { recursive: true })
       fs.writeFileSync(path.join(sharedDir, 'shared.md'), '# Shared Content', 'utf-8')
 
@@ -1111,7 +1111,7 @@ coAuthors:
     })
 
     it('refuse si une regle locale du meme nom existe (non-symlink)', async () => {
-      const sharedDir = path.join(TEST_DIR, '.mirehub', 'shared-rules')
+      const sharedDir = path.join(TEST_DIR, '.kanbai', 'shared-rules')
       fs.mkdirSync(sharedDir, { recursive: true })
       fs.writeFileSync(path.join(sharedDir, 'conflict.md'), '# Shared', 'utf-8')
 
@@ -1131,7 +1131,7 @@ coAuthors:
     })
 
     it.skipIf(IS_WIN)('remplace un symlink existant du meme nom', async () => {
-      const sharedDir = path.join(TEST_DIR, '.mirehub', 'shared-rules')
+      const sharedDir = path.join(TEST_DIR, '.kanbai', 'shared-rules')
       fs.mkdirSync(sharedDir, { recursive: true })
       fs.writeFileSync(path.join(sharedDir, 'update.md'), '# Updated Shared', 'utf-8')
 
@@ -1157,7 +1157,7 @@ coAuthors:
 
   describe('claude:memoryUnlinkSharedRule', () => {
     it.skipIf(IS_WIN)('supprime un symlink', async () => {
-      const sharedDir = path.join(TEST_DIR, '.mirehub', 'shared-rules')
+      const sharedDir = path.join(TEST_DIR, '.kanbai', 'shared-rules')
       fs.mkdirSync(sharedDir, { recursive: true })
       fs.writeFileSync(path.join(sharedDir, 'linked.md'), '# Linked', 'utf-8')
 

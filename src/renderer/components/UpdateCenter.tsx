@@ -21,7 +21,7 @@ export function UpdateCenter() {
 
   useEffect(() => {
     checkUpdates()
-    window.mirehub.app.version().then((info) => {
+    window.kanbai.app.version().then((info) => {
       setCurrentAppVersion(info.version)
     })
     const interval = setInterval(() => checkUpdates(), 3600000)
@@ -148,7 +148,7 @@ export function UpdateCenter() {
               className={`notification-item${appUpdateAvailable ? ' notification-item--update' : ''}`}
             >
               <div className="notification-item-info">
-                <span className="notification-item-name">Mirehub</span>
+                <span className="notification-item-name">Kanbai</span>
                 <span className="notification-item-version">
                   {currentAppVersion ?? '...'}
                   {appUpdateStatus === 'available' && appNewVersion && (

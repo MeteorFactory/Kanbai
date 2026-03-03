@@ -78,9 +78,9 @@ describe('StorageService', () => {
 ```typescript
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
-// Mock de l'API window.mirehub (preload bridge)
+// Mock de l'API window.kanbai (preload bridge)
 const mockWorkspaceApi = { list: vi.fn(), create: vi.fn(), /* ... */ }
-vi.stubGlobal('window', { mirehub: { workspace: mockWorkspaceApi } })
+vi.stubGlobal('window', { kanbai: { workspace: mockWorkspaceApi } })
 
 const { useWorkspaceStore } = await import('../../src/renderer/lib/stores/workspaceStore')
 
@@ -158,11 +158,11 @@ Autres mocks disponibles : `createMockBrowserWindow()`, `createMockDialog()`, `c
 
 ### Mock de l'API preload (stores renderer)
 
-Pour tester les stores Zustand qui appellent `window.mirehub.*` :
+Pour tester les stores Zustand qui appellent `window.kanbai.*` :
 
 ```typescript
 const mockApi = { list: vi.fn(), create: vi.fn() }
-vi.stubGlobal('window', { mirehub: { workspace: mockApi } })
+vi.stubGlobal('window', { kanbai: { workspace: mockApi } })
 ```
 
 ### Mock du filesystem (StorageService)

@@ -2,7 +2,7 @@ import fs from 'fs'
 import path from 'path'
 import os from 'os'
 
-const TEST_DATA_DIR = path.join(os.tmpdir(), '.mirehub-test-' + process.pid)
+const TEST_DATA_DIR = path.join(os.tmpdir(), '.kanbai-test-' + process.pid)
 
 /**
  * Creates a temporary data directory for StorageService tests.

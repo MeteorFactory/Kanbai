@@ -5,7 +5,7 @@ import os from 'os'
 import { createMockIpcMain } from '../mocks/electron'
 import { IS_WIN } from '../helpers/platform'
 
-const TEST_DIR = path.join(os.tmpdir(), `.mirehub-fs-ipc-test-${process.pid}-${Date.now()}`)
+const TEST_DIR = path.join(os.tmpdir(), `.kanbai-fs-ipc-test-${process.pid}-${Date.now()}`)
 const testFilesDir = path.join(TEST_DIR, 'test-files')
 
 describe('Filesystem IPC Handlers', () => {

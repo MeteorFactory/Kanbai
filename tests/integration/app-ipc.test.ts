@@ -5,8 +5,8 @@ import os from 'os'
 import { createMockIpcMain } from '../mocks/electron'
 import { DEFAULT_SETTINGS } from '../../src/shared/constants/defaults'
 
-const TEST_DIR = path.join(os.tmpdir(), `.mirehub-app-ipc-test-${process.pid}-${Date.now()}`)
-const dataDir = path.join(TEST_DIR, '.mirehub')
+const TEST_DIR = path.join(os.tmpdir(), `.kanbai-app-ipc-test-${process.pid}-${Date.now()}`)
+const dataDir = path.join(TEST_DIR, '.kanbai')
 
 vi.mock('os', async () => {
   const actual = await vi.importActual<typeof import('os')>('os')

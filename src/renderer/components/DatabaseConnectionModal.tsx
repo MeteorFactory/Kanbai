@@ -140,7 +140,7 @@ export function DatabaseConnectionModal({
     setTesting(true)
     setTestResult(null)
     try {
-      const result = await window.mirehub.database.testConnection(buildConfig())
+      const result = await window.kanbai.database.testConnection(buildConfig())
       setTestResult(result)
     } catch (err) {
       setTestResult({ success: false, error: String(err) })
@@ -173,7 +173,7 @@ export function DatabaseConnectionModal({
 
   const handleBrowseFile = useCallback(async () => {
     try {
-      const selectedPath = await window.mirehub.project.selectDir()
+      const selectedPath = await window.kanbai.project.selectDir()
       if (selectedPath) {
         setFilePath(selectedPath)
       }

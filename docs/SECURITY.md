@@ -2,7 +2,7 @@
 
 ## Principes fondamentaux
 
-Mirehub respecte les bonnes pratiques de securite Electron. Le modele de securite repose sur l'**isolation stricte** entre le processus renderer (non fiable) et le processus main (privilegie).
+Kanbai respecte les bonnes pratiques de securite Electron. Le modele de securite repose sur l'**isolation stricte** entre le processus renderer (non fiable) et le processus main (privilegie).
 
 ```
 ┌──────────────────────────┐     ┌───────────────────────────┐
@@ -11,7 +11,7 @@ Mirehub respecte les bonnes pratiques de securite Electron. Le modele de securit
 │                          │     │                           │
 │  ✗ Pas d'acces Node.js   │←IPC→│  ✓ Acces complet OS       │
 │  ✗ Pas d'acces filesystem │     │  ✓ Spawn de processus     │
-│  ✓ window.mirehub.* only  │     │  ✓ Lecture/ecriture        │
+│  ✓ window.kanbai.* only  │     │  ✓ Lecture/ecriture        │
 └──────────────────────────┘     └───────────────────────────┘
             ↑
      contextBridge
@@ -43,10 +43,10 @@ Le preload script doit acceder a `node-pty` pour creer des pseudo-terminaux. `sa
 
 ## 2. Preload et contextBridge
 
-Le preload script (`src/preload/index.ts`) expose une API structuree par domaine sous `window.mirehub` :
+Le preload script (`src/preload/index.ts`) expose une API structuree par domaine sous `window.kanbai` :
 
 ```typescript
-contextBridge.exposeInMainWorld('mirehub', {
+contextBridge.exposeInMainWorld('kanbai', {
   terminal: { create, write, resize, close, onData, onClose },
   workspace: { list, create, update, delete },
   project: { list, add, remove, scanClaude, ... },

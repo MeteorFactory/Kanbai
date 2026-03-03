@@ -53,7 +53,7 @@ export function AiDefaultsTab({ projectId }: Props) {
 
   useEffect(() => {
     setLoading(true)
-    window.mirehub.aiDefaults.get(projectId).then((d: AiDefaults) => {
+    window.kanbai.aiDefaults.get(projectId).then((d: AiDefaults) => {
       setDefaults(d ?? {})
       setLoading(false)
     }).catch(() => setLoading(false))
@@ -61,7 +61,7 @@ export function AiDefaultsTab({ projectId }: Props) {
 
   const save = useCallback(async (next: AiDefaults) => {
     setDefaults(next)
-    await window.mirehub.aiDefaults.set(projectId, next as unknown as Record<string, unknown>)
+    await window.kanbai.aiDefaults.set(projectId, next as unknown as Record<string, unknown>)
     const { projects } = useWorkspaceStore.getState()
     const updated = projects.map((p) =>
       p.id === projectId ? { ...p, aiDefaults: next } : p,

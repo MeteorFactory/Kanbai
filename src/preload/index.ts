@@ -743,6 +743,6 @@ const api = {
   },
 }
 
-contextBridge.exposeInMainWorld('mirehub', api)
+contextBridge.exposeInMainWorld('kanbai', api)
 
-export type MirehubAPI = typeof api
+export type KanbaiAPI = typeof api

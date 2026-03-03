@@ -36,5 +36,5 @@ Commandes utiles :
 ```bash
 screencapture /tmp/debug-before.png   # Avant fix
 screencapture /tmp/debug-after.png    # Apres fix
-osascript -e 'tell application "Mirehub" to activate'
+osascript -e 'tell application "Kanbai" to activate'
 ```

@@ -66,10 +66,10 @@ export function CopilotGeneralTab({ projectPath }: Props) {
   const loadConfig = useCallback(async () => {
     setLoading(true)
     try {
-      const check = await window.mirehub.copilotConfig.check(projectPath)
+      const check = await window.kanbai.copilotConfig.check(projectPath)
       setExists(check.exists)
       if (check.exists) {
-        const result = await window.mirehub.copilotConfig.read(projectPath)
+        const result = await window.kanbai.copilotConfig.read(projectPath)
         if (result.success && result.content) {
           setRawContent(result.content)
           setConfig(parseConfig(result.content))
@@ -85,14 +85,14 @@ export function CopilotGeneralTab({ projectPath }: Props) {
     setConfig(newConfig)
     const json = serializeConfig(newConfig)
     setRawContent(json)
-    await window.mirehub.copilotConfig.write(projectPath, json)
+    await window.kanbai.copilotConfig.write(projectPath, json)
     setExists(true)
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }, [projectPath])
 
   const saveRaw = useCallback(async () => {
-    await window.mirehub.copilotConfig.write(projectPath, rawContent)
+    await window.kanbai.copilotConfig.write(projectPath, rawContent)
     setConfig(parseConfig(rawContent))
     setExists(true)
     setSaved(true)

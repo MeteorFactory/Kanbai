@@ -538,12 +538,12 @@ export function GitPanel() {
     setLoading(true)
     try {
       const [s, l, b, st, tg, rm] = await Promise.all([
-        window.mirehub.git.status(activeProject.path),
-        window.mirehub.git.log(activeProject.path, 200),
-        window.mirehub.git.branches(activeProject.path),
-        window.mirehub.git.stashList(activeProject.path),
-        window.mirehub.git.tags(activeProject.path),
-        window.mirehub.git.remotes(activeProject.path),
+        window.kanbai.git.status(activeProject.path),
+        window.kanbai.git.log(activeProject.path, 200),
+        window.kanbai.git.branches(activeProject.path),
+        window.kanbai.git.stashList(activeProject.path),
+        window.kanbai.git.tags(activeProject.path),
+        window.kanbai.git.remotes(activeProject.path),
       ])
       setStatus(s)
       setLog(l || [])
@@ -588,7 +588,7 @@ export function GitPanel() {
     setSelectedCommitFile(null)
     if (!activeProject) return
     try {
-      const detail = await window.mirehub.git.show(activeProject.path, entry.hash)
+      const detail = await window.kanbai.git.show(activeProject.path, entry.hash)
       setCommitDetail(detail)
       // Auto-select the first file
       if (detail.files.length > 0) {
@@ -613,7 +613,7 @@ export function GitPanel() {
     setSelectedFile(file)
     setSelectedCommit(null)
     setCommitDetail(null)
-    const diff = await window.mirehub.git.diff(activeProject.path, file, staged)
+    const diff = await window.kanbai.git.diff(activeProject.path, file, staged)
     setDiffContent(diff || '')
     // Highlight the file in the sidebar file tree
     useViewStore.getState().setHighlightedFilePath(activeProject.path + '/' + file)
@@ -623,7 +623,7 @@ export function GitPanel() {
 
   const handleStageFile = useCallback(async (file: string) => {
     if (!activeProject) return
-    await window.mirehub.git.stage(activeProject.path, [file])
+    await window.kanbai.git.stage(activeProject.path, [file])
     refresh()
   }, [activeProject, refresh])
 
@@ -631,20 +631,20 @@ export function GitPanel() {
     if (!activeProject || !status) return
     const files = [...status.modified, ...status.untracked]
     if (files.length === 0) return
-    await window.mirehub.git.stage(activeProject.path, files)
+    await window.kanbai.git.stage(activeProject.path, files)
     refresh()
   }, [activeProject, status, refresh])
 
   const handleUnstageFile = useCallback(async (file: string) => {
     if (!activeProject) return
-    await window.mirehub.git.unstage(activeProject.path, [file])
+    await window.kanbai.git.unstage(activeProject.path, [file])
     refresh()
   }, [activeProject, refresh])
 
   const handleUnstageAll = useCallback(async () => {
     if (!activeProject || !status) return
     if (status.staged.length === 0) return
-    await window.mirehub.git.unstage(activeProject.path, status.staged)
+    await window.kanbai.git.unstage(activeProject.path, status.staged)
     refresh()
   }, [activeProject, status, refresh])
 
@@ -652,7 +652,7 @@ export function GitPanel() {
     if (!activeProject) return
     const confirmed = window.confirm(`Abandonner les modifications de "${file}" ?`)
     if (!confirmed) return
-    await window.mirehub.git.discard(activeProject.path, [file])
+    await window.kanbai.git.discard(activeProject.path, [file])
     refresh()
   }, [activeProject, refresh])
 
@@ -662,7 +662,7 @@ export function GitPanel() {
     if (!activeProject || !status || !commitMessage.trim()) return
     if (status.staged.length === 0) return
     try {
-      await window.mirehub.git.commit(activeProject.path, commitMessage.trim(), status.staged)
+      await window.kanbai.git.commit(activeProject.path, commitMessage.trim(), status.staged)
       setCommitMessage('')
       refresh()
     } catch (err) {
@@ -675,13 +675,13 @@ export function GitPanel() {
 
   const handleCheckout = useCallback(async (branch: string) => {
     if (!activeProject) return
-    await window.mirehub.git.checkout(activeProject.path, branch)
+    await window.kanbai.git.checkout(activeProject.path, branch)
     refresh()
   }, [activeProject, refresh])
 
   const handleCreateBranch = useCallback(async () => {
     if (!activeProject || !newBranchName.trim()) return
-    await window.mirehub.git.createBranch(activeProject.path, newBranchName.trim())
+    await window.kanbai.git.createBranch(activeProject.path, newBranchName.trim())
     setNewBranchName('')
     setShowNewBranch(false)
     refresh()
@@ -691,19 +691,19 @@ export function GitPanel() {
     if (!activeProject) return
     const confirmed = window.confirm(`Supprimer la branche "${name}" ?`)
     if (!confirmed) return
-    await window.mirehub.git.deleteBranch(activeProject.path, name)
+    await window.kanbai.git.deleteBranch(activeProject.path, name)
     refresh()
   }, [activeProject, refresh])
 
   const handleMerge = useCallback(async (branch: string) => {
     if (!activeProject) return
-    await window.mirehub.git.merge(activeProject.path, branch)
+    await window.kanbai.git.merge(activeProject.path, branch)
     refresh()
   }, [activeProject, refresh])
 
   const handleRenameBranch = useCallback(async () => {
     if (!activeProject || !renamingBranch || !renameValue.trim()) return
-    await window.mirehub.git.renameBranch(activeProject.path, renamingBranch, renameValue.trim())
+    await window.kanbai.git.renameBranch(activeProject.path, renamingBranch, renameValue.trim())
     setRenamingBranch(null)
     setRenameValue('')
     refresh()
@@ -713,37 +713,37 @@ export function GitPanel() {
 
   const handlePush = useCallback(async () => {
     if (!activeProject) return
-    await window.mirehub.git.push(activeProject.path)
+    await window.kanbai.git.push(activeProject.path)
     refresh()
   }, [activeProject, refresh])
 
   const handlePull = useCallback(async () => {
     if (!activeProject) return
-    await window.mirehub.git.pull(activeProject.path)
+    await window.kanbai.git.pull(activeProject.path)
     refresh()
   }, [activeProject, refresh])
 
   const handleFetch = useCallback(async () => {
     if (!activeProject) return
-    await window.mirehub.git.fetch(activeProject.path)
+    await window.kanbai.git.fetch(activeProject.path)
     refresh()
   }, [activeProject, refresh])
 
   const handleStash = useCallback(async () => {
     if (!activeProject) return
-    await window.mirehub.git.stash(activeProject.path)
+    await window.kanbai.git.stash(activeProject.path)
     refresh()
   }, [activeProject, refresh])
 
   const handleStashPop = useCallback(async () => {
     if (!activeProject) return
-    await window.mirehub.git.stashPop(activeProject.path)
+    await window.kanbai.git.stashPop(activeProject.path)
     refresh()
   }, [activeProject, refresh])
 
   const handleGitInit = useCallback(async () => {
     if (!activeProject) return
-    await window.mirehub.git.init(activeProject.path)
+    await window.kanbai.git.init(activeProject.path)
     refresh()
   }, [activeProject, refresh])
 
@@ -751,7 +751,7 @@ export function GitPanel() {
     if (!activeProject) return
     const confirmed = window.confirm(t('git.undoCommit'))
     if (!confirmed) return
-    const result = await window.mirehub.git.resetSoft(activeProject.path)
+    const result = await window.kanbai.git.resetSoft(activeProject.path)
     if (!result.success) {
       window.alert(result.error)
     }
@@ -766,7 +766,7 @@ export function GitPanel() {
 
   const handleCreateTag = useCallback(async () => {
     if (!activeProject || !newTagName.trim()) return
-    await window.mirehub.git.createTag(activeProject.path, newTagName.trim(), newTagMessage.trim() || undefined)
+    await window.kanbai.git.createTag(activeProject.path, newTagName.trim(), newTagMessage.trim() || undefined)
     setNewTagName('')
     setNewTagMessage('')
     setShowNewTag(false)
@@ -777,7 +777,7 @@ export function GitPanel() {
     if (!activeProject) return
     const confirmed = window.confirm(`Supprimer le tag "${name}" ?`)
     if (!confirmed) return
-    await window.mirehub.git.deleteTag(activeProject.path, name)
+    await window.kanbai.git.deleteTag(activeProject.path, name)
     refresh()
   }, [activeProject, refresh])
 
@@ -787,7 +787,7 @@ export function GitPanel() {
     if (!activeProject) return
     const confirmed = window.confirm(`Cherry-pick le commit ${hash.slice(0, 7)} ?`)
     if (!confirmed) return
-    const result = await window.mirehub.git.cherryPick(activeProject.path, hash)
+    const result = await window.kanbai.git.cherryPick(activeProject.path, hash)
     if (!result.success) {
       window.alert(`Cherry-pick echoue: ${result.error}`)
     }
@@ -798,7 +798,7 @@ export function GitPanel() {
 
   const handleCompareBranches = useCallback(async () => {
     if (!activeProject || !compareBranch1 || !compareBranch2) return
-    const result = await window.mirehub.git.diffBranches(activeProject.path, compareBranch1, compareBranch2)
+    const result = await window.kanbai.git.diffBranches(activeProject.path, compareBranch1, compareBranch2)
     setBranchDiffResult(result || 'Aucune difference')
   }, [activeProject, compareBranch1, compareBranch2])
 
@@ -817,7 +817,7 @@ export function GitPanel() {
     setSelectedFile(null)
     setDiffContent('')
     setShowBranchCompare(false)
-    const data = await window.mirehub.git.blame(activeProject.path, file)
+    const data = await window.kanbai.git.blame(activeProject.path, file)
     setBlameData(data || [])
   }, [activeProject, blameFile])
 
@@ -825,7 +825,7 @@ export function GitPanel() {
 
   const handleAddRemote = useCallback(async () => {
     if (!activeProject || !newRemoteName.trim() || !newRemoteUrl.trim()) return
-    await window.mirehub.git.addRemote(activeProject.path, newRemoteName.trim(), newRemoteUrl.trim())
+    await window.kanbai.git.addRemote(activeProject.path, newRemoteName.trim(), newRemoteUrl.trim())
     setNewRemoteName('')
     setNewRemoteUrl('')
     setShowNewRemote(false)
@@ -836,7 +836,7 @@ export function GitPanel() {
     if (!activeProject) return
     const confirmed = window.confirm(`Supprimer le remote "${name}" ?`)
     if (!confirmed) return
-    await window.mirehub.git.removeRemote(activeProject.path, name)
+    await window.kanbai.git.removeRemote(activeProject.path, name)
     refresh()
   }, [activeProject, refresh])
 
@@ -898,8 +898,8 @@ export function GitPanel() {
         action: async () => {
           const name = window.prompt(t('git.newBranch').replace('+ ', ''))
           if (name && activeProject) {
-            await window.mirehub.git.checkout(activeProject.path, entry.hash)
-            await window.mirehub.git.createBranch(activeProject.path, name.trim())
+            await window.kanbai.git.checkout(activeProject.path, entry.hash)
+            await window.kanbai.git.createBranch(activeProject.path, name.trim())
             refresh()
           }
         },
@@ -909,7 +909,7 @@ export function GitPanel() {
         action: async () => {
           const name = window.prompt(t('git.newTag').replace('+ ', ''))
           if (name && activeProject) {
-            await window.mirehub.git.createTag(activeProject.path, name.trim())
+            await window.kanbai.git.createTag(activeProject.path, name.trim())
             refresh()
           }
         },

@@ -22,10 +22,10 @@ export function CopilotSkillsTab({ projectPath }: Props) {
   } | null>(null)
 
   const loadAll = useCallback(async () => {
-    const skillList: SkillEntry[] = await window.mirehub.copilotSkills.list(projectPath)
+    const skillList: SkillEntry[] = await window.kanbai.copilotSkills.list(projectPath)
     const enriched = await Promise.all(
       skillList.map(async (s) => {
-        const content = await window.mirehub.copilotSkills.read(projectPath, s.dirname)
+        const content = await window.kanbai.copilotSkills.read(projectPath, s.dirname)
         const parsed = parseAgentFrontmatter(`${s.dirname}/SKILL.md`, content ?? '')
         return { ...parsed, name: s.dirname }
       }),
@@ -38,23 +38,23 @@ export function CopilotSkillsTab({ projectPath }: Props) {
   const handleSave = useCallback(async (filename: string, content: string) => {
     if (!editing) return
     const dirname = filename.replace(/\/SKILL\.md$/, '').replace(/\.md$/, '')
-    await window.mirehub.copilotSkills.write(projectPath, dirname, content)
+    await window.kanbai.copilotSkills.write(projectPath, dirname, content)
     if (editing.skill && editing.skill.name && editing.skill.name !== dirname) {
-      await window.mirehub.copilotSkills.delete(projectPath, editing.skill.name)
+      await window.kanbai.copilotSkills.delete(projectPath, editing.skill.name)
     }
     setEditing(null)
     await loadAll()
   }, [editing, projectPath, loadAll])
 
   const handleDuplicate = useCallback(async (skill: EnrichedAgent) => {
-    const content = await window.mirehub.copilotSkills.read(projectPath, skill.name)
+    const content = await window.kanbai.copilotSkills.read(projectPath, skill.name)
     const newDirname = `${skill.name}-copy`
-    await window.mirehub.copilotSkills.write(projectPath, newDirname, content ?? '')
+    await window.kanbai.copilotSkills.write(projectPath, newDirname, content ?? '')
     await loadAll()
   }, [projectPath, loadAll])
 
   const handleDelete = useCallback(async (dirname: string) => {
-    await window.mirehub.copilotSkills.delete(projectPath, dirname)
+    await window.kanbai.copilotSkills.delete(projectPath, dirname)
     await loadAll()
   }, [projectPath, loadAll])
 

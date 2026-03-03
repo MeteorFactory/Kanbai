@@ -4,8 +4,8 @@ import path from 'path'
 import os from 'os'
 import { createMockIpcMain } from '../mocks/electron'
 
-const TEST_DIR = path.join(os.tmpdir(), `.mirehub-ipc-test-${process.pid}-${Date.now()}`)
-const dataDir = path.join(TEST_DIR, '.mirehub')
+const TEST_DIR = path.join(os.tmpdir(), `.kanbai-ipc-test-${process.pid}-${Date.now()}`)
+const dataDir = path.join(TEST_DIR, '.kanbai')
 
 // Mock os.homedir to use temp directory
 vi.mock('os', async () => {
@@ -40,8 +40,8 @@ describe('Workspace IPC Handlers', () => {
     }
     fs.mkdirSync(dataDir, { recursive: true })
 
-    // Clean workspace env directory (now under .mirehub/envs/)
-    const envsDir = path.join(TEST_DIR, '.mirehub', 'envs')
+    // Clean workspace env directory (now under .kanbai/envs/)
+    const envsDir = path.join(TEST_DIR, '.kanbai', 'envs')
     if (fs.existsSync(envsDir)) {
       fs.rmSync(envsDir, { recursive: true, force: true })
     }
@@ -137,8 +137,8 @@ describe('Workspace IPC Handlers', () => {
   it('soft-delete ne supprime pas le dossier env', async () => {
     const ws = await mockIpcMain._invoke('workspace:create', { name: 'Env Cleanup' })
 
-    // Create a fake env directory to simulate workspace env (now under .mirehub/envs/)
-    const envDir = path.join(TEST_DIR, '.mirehub', 'envs', 'Env Cleanup')
+    // Create a fake env directory to simulate workspace env (now under .kanbai/envs/)
+    const envDir = path.join(TEST_DIR, '.kanbai', 'envs', 'Env Cleanup')
     fs.mkdirSync(envDir, { recursive: true })
     fs.writeFileSync(path.join(envDir, 'marker.txt'), 'test')
     expect(fs.existsSync(envDir)).toBe(true)
@@ -152,8 +152,8 @@ describe('Workspace IPC Handlers', () => {
   it('supprime le dossier env sur disque lors de la suppression permanente', async () => {
     const ws = await mockIpcMain._invoke('workspace:create', { name: 'Env Cleanup Perm' })
 
-    // Create a fake env directory to simulate workspace env (now under .mirehub/envs/)
-    const envDir = path.join(TEST_DIR, '.mirehub', 'envs', 'Env Cleanup Perm')
+    // Create a fake env directory to simulate workspace env (now under .kanbai/envs/)
+    const envDir = path.join(TEST_DIR, '.kanbai', 'envs', 'Env Cleanup Perm')
     fs.mkdirSync(envDir, { recursive: true })
     fs.writeFileSync(path.join(envDir, 'marker.txt'), 'test')
     expect(fs.existsSync(envDir)).toBe(true)
@@ -167,8 +167,8 @@ describe('Workspace IPC Handlers', () => {
   it('renomme le dossier env lors du renommage du workspace', async () => {
     const ws = await mockIpcMain._invoke('workspace:create', { name: 'Old Name' })
 
-    // Create a fake env directory (now under .mirehub/envs/)
-    const oldEnvDir = path.join(TEST_DIR, '.mirehub', 'envs', 'Old Name')
+    // Create a fake env directory (now under .kanbai/envs/)
+    const oldEnvDir = path.join(TEST_DIR, '.kanbai', 'envs', 'Old Name')
     fs.mkdirSync(oldEnvDir, { recursive: true })
     fs.writeFileSync(path.join(oldEnvDir, 'marker.txt'), 'test')
 
@@ -177,7 +177,7 @@ describe('Workspace IPC Handlers', () => {
 
     // Old dir should be gone, new dir should exist
     expect(fs.existsSync(oldEnvDir)).toBe(false)
-    const newEnvDir = path.join(TEST_DIR, '.mirehub', 'envs', 'New Name')
+    const newEnvDir = path.join(TEST_DIR, '.kanbai', 'envs', 'New Name')
     expect(fs.existsSync(newEnvDir)).toBe(true)
     expect(fs.readFileSync(path.join(newEnvDir, 'marker.txt'), 'utf-8')).toBe('test')
   })

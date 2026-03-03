@@ -53,7 +53,7 @@ export function PackagesChat({ projectPath, manager }: PackagesChatProps) {
 
   const handleCancel = useCallback(async () => {
     try {
-      await window.mirehub.packages.nlCancel()
+      await window.kanbai.packages.nlCancel()
     } catch {
       // Ignore cancel errors
     }
@@ -75,7 +75,7 @@ export function PackagesChat({ projectPath, manager }: PackagesChatProps) {
       const { activeProjectId, projects } = useWorkspaceStore.getState()
       const activeProject = projects.find((p) => p.id === activeProjectId)
       const packagesProvider = activeProject?.aiDefaults?.packages ?? activeProject?.aiProvider ?? 'claude'
-      const result = await window.mirehub.packages.nlAsk(
+      const result = await window.kanbai.packages.nlAsk(
         projectPath,
         manager,
         userQuestion,

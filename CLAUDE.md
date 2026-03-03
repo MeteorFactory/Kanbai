@@ -1,4 +1,4 @@
-# Mirehub - Electron macOS Application
+# Kanbai - Electron macOS Application
 
 ## Project Overview
 
@@ -233,7 +233,7 @@ Methodology:
 - Wait for startup (monitor stdout for "ready" / "listening" / "compiled")
 - Screenshot: `screencapture /tmp/integration-screenshot.png`
 - Analyze: Read the screenshot (multimodal) to verify the rendering
-- Interact: `osascript -e 'tell application "Mirehub" to activate'` then `osascript -e 'tell application "System Events" to click at {x, y}'`
+- Interact: `osascript -e 'tell application "Kanbai" to activate'` then `osascript -e 'tell application "System Events" to click at {x, y}'`
 - Re-screenshot after interaction and compare
 - Always clean up (kill the app process, remove temporary screenshots)
 
@@ -352,7 +352,7 @@ tests/
 - ESLint + Prettier for formatting
 - Conventional Commits for git messages (in French)
 
-<!-- MIREHUB_WORKFLOW -->
+<!-- KANBAI_WORKFLOW -->
 
 ## Workflow Orchestration
 

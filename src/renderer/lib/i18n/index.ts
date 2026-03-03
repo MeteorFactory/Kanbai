@@ -17,7 +17,7 @@ export const useI18n = create<I18nState>((set, get) => ({
   locale: 'fr',
   setLocale: (locale) => {
     set({ locale })
-    window.mirehub.settings.set({ locale })
+    window.kanbai.settings.set({ locale })
   },
   t: (key, params?) => {
     const dict = translations[get().locale]

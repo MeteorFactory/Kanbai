@@ -102,10 +102,10 @@ export function CodexGeneralTab({ projectPath }: Props) {
   const loadConfig = useCallback(async () => {
     setLoading(true)
     try {
-      const check = await window.mirehub.codexConfig.check(projectPath)
+      const check = await window.kanbai.codexConfig.check(projectPath)
       setExists(check.exists)
       if (check.exists) {
-        const result = await window.mirehub.codexConfig.read(projectPath)
+        const result = await window.kanbai.codexConfig.read(projectPath)
         if (result.success && result.content) {
           setRawContent(result.content)
           setConfig(parseToml(result.content))
@@ -121,14 +121,14 @@ export function CodexGeneralTab({ projectPath }: Props) {
     setConfig(newConfig)
     const toml = serializeToml(newConfig)
     setRawContent(toml)
-    await window.mirehub.codexConfig.write(projectPath, toml)
+    await window.kanbai.codexConfig.write(projectPath, toml)
     setExists(true)
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }, [projectPath])
 
   const saveRaw = useCallback(async () => {
-    await window.mirehub.codexConfig.write(projectPath, rawContent)
+    await window.kanbai.codexConfig.write(projectPath, rawContent)
     setConfig(parseToml(rawContent))
     setExists(true)
     setSaved(true)

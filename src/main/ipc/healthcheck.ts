@@ -19,22 +19,22 @@ function defaultHealthCheckFile(): HealthCheckFile {
 }
 
 function getHealthChecksPath(projectPath: string): string {
-  return path.join(projectPath, '.mirehub', 'health-checks.json')
+  return path.join(projectPath, '.kanbai', 'health-checks.json')
 }
 
 function getApiTestsPath(projectPath: string): string {
-  return path.join(projectPath, '.mirehub', 'api-tests.json')
+  return path.join(projectPath, '.kanbai', 'api-tests.json')
 }
 
-function ensureMirehubDir(projectPath: string): void {
-  const dirPath = path.join(projectPath, '.mirehub')
+function ensureKanbaiDir(projectPath: string): void {
+  const dirPath = path.join(projectPath, '.kanbai')
   if (!fs.existsSync(dirPath)) {
     fs.mkdirSync(dirPath, { recursive: true })
   }
 }
 
 function saveHealthCheckFile(projectPath: string, data: HealthCheckFile): void {
-  ensureMirehubDir(projectPath)
+  ensureKanbaiDir(projectPath)
   fs.writeFileSync(getHealthChecksPath(projectPath), JSON.stringify(data, null, 2), 'utf-8')
 }
 

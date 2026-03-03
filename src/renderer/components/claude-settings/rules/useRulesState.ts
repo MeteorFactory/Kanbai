@@ -34,9 +34,9 @@ export function useRulesState(projectPath: string) {
 
   // Get git user name for co-authoring
   useEffect(() => {
-    if (window.mirehub.gitConfig) {
+    if (window.kanbai.gitConfig) {
       // Use empty namespaceId to get global config
-      window.mirehub.gitConfig.get('').then((config: { userName: string }) => {
+      window.kanbai.gitConfig.get('').then((config: { userName: string }) => {
         if (config.userName) setGitUserName(config.userName.trim())
       }).catch(() => { /* ignore */ })
     }
@@ -44,9 +44,9 @@ export function useRulesState(projectPath: string) {
 
   const load = useCallback(async () => {
     const [listResult, shared, templateList] = await Promise.all([
-      window.mirehub.claudeMemory.listRules(projectPath),
-      window.mirehub.claudeMemory.listSharedRules(),
-      window.mirehub.claudeMemory.listTemplates(),
+      window.kanbai.claudeMemory.listRules(projectPath),
+      window.kanbai.claudeMemory.listSharedRules(),
+      window.kanbai.claudeMemory.listTemplates(),
     ])
     setRules(listResult.rules)
     setDirectories(listResult.directories)
@@ -62,7 +62,7 @@ export function useRulesState(projectPath: string) {
       await load()
       setSyncing(true)
       try {
-        await window.mirehub.claudeMemory.checkAiRules(projectPath)
+        await window.kanbai.claudeMemory.checkAiRules(projectPath)
         if (!cancelled) await load()
       } finally {
         if (!cancelled) setSyncing(false)
@@ -123,7 +123,7 @@ export function useRulesState(projectPath: string) {
     const filename = name.endsWith('.md') ? name : name + '.md'
     const parentDir = getParentDir()
     const relativePath = parentDir ? parentDir + '/' + filename : filename
-    await window.mirehub.claudeMemory.writeRule(projectPath, relativePath, `# ${name.replace('.md', '')}\n\n`)
+    await window.kanbai.claudeMemory.writeRule(projectPath, relativePath, `# ${name.replace('.md', '')}\n\n`)
     setCreating(false)
     setNewName('')
     setSelected({ relativePath, source: 'local' })
@@ -135,7 +135,7 @@ export function useRulesState(projectPath: string) {
     if (!name) return
     const parentDir = getParentDir()
     const dirPath = parentDir ? parentDir + '/' + name : name
-    await window.mirehub.claudeMemory.createRuleDir(projectPath, dirPath)
+    await window.kanbai.claudeMemory.createRuleDir(projectPath, dirPath)
     setCreatingDir(false)
     setNewName('')
     await load()
@@ -149,9 +149,9 @@ export function useRulesState(projectPath: string) {
       finalContent = updateAuthorFrontmatter(content, gitUserName)
     }
     if (selectedRule.isSymlink) {
-      await window.mirehub.claudeMemory.writeSharedRule(selectedRule.filename, finalContent)
+      await window.kanbai.claudeMemory.writeSharedRule(selectedRule.filename, finalContent)
     } else {
-      await window.mirehub.claudeMemory.writeRule(projectPath, selectedRule.relativePath, finalContent)
+      await window.kanbai.claudeMemory.writeRule(projectPath, selectedRule.relativePath, finalContent)
     }
     await load()
   }, [selectedRule, projectPath, load, gitUserName])
@@ -160,16 +160,16 @@ export function useRulesState(projectPath: string) {
     const rule = rules.find((r) => r.relativePath === relativePath)
     if (!rule) return
     if (rule.isSymlink) {
-      await window.mirehub.claudeMemory.unlinkSharedRule(projectPath, rule.filename)
+      await window.kanbai.claudeMemory.unlinkSharedRule(projectPath, rule.filename)
     } else {
-      await window.mirehub.claudeMemory.deleteRule(projectPath, rule.relativePath)
+      await window.kanbai.claudeMemory.deleteRule(projectPath, rule.relativePath)
     }
     if (selected?.relativePath === relativePath && selected.source === 'local') setSelected(null)
     await load()
   }, [rules, selected, projectPath, load])
 
   const handleDeleteDir = useCallback(async (dirPath: string) => {
-    await window.mirehub.claudeMemory.deleteRuleDir(projectPath, dirPath)
+    await window.kanbai.claudeMemory.deleteRuleDir(projectPath, dirPath)
     if (selected?.source === 'local' && selected.relativePath.startsWith(dirPath + '/')) {
       setSelected(null)
     }
@@ -187,7 +187,7 @@ export function useRulesState(projectPath: string) {
     const newRelativePath = parts.length > 1
       ? parts.slice(0, -1).join('/') + '/' + finalName
       : finalName
-    await window.mirehub.claudeMemory.moveRule(projectPath, oldRelativePath, newRelativePath)
+    await window.kanbai.claudeMemory.moveRule(projectPath, oldRelativePath, newRelativePath)
     setRenaming(null)
     setSelected({ relativePath: newRelativePath, source: 'local' })
     await load()
@@ -200,13 +200,13 @@ export function useRulesState(projectPath: string) {
     const newDirPath = parts.length > 1
       ? parts.slice(0, -1).join('/') + '/' + newDirName
       : newDirName
-    await window.mirehub.claudeMemory.renameRuleDir(projectPath, oldDirPath, newDirPath)
+    await window.kanbai.claudeMemory.renameRuleDir(projectPath, oldDirPath, newDirPath)
     setRenaming(null)
     await load()
   }, [renameValue, projectPath, load])
 
   const handleMoveRule = useCallback(async (oldPath: string, newPath: string) => {
-    await window.mirehub.claudeMemory.moveRule(projectPath, oldPath, newPath)
+    await window.kanbai.claudeMemory.moveRule(projectPath, oldPath, newPath)
     if (selected?.relativePath === oldPath) {
       setSelected({ relativePath: newPath, source: 'local' })
     }
@@ -214,7 +214,7 @@ export function useRulesState(projectPath: string) {
   }, [projectPath, load, selected])
 
   const handleLinkShared = useCallback(async (filename: string) => {
-    await window.mirehub.claudeMemory.linkSharedRule(projectPath, filename)
+    await window.kanbai.claudeMemory.linkSharedRule(projectPath, filename)
     setSelected({ relativePath: filename, source: 'local' })
     await load()
   }, [projectPath, load])
@@ -222,9 +222,9 @@ export function useRulesState(projectPath: string) {
   const handleReplaceWithShared = useCallback(async (filename: string) => {
     const rule = rules.find((r) => r.filename === filename && !r.isSymlink)
     if (rule) {
-      await window.mirehub.claudeMemory.deleteRule(projectPath, rule.relativePath)
+      await window.kanbai.claudeMemory.deleteRule(projectPath, rule.relativePath)
     }
-    await window.mirehub.claudeMemory.linkSharedRule(projectPath, filename)
+    await window.kanbai.claudeMemory.linkSharedRule(projectPath, filename)
     setConfirmReplace(null)
     await load()
   }, [rules, projectPath, load])
@@ -239,37 +239,37 @@ export function useRulesState(projectPath: string) {
       setConfirmOverwriteShared({ filename: rule.filename, content: rule.content })
       return
     }
-    await window.mirehub.claudeMemory.writeSharedRule(rule.filename, rule.content)
-    await window.mirehub.claudeMemory.deleteRule(projectPath, rule.relativePath)
-    await window.mirehub.claudeMemory.linkSharedRule(projectPath, rule.filename)
+    await window.kanbai.claudeMemory.writeSharedRule(rule.filename, rule.content)
+    await window.kanbai.claudeMemory.deleteRule(projectPath, rule.relativePath)
+    await window.kanbai.claudeMemory.linkSharedRule(projectPath, rule.filename)
     await load()
   }, [rules, sharedRules, projectPath, load])
 
   const confirmConvertToShared = useCallback(async () => {
     if (!confirmOverwriteShared) return
     const { filename, content } = confirmOverwriteShared
-    await window.mirehub.claudeMemory.writeSharedRule(filename, content)
+    await window.kanbai.claudeMemory.writeSharedRule(filename, content)
     // Delete local rule (find it by filename)
     const rule = rules.find((r) => r.filename === filename && !r.isSymlink)
     if (rule) {
-      await window.mirehub.claudeMemory.deleteRule(projectPath, rule.relativePath)
+      await window.kanbai.claudeMemory.deleteRule(projectPath, rule.relativePath)
     }
-    await window.mirehub.claudeMemory.linkSharedRule(projectPath, filename)
+    await window.kanbai.claudeMemory.linkSharedRule(projectPath, filename)
     setConfirmOverwriteShared(null)
     await load()
   }, [confirmOverwriteShared, rules, projectPath, load])
 
   const handleExport = useCallback(async () => {
-    await window.mirehub.claudeMemory.exportRules(projectPath)
+    await window.kanbai.claudeMemory.exportRules(projectPath)
   }, [projectPath])
 
   const handleImport = useCallback(async () => {
-    const result = await window.mirehub.claudeMemory.importRules(projectPath)
+    const result = await window.kanbai.claudeMemory.importRules(projectPath)
     if (result.success) await load()
   }, [projectPath, load])
 
   const handleImportTemplates = useCallback(async (relativePaths: string[]) => {
-    const result = await window.mirehub.claudeMemory.importTemplates(projectPath, relativePaths)
+    const result = await window.kanbai.claudeMemory.importTemplates(projectPath, relativePaths)
     if (result.success) await load()
   }, [projectPath, load])
 

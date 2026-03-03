@@ -1,18 +1,18 @@
 <p align="center">
-  <img src="website/assets/icon-256.png" alt="Mirehub" width="128" height="128">
+  <img src="website/assets/icon-256.png" alt="Kanbai" width="128" height="128">
 </p>
 
-<h1 align="center">Mirehub</h1>
+<h1 align="center">Kanbai</h1>
 
 <p align="center">
   <strong>AI-powered development environment for macOS</strong>
 </p>
 
 <p align="center">
-  <a href="https://github.com/AntonyCanut/Mirehub/releases"><img src="https://img.shields.io/github/v/release/AntonyCanut/Mirehub?style=flat-square" alt="Release"></a>
-  <a href="https://github.com/AntonyCanut/Mirehub/actions"><img src="https://img.shields.io/github/actions/workflow/status/AntonyCanut/Mirehub/ci.yml?style=flat-square" alt="CI"></a>
+  <a href="https://github.com/AntonyCanut/Kanbai/releases"><img src="https://img.shields.io/github/v/release/AntonyCanut/Kanbai?style=flat-square" alt="Release"></a>
+  <a href="https://github.com/AntonyCanut/Kanbai/actions"><img src="https://img.shields.io/github/actions/workflow/status/AntonyCanut/Kanbai/ci.yml?style=flat-square" alt="CI"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Proprietary-blue?style=flat-square" alt="License"></a>
-  <a href="https://github.com/AntonyCanut/Mirehub/issues"><img src="https://img.shields.io/github/issues/AntonyCanut/Mirehub?style=flat-square" alt="Issues"></a>
+  <a href="https://github.com/AntonyCanut/Kanbai/issues"><img src="https://img.shields.io/github/issues/AntonyCanut/Kanbai?style=flat-square" alt="Issues"></a>
 </p>
 
 <p align="center">
@@ -26,7 +26,7 @@
 
 ---
 
-Mirehub combines a multi-tab terminal, project workspaces, a Kanban board, Git tools, a database explorer, and Claude AI sessions into a single native macOS application. It is built with Electron and designed to streamline the full development workflow without switching between tools.
+Kanbai combines a multi-tab terminal, project workspaces, a Kanban board, Git tools, a database explorer, and Claude AI sessions into a single native macOS application. It is built with Electron and designed to streamline the full development workflow without switching between tools.
 
 ## Features
 
@@ -36,7 +36,7 @@ Full-featured terminal emulator powered by xterm.js and node-pty. Supports multi
 
 ### Workspaces
 
-Isolated project environments managed via symlinks (`~/.mirehub/envs/{name}`). Each workspace maintains its own terminal tabs, open files, and session state.
+Isolated project environments managed via symlinks (`~/.kanbai/envs/{name}`). Each workspace maintains its own terminal tabs, open files, and session state.
 
 ### Git
 
@@ -117,8 +117,8 @@ Built-in HTTP client for testing API endpoints directly from the application.
 ### From source
 
 ```bash
-git clone https://github.com/AntonyCanut/Mirehub.git
-cd Mirehub
+git clone https://github.com/AntonyCanut/Kanbai.git
+cd Kanbai
 npm install
 npm run dev
 ```
