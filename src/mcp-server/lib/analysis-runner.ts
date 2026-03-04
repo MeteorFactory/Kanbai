@@ -870,6 +870,62 @@ export function buildTicketTitle(
   }
 }
 
+// ---------------------------------------------------------------------------
+// Gitignore auto-update for analysis report directories
+// ---------------------------------------------------------------------------
+
+/** Known report directories that analysis tools may generate inside a project */
+const TOOL_REPORT_PATTERNS: Record<string, string[]> = {
+  megalinter: ['megalinter-reports/'],
+  semgrep: ['.semgrep/'],
+  bearer: ['.bearer/'],
+  trivy: ['.trivycache/'],
+  checkov: ['.checkov/'],
+}
+
+/** Header comment used to identify the auto-managed gitignore section */
+const GITIGNORE_SECTION_HEADER = '# Analysis tool reports (auto-managed by Kanbai)'
+const GITIGNORE_SECTION_FOOTER = '# End analysis tool reports'
+
+/**
+ * After running an analysis tool, ensure the project's .gitignore excludes
+ * any report directories the tool may have created.
+ * Only modifies .gitignore if the project already has one (i.e. is a git repo).
+ */
+export function ensureGitignoreExcludesReports(projectPath: string, toolId: string): void {
+  const patterns = TOOL_REPORT_PATTERNS[toolId]
+  if (!patterns || patterns.length === 0) return
+
+  const gitignorePath = path.join(projectPath, '.gitignore')
+  if (!fs.existsSync(gitignorePath)) return
+
+  const content = fs.readFileSync(gitignorePath, 'utf-8')
+  const missingPatterns = patterns.filter((p) => !content.includes(p))
+  if (missingPatterns.length === 0) return
+
+  // Check if our managed section already exists
+  const hasSection = content.includes(GITIGNORE_SECTION_HEADER)
+
+  if (hasSection) {
+    // Insert missing patterns before the footer
+    const updatedContent = content.replace(
+      GITIGNORE_SECTION_FOOTER,
+      missingPatterns.join('\n') + '\n' + GITIGNORE_SECTION_FOOTER,
+    )
+    fs.writeFileSync(gitignorePath, updatedContent, 'utf-8')
+  } else {
+    // Append a new section at the end
+    const section = [
+      '',
+      GITIGNORE_SECTION_HEADER,
+      ...missingPatterns,
+      GITIGNORE_SECTION_FOOTER,
+      '',
+    ].join('\n')
+    fs.writeFileSync(gitignorePath, content.trimEnd() + '\n' + section, 'utf-8')
+  }
+}
+
 export function buildTicketDescription(findings: AnalysisFinding[]): string {
   const lines: string[] = []
   for (const f of findings) {

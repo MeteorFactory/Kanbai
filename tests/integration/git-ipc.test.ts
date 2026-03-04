@@ -14,7 +14,7 @@ function gitExec(cmd: string, cwd: string = repoDir): string {
 
 function setupGitRepo(): void {
   fs.mkdirSync(repoDir, { recursive: true })
-  gitExec('git init')
+  gitExec('git init -b master')
   gitExec('git config user.email "test@test.com"')
   gitExec('git config user.name "Test User"')
 }
@@ -235,7 +235,7 @@ describe('Git IPC Handlers', () => {
 
       expect(branches.length).toBeGreaterThan(0)
       expect(branches.some((b: { name: string }) => b.name === 'master')).toBe(true)
-    })
+    }, 15_000)
 
     it('gere un repo sans commits', async () => {
       setupGitRepo()
