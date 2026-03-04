@@ -990,6 +990,7 @@ export const en = {
   // Git
   'git.noChanges': 'No changes',
   'git.selectProject': 'Select a project to view Git history.',
+  'git.allProjects': 'All projects',
   'git.notGitRepo': 'This project is not a Git repository.',
   'git.initGit': 'Initialize Git',
   'git.checkout': 'Checkout',
