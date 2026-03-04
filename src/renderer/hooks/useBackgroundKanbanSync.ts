@@ -86,7 +86,7 @@ export function useBackgroundKanbanSync(): void {
       if (activeWorkspaceId) {
         await useKanbanStore.getState().syncTasksFromFile()
         const freshStore = useKanbanStore.getState()
-        const { tasks: activeTasks, kanbanTabIds: activeTabIds } = freshStore
+        const { tasks: activeTasks } = freshStore
         if (activeTasks.length > 0) {
           // Only launch next TODO if no task is WORKING or PENDING (in-progress states)
           const hasInProgress = activeTasks.some(
