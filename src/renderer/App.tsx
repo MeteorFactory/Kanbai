@@ -30,6 +30,7 @@ import { useTerminalTabStore } from './lib/stores/terminalTabStore'
 import { useViewStore } from './lib/stores/viewStore'
 import { useAppUpdateStore } from './lib/stores/appUpdateStore'
 import { useClaudeStore } from './lib/stores/claudeStore'
+import { useKanbanStore } from './lib/stores/kanbanStore'
 import { useI18n } from './lib/i18n'
 import { useBackgroundKanbanSync } from './hooks/useBackgroundKanbanSync'
 import type { AppSettings, SessionData, SessionTab } from '../shared/types'
@@ -144,7 +145,17 @@ export function App() {
         return false
       }
 
-      const sessionTabs: SessionTab[] = tabs.filter((tab) => !isPixelAgentsPane(tab.paneTree)).map((tab) => ({
+      // Skip tabs linked to closed tickets (DONE/FAILED) — no need to restore them
+      const { kanbanTabIds, tasks: kanbanTasks } = useKanbanStore.getState()
+      const closedTicketTabIds = new Set<string>()
+      for (const [taskId, tabId] of Object.entries(kanbanTabIds)) {
+        const task = kanbanTasks.find((t) => t.id === taskId)
+        if (task && (task.status === 'DONE' || task.status === 'FAILED')) {
+          closedTicketTabIds.add(tabId)
+        }
+      }
+
+      const sessionTabs: SessionTab[] = tabs.filter((tab) => !isPixelAgentsPane(tab.paneTree) && !closedTicketTabIds.has(tab.id)).map((tab) => ({
         workspaceId: tab.workspaceId,
         cwd: tab.cwd,
         label: tab.label,

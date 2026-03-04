@@ -88,19 +88,13 @@ export function useBackgroundKanbanSync(): void {
         const freshStore = useKanbanStore.getState()
         const { tasks: activeTasks, kanbanTabIds: activeTabIds } = freshStore
         if (activeTasks.length > 0) {
-          // Resume a WORKING task that lost its terminal
-          const workingWithoutTerminal = activeTasks.find(
-            (t) => t.status === 'WORKING' && !activeTabIds[t.id],
+          // Only launch next TODO if no task is WORKING or PENDING (in-progress states)
+          const hasInProgress = activeTasks.some(
+            (t) => t.status === 'WORKING' || t.status === 'PENDING',
           )
-          if (workingWithoutTerminal) {
-            freshStore.sendToAi(workingWithoutTerminal)
-          } else {
-            // If no WORKING task at all, pick the next TODO
-            const hasWorking = activeTasks.some((t) => t.status === 'WORKING')
-            if (!hasWorking) {
-              const next = pickNextTask(activeTasks)
-              if (next) freshStore.sendToAi(next)
-            }
+          if (!hasInProgress) {
+            const next = pickNextTask(activeTasks)
+            if (next) freshStore.sendToAi(next)
           }
         }
       }

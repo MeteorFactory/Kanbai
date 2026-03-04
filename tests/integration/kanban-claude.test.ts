@@ -812,7 +812,7 @@ describe('Kanban → Claude Integration (PTY interactif)', () => {
   describe('reactivateIfDone (user message submission on DONE terminal)', () => {
     it('remet un ticket DONE en WORKING quand l\'utilisateur soumet un message (Enter)', () => {
       useKanbanStore.setState({
-        tasks: [makeTask({ id: 'task-1', status: 'DONE' })],
+        tasks: [makeTask({ id: 'task-1', status: 'DONE', updatedAt: Date.now() - 60_000 })],
         kanbanTabIds: { 'task-1': 'tab-abc' },
       })
 
@@ -831,7 +831,7 @@ describe('Kanban → Claude Integration (PTY interactif)', () => {
 
     it('restaure la couleur du provider apres reactivation', () => {
       useKanbanStore.setState({
-        tasks: [makeTask({ id: 'task-1', status: 'DONE', aiProvider: 'claude' })],
+        tasks: [makeTask({ id: 'task-1', status: 'DONE', aiProvider: 'claude', updatedAt: Date.now() - 60_000 })],
         kanbanTabIds: { 'task-1': 'tab-abc' },
       })
 
@@ -876,7 +876,7 @@ describe('Kanban → Claude Integration (PTY interactif)', () => {
 
     it('utilise la couleur Claude par defaut si pas de aiProvider', () => {
       useKanbanStore.setState({
-        tasks: [makeTask({ id: 'task-1', status: 'DONE' })],
+        tasks: [makeTask({ id: 'task-1', status: 'DONE', updatedAt: Date.now() - 60_000 })],
         kanbanTabIds: { 'task-1': 'tab-abc' },
       })
 
@@ -890,7 +890,7 @@ describe('Kanban → Claude Integration (PTY interactif)', () => {
       mockKanbanUpdate.mockReturnValue(new Promise(() => { /* never resolves */ }))
 
       useKanbanStore.setState({
-        tasks: [makeTask({ id: 'task-1', status: 'DONE' })],
+        tasks: [makeTask({ id: 'task-1', status: 'DONE', updatedAt: Date.now() - 60_000 })],
         kanbanTabIds: { 'task-1': 'tab-abc' },
       })
 

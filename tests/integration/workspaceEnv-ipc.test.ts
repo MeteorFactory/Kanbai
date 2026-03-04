@@ -226,7 +226,12 @@ describe('WorkspaceEnv IPC Handlers', () => {
       const envClaudeSettings = path.join(result.envPath, '.claude', 'settings.json')
 
       expect(fs.existsSync(envClaudeMd)).toBe(true)
-      expect(fs.readFileSync(envClaudeMd, 'utf-8')).toBe('# Rules Alpha')
+      const claudeMdContent = fs.readFileSync(envClaudeMd, 'utf-8')
+      expect(claudeMdContent).toContain('# Rules Alpha')
+      // Required sections are auto-injected
+      expect(claudeMdContent).toContain('## Execution Rules')
+      expect(claudeMdContent).toContain('## Testing')
+      expect(claudeMdContent).toContain('## Code Patterns / Gotchas')
       expect(fs.existsSync(envClaudeSettings)).toBe(true)
       expect(fs.readFileSync(envClaudeSettings, 'utf-8')).toBe('{"mode":"bypass"}')
     })
@@ -246,9 +251,10 @@ describe('WorkspaceEnv IPC Handlers', () => {
 
       expect(result.success).toBe(true)
 
-      // Le premier projet gagne
+      // Le premier projet gagne (contenu original + sections requises)
       const envClaudeMd = fs.readFileSync(path.join(result.envPath, 'CLAUDE.md'), 'utf-8')
-      expect(envClaudeMd).toBe('# Alpha Rules')
+      expect(envClaudeMd).toContain('# Alpha Rules')
+      expect(envClaudeMd).not.toContain('# Beta Rules')
     })
 
     it('ne copie pas de regles si aucun projet n en a', async () => {
@@ -258,7 +264,12 @@ describe('WorkspaceEnv IPC Handlers', () => {
       })
 
       expect(result.success).toBe(true)
-      expect(fs.existsSync(path.join(result.envPath, 'CLAUDE.md'))).toBe(false)
+      // CLAUDE.md is now always created with required sections even without project rules
+      expect(fs.existsSync(path.join(result.envPath, 'CLAUDE.md'))).toBe(true)
+      const claudeMdContent = fs.readFileSync(path.join(result.envPath, 'CLAUDE.md'), 'utf-8')
+      expect(claudeMdContent).toContain('## Execution Rules')
+      expect(claudeMdContent).toContain('## Testing')
+      expect(claudeMdContent).toContain('## Code Patterns / Gotchas')
       // .claude/ exists (created by installActivityHooks) but should NOT contain copied settings.json
       expect(fs.existsSync(path.join(result.envPath, '.claude'))).toBe(true)
       expect(fs.existsSync(path.join(result.envPath, '.claude', 'settings.json'))).toBe(false)
@@ -275,7 +286,10 @@ describe('WorkspaceEnv IPC Handlers', () => {
 
       expect(result.success).toBe(true)
       expect(fs.existsSync(path.join(result.envPath, 'CLAUDE.md'))).toBe(true)
-      expect(fs.readFileSync(path.join(result.envPath, 'CLAUDE.md'), 'utf-8')).toBe('# Simple Rules')
+      const claudeMdContent = fs.readFileSync(path.join(result.envPath, 'CLAUDE.md'), 'utf-8')
+      expect(claudeMdContent).toContain('# Simple Rules')
+      // Required sections are auto-injected
+      expect(claudeMdContent).toContain('## Execution Rules')
       // .claude/ exists (created by installActivityHooks) but applyCludeRulesToEnv did not copy a .claude dir
       // The .claude dir contains only hook settings, not project-copied settings
       expect(fs.existsSync(path.join(result.envPath, '.claude'))).toBe(true)
@@ -302,7 +316,8 @@ describe('WorkspaceEnv IPC Handlers', () => {
 
       expect(result.success).toBe(true)
       const envClaudeMd = fs.readFileSync(path.join(result.envPath, 'CLAUDE.md'), 'utf-8')
-      expect(envClaudeMd).toBe('# New Rules')
+      expect(envClaudeMd).toContain('# New Rules')
+      expect(envClaudeMd).not.toContain('# Old Rules')
     })
 
     it('prend le second projet si le premier n a pas Claude', async () => {
@@ -317,7 +332,8 @@ describe('WorkspaceEnv IPC Handlers', () => {
 
       expect(result.success).toBe(true)
       const envClaudeMd = fs.readFileSync(path.join(result.envPath, 'CLAUDE.md'), 'utf-8')
-      expect(envClaudeMd).toBe('# Beta Only')
+      expect(envClaudeMd).toContain('# Beta Only')
+      expect(envClaudeMd).toContain('## Execution Rules')
     })
   })
 

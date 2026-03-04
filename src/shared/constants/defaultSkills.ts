@@ -4,7 +4,7 @@ export interface DefaultSkill {
   id: string
   name: string
   description: string
-  category: 'Git' | 'Development' | 'Quality' | 'Documentation' | 'Security' | 'DevOps'
+  category: 'Git' | 'Development' | 'Quality' | 'Documentation' | 'Security' | 'DevOps' | 'Workflow'
   content: string
   filename: string
 }
@@ -236,6 +236,126 @@ Analyze the project and generate a deployment checklist:
 Mark each item as PASS/FAIL/N-A with details.
 `,
   },
+  {
+    id: 'ticket',
+    name: '/ticket',
+    description: 'Execute a kanban ticket with strict time-boxing',
+    category: 'Workflow',
+    filename: 'ticket.md',
+    content: `---
+description: Execute a kanban ticket with strict time-boxing (2-3 min exploration max)
+---
+
+$ARGUMENTS contains the ticket identifier (e.g., T-25) or the ticket file path.
+
+## Execution Constraints
+
+1. Read the specified ticket (max 1 min)
+2. Read ONLY the files directly referenced by the ticket (max 2 min)
+3. Start implementing immediately — produce code changes within the first 3 minutes
+4. Do NOT do broad codebase exploration — ask the user if you need clarification
+5. Run tests after implementation
+6. Update the ticket status in the kanban file
+
+## Workflow
+
+1. Read the ticket and extract acceptance criteria
+2. Identify the files to modify (max 3-5 files)
+3. Implement the changes
+4. Run \`npm run test\` to verify no regressions
+5. Run \`npm run typecheck\` if the project is TypeScript
+6. Update the ticket: status DONE + result field with summary
+7. If blocked: status PENDING + question field
+
+## Anti-patterns
+
+- Do NOT spend the entire session exploring/planning without producing code
+- Do NOT create a plan document — write code directly
+- Do NOT explore more than 5 files not referenced by the ticket
+`,
+  },
+  {
+    id: 'ticket-tdd',
+    name: '/ticket-tdd',
+    description: 'Execute a kanban ticket in Test-Driven mode',
+    category: 'Workflow',
+    filename: 'ticket-tdd.md',
+    content: `---
+description: Execute a kanban ticket in Test-Driven mode (tests first, then implementation)
+---
+
+$ARGUMENTS contains the ticket identifier (e.g., T-25) or the ticket file path.
+
+## Strict TDD Loop
+
+1. Read the ticket and extract all acceptance criteria
+2. Write failing unit/integration tests that encode each criterion
+3. Run tests to confirm they fail
+4. Implement the feature with minimal code to pass all tests
+5. Re-run tests — if any fail, debug and fix without asking the user
+6. Once all tests are green, run the full test suite to check for regressions
+7. Update the ticket to DONE with the list of changed files and test results
+
+## Rules
+
+- NEVER mark the ticket as done before all tests pass
+- Write tests BEFORE implementation
+- Each acceptance criterion must have at least one test
+- Cover edge cases: empty inputs, missing files, first-time runs
+- Use the project's existing test framework (Vitest, pytest, etc.)
+
+## Anti-patterns
+
+- Do NOT implement without tests
+- Do NOT ignore failing tests
+- Do NOT write tests that test implementation rather than behavior
+`,
+  },
+  {
+    id: 'edge-review',
+    name: '/edge-review',
+    description: 'Edge-case review before marking work as done',
+    category: 'Quality',
+    filename: 'edge-review.md',
+    content: `---
+description: Edge-case and completeness review before marking work as done
+---
+
+$ARGUMENTS contains the description of the implemented feature or the modified files.
+
+## Review Checklist
+
+Before reporting work as done, systematically verify:
+
+### 1. Edge Cases
+- Empty or null inputs
+- Missing or inaccessible files
+- First-time execution (no existing data)
+- Corrupted data or unexpected format
+- Numeric boundaries (0, negatives, very large numbers)
+
+### 2. Requirement Completeness
+- Are ALL ticket criteria addressed?
+- No partial or forgotten functionality?
+- Are error messages clear and actionable?
+
+### 3. Test Coverage
+- Do tests cover the new behaviors?
+- Are the edge cases identified above tested?
+- Do existing tests still pass?
+
+### 4. Triggers and Side Effects
+- Does the behavior trigger ONLY at the right moment?
+- No unintended automatic triggering?
+- Are side effects documented?
+
+## Actions
+
+1. Run \`npm run test\` (or equivalent) to verify
+2. If issues are found, fix them immediately
+3. Summarize the verifications performed in the final report
+`,
+  },
 ]
 
 const SKILLS_FR: DefaultSkill[] = [
@@ -463,6 +583,126 @@ Analyse le projet et genere une checklist de deploiement :
 10. **Rollback** : Le plan de rollback est-il documente ?
 
 Marque chaque element comme OK/ECHEC/N-A avec des details.
+`,
+  },
+  {
+    id: 'ticket',
+    name: '/ticket',
+    description: 'Execute un ticket Kanban avec time-boxing strict',
+    category: 'Workflow',
+    filename: 'ticket.md',
+    content: `---
+description: Execute un ticket Kanban avec time-boxing strict (2-3 min exploration max)
+---
+
+$ARGUMENTS contient l'identifiant du ticket (ex: T-25) ou le chemin du fichier ticket.
+
+## Contraintes d'execution
+
+1. Lis le ticket specifie (max 1 min)
+2. Lis UNIQUEMENT les fichiers directement references par le ticket (max 2 min)
+3. Commence a implementer immediatement — produis des changements de code dans les 3 premieres minutes
+4. NE FAIS PAS d'exploration large du codebase — demande a l'utilisateur si tu as besoin de clarification
+5. Lance les tests apres implementation
+6. Mets a jour le statut du ticket dans le fichier kanban
+
+## Workflow
+
+1. Lire le ticket et extraire les criteres d'acceptation
+2. Identifier les fichiers a modifier (max 3-5 fichiers)
+3. Implementer les changements
+4. Lancer \`npm run test\` pour verifier aucune regression
+5. Lancer \`npm run typecheck\` si le projet est TypeScript
+6. Mettre a jour le ticket: status DONE + champ result avec resume
+7. Si bloque: status PENDING + champ question
+
+## Anti-patterns
+
+- NE PAS passer toute la session a explorer/planifier sans produire de code
+- NE PAS creer de document de plan — ecrire du code directement
+- NE PAS explorer plus de 5 fichiers non references par le ticket
+`,
+  },
+  {
+    id: 'ticket-tdd',
+    name: '/ticket-tdd',
+    description: 'Execute un ticket Kanban en mode Test-Driven',
+    category: 'Workflow',
+    filename: 'ticket-tdd.md',
+    content: `---
+description: Execute un ticket Kanban en mode Test-Driven (tests d'abord, puis implementation)
+---
+
+$ARGUMENTS contient l'identifiant du ticket (ex: T-25) ou le chemin du fichier ticket.
+
+## Boucle TDD stricte
+
+1. Lis le ticket et extrais tous les criteres d'acceptation
+2. Ecris des tests unitaires/integration qui echouent et encodent chaque critere
+3. Lance les tests pour confirmer qu'ils echouent
+4. Implemente la fonctionnalite avec le minimum de code pour passer tous les tests
+5. Relance les tests — si un test echoue, debug et corrige sans demander a l'utilisateur
+6. Une fois tous les tests verts, lance la suite de tests complete pour verifier les regressions
+7. Mets a jour le ticket a DONE avec la liste des fichiers modifies et les resultats de tests
+
+## Regles
+
+- NE JAMAIS marquer le ticket comme termine avant que tous les tests passent
+- Ecrire les tests AVANT l'implementation
+- Chaque critere d'acceptation doit avoir au moins un test
+- Couvrir les cas limites : entrees vides, fichiers manquants, premiere execution
+- Utiliser le framework de test existant du projet (Vitest, pytest, etc.)
+
+## Anti-patterns
+
+- NE PAS implementer sans tests
+- NE PAS ignorer les tests en echec
+- NE PAS ecrire des tests qui testent l'implementation plutot que le comportement
+`,
+  },
+  {
+    id: 'edge-review',
+    name: '/edge-review',
+    description: 'Revue des cas limites avant de marquer un travail comme termine',
+    category: 'Quality',
+    filename: 'edge-review.md',
+    content: `---
+description: Revue des cas limites et completude avant de marquer un travail comme termine
+---
+
+$ARGUMENTS contient la description de la fonctionnalite implementee ou les fichiers modifies.
+
+## Checklist de revue
+
+Avant de reporter le travail comme termine, verifie systematiquement :
+
+### 1. Cas limites
+- Entrees vides ou nulles
+- Fichiers manquants ou inaccessibles
+- Premiere execution (pas de donnees existantes)
+- Donnees corrompues ou format inattendu
+- Limites numeriques (0, negatifs, tres grands nombres)
+
+### 2. Completude des exigences
+- TOUS les criteres du ticket sont-ils adresses ?
+- Aucune fonctionnalite partielle ou oubliee ?
+- Les messages d'erreur sont-ils clairs et actionnables ?
+
+### 3. Couverture de tests
+- Les tests couvrent-ils les nouveaux comportements ?
+- Les cas limites identifies ci-dessus ont-ils des tests ?
+- Les tests existants passent-ils toujours ?
+
+### 4. Triggers et effets de bord
+- Le comportement se declenche-t-il UNIQUEMENT au bon moment ?
+- Pas de declenchement automatique non desire ?
+- Les effets de bord sont-ils documentes ?
+
+## Actions
+
+1. Lance \`npm run test\` (ou equivalent) pour verifier
+2. Si des problemes sont trouves, corrige-les immediatement
+3. Resumer les verifications effectuees dans le rapport final
 `,
   },
 ]

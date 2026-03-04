@@ -156,6 +156,22 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
       const tasks: KanbanTask[] = await window.kanbai.kanban.list(workspaceId)
       set({ tasks })
 
+      // Clean up terminals linked to closed tickets (DONE/FAILED)
+      const { kanbanTabIds: staleTabIds } = get()
+      const closedTabIds: string[] = []
+      for (const [taskId, tabId] of Object.entries(staleTabIds)) {
+        const task = tasks.find((t) => t.id === taskId)
+        if (task && (task.status === 'DONE' || task.status === 'FAILED')) {
+          closedTabIds.push(tabId)
+        }
+      }
+      if (closedTabIds.length > 0) {
+        const termStore = useTerminalTabStore.getState()
+        for (const tabId of closedTabIds) {
+          termStore.closeTab(tabId)
+        }
+      }
+
       // One-at-a-time scheduling: resume a WORKING without terminal, or pick next TODO
       const capturedWorkspaceId = workspaceId
       setTimeout(() => {
@@ -305,6 +321,16 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
       }
 
       set({ tasks: newTasks })
+
+      // Always clean up terminals linked to already-closed tickets (DONE/FAILED),
+      // regardless of autoClose setting — stale tabs from previous transitions
+      for (const [taskId, tabId] of Object.entries(kanbanTabIds)) {
+        if (tabsToClose.includes(tabId)) continue // already scheduled for close
+        const task = newTasks.find((t) => t.id === taskId)
+        if (task && (task.status === 'DONE' || task.status === 'FAILED')) {
+          tabsToClose.push(tabId)
+        }
+      }
 
       // Launch Claude terminals for tasks manually moved to WORKING
       for (const task of tasksToLaunch) {
@@ -701,6 +727,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
 
       // Verify Claude actually started: if the tab disappeared within 20s,
       // the terminal likely crashed. Reset to TODO so it gets relaunched.
+      // Only reset if the task is still WORKING (not PENDING from handleTabClosed).
       const capturedTaskId = task.id
       const capturedTabId = tabId
       setTimeout(() => {
@@ -708,8 +735,9 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
         const tabStillExists = termStore.tabs.some((t) => t.id === capturedTabId)
         if (tabStillExists) return
         const currentTask = get().tasks.find((t) => t.id === capturedTaskId)
-        if (!currentTask || currentTask.status === 'DONE' || currentTask.status === 'TODO') return
-        // Tab is gone and task is still WORKING or PENDING — reset to TODO for relaunch
+        if (!currentTask || currentTask.status !== 'WORKING') return
+        // Tab is gone and task is still WORKING — the terminal crashed before
+        // handleTabClosed could fire. Reset to TODO for relaunch.
         if (!relaunchedTaskIds.has(capturedTaskId)) {
           relaunchedTaskIds.add(capturedTaskId)
           get().updateTaskStatus(capturedTaskId, 'TODO')

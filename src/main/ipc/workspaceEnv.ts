@@ -48,6 +48,63 @@ const AI_MEMORY_FILES: Record<string, string> = {
 }
 
 /**
+ * Required sections that must always be present in CLAUDE.md.
+ * These are injected automatically when missing, even after AI memory refactors.
+ */
+const REQUIRED_CLAUDE_MD_SECTIONS: Array<{ heading: string; content: string }> = [
+  {
+    heading: '## Execution Rules',
+    content: `## Execution Rules
+
+When executing kanban tickets or task files, start implementation immediately after reading the ticket. Limit exploration to 2-3 minutes max. Do NOT spend entire sessions planning — produce code changes early and iterate.`,
+  },
+  {
+    heading: '## Testing',
+    content: `## Testing
+
+After implementing any feature, always run the existing test suite before reporting completion. Fix any failing tests before marking work as done.`,
+  },
+  {
+    heading: '## Code Patterns / Gotchas',
+    content: `## Code Patterns / Gotchas
+
+When generating shell scripts or wrapper scripts, never use heredoc syntax inside template literals. Write files using direct fs.writeFileSync or equivalent with properly escaped content.`,
+  },
+]
+
+/**
+ * Ensure CLAUDE.md contains all required sections.
+ * If the file does not exist, create it with the required sections.
+ * If it exists but is missing sections, append them at the top (after the first line).
+ */
+function ensureRequiredClaudeMdSections(envDir: string): void {
+  const claudeMdPath = path.join(envDir, 'CLAUDE.md')
+
+  if (!fs.existsSync(claudeMdPath)) {
+    // No CLAUDE.md exists — create a default one
+    const content = REQUIRED_CLAUDE_MD_SECTIONS.map((s) => s.content).join('\n\n')
+    fs.writeFileSync(claudeMdPath, content + '\n', 'utf-8')
+    return
+  }
+
+  const existing = fs.readFileSync(claudeMdPath, 'utf-8')
+  const missingSections: string[] = []
+
+  for (const section of REQUIRED_CLAUDE_MD_SECTIONS) {
+    if (!existing.includes(section.heading)) {
+      missingSections.push(section.content)
+    }
+  }
+
+  if (missingSections.length === 0) return
+
+  // Append missing sections at the end of the file
+  const separator = existing.endsWith('\n') ? '\n' : '\n\n'
+  const updated = existing + separator + missingSections.join('\n\n') + '\n'
+  fs.writeFileSync(claudeMdPath, updated, 'utf-8')
+}
+
+/**
  * Copy AI config directories and memory files from the first project
  * that has them into the workspace env root directory.
  * Handles all AI providers: Claude, Codex, Copilot, Gemini.
@@ -84,6 +141,9 @@ function applyAiRulesToEnv(envDir: string, projectPaths: string[]): void {
       }
     }
   }
+
+  // Always ensure CLAUDE.md has required sections (even after copy or fresh creation)
+  ensureRequiredClaudeMdSections(envDir)
 }
 
 /**
