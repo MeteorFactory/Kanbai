@@ -48,6 +48,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   autoApprove: true,
   tutorialCompleted: false,
   tutorialSeenSections: [],
+  autoCreateAiMemoryRefactorTickets: true,
 }
 
 type SettingsSection = 'general' | 'appearance' | 'terminal' | 'git' | 'ssh' | 'claude' | 'ai' | 'kanban' | 'notifications' | 'about'

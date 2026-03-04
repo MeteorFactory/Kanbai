@@ -379,12 +379,16 @@ app.whenReady().then(() => {
   startActivityWatcher()
 
   // Check if any workspace needs an AI memory refactor ticket (first run or milestone)
-  const storage = new StorageService()
-  for (const ws of storage.getWorkspaces()) {
-    const tasks = readKanbanTasks(ws.id)
-    if (tasks.length > 0) {
-      maybeCreateMemoryRefactorTicket(ws.id, tasks)
+  try {
+    const storage = new StorageService()
+    for (const ws of storage.getWorkspaces()) {
+      const tasks = readKanbanTasks(ws.id)
+      if (tasks.length > 0) {
+        maybeCreateMemoryRefactorTicket(ws.id, tasks)
+      }
     }
+  } catch {
+    // Non-critical: skip if storage is unavailable (e.g. first launch)
   }
 
   // DevTools shortcut: Cmd+Alt+I

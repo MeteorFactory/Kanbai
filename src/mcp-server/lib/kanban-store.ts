@@ -43,25 +43,41 @@ const MEMORY_REFACTOR_INTERVAL = 10
 
 const MEMORY_REFACTOR_DESCRIPTION = `## Objective
 Review and consolidate all AI memory files to reflect the current project state.
+All work must be done in the **workspace** (not the project).
 
-## Files to review
-- [ ] CLAUDE.md / CLAUDE.local.md (workspace + each project)
+## Files to review (per provider)
+
+### Claude Code
+- [ ] CLAUDE.md (workspace root — agent team protocol)
 - [ ] .claude/rules/ (rule files)
 - [ ] .claude/agents/ (agent configs)
-- [ ] GEMINI.md / .gemini/settings.json
-- [ ] .codex/config.toml
-- [ ] .copilot/config.json
+
+### Codex
+- [ ] AGENTS.md (workspace root — Codex instruction file)
+- [ ] .codex/config.toml (settings)
+
+### Copilot
+- [ ] .github/copilot-instructions.md (global instructions)
+- [ ] .github/instructions/*.instructions.md (path-specific rules)
+- [ ] .copilot/config.json (settings)
+
+### Gemini CLI
+- [ ] GEMINI.md (workspace root — Gemini instruction file)
+- [ ] .gemini/settings.json (settings)
 
 ## Tasks
 1. Read all existing AI memory files in the workspace and each project
-2. Consolidate duplicated information across files
-3. Update with new knowledge gained from recent tickets
-4. Improve clarity: architecture, technologies, conventions, decisions
-5. Copy useful project-level memory files to the workspace level
-6. Remove outdated or contradictory information
+2. Ensure all 4 providers have comprehensive, up-to-date instruction files
+3. Consolidate duplicated information — each file should have the same project knowledge adapted to the provider format
+4. Update with new knowledge gained from recent tickets
+5. Improve clarity: architecture, technologies, conventions, decisions
+6. Copy useful project-level memory files to the workspace level
+7. Remove outdated or contradictory information
 
 ## Acceptance Criteria
-- No redundant information across memory files
+- All 4 providers have comprehensive instruction files in the workspace
+- Same knowledge base across all files (architecture, conventions, decisions)
+- No redundant information within each file
 - Memory reflects the current project architecture and conventions
 - Files are clear and easy to understand for any AI agent
 `
