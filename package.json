@@ -24,7 +24,9 @@
     "typecheck": "tsc --noEmit",
     "build:mcp": "tsc -p tsconfig.mcp.json",
     "pixel-agents:setup": "bash scripts/setup-pixel-agents.sh",
-    "pixel-agents:update": "cd vendor/pixel-agents && git pull && cd webview-ui && npm install && npm run build && cd ../../.. && node scripts/patch-pixel-agents-html.js"
+    "pixel-agents:update": "cd vendor/pixel-agents && git pull && cd webview-ui && npm install && npm run build && cd ../../.. && node scripts/patch-pixel-agents-html.js",
+    "rtk:setup": "bash scripts/setup-rtk.sh",
+    "rtk:update": "cd vendor/rtk && git pull"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.27.1",

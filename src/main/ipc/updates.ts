@@ -85,7 +85,7 @@ const TOOLS_TO_CHECK: ToolCheck[] = [
     checkCommand: IS_WIN ? 'pip' : 'pip3',
     checkArgs: ['--version'],
   },
-  // cargo & rtk — Windows only
+  // cargo — Windows only
   ...(IS_WIN
     ? [
         {
@@ -93,13 +93,14 @@ const TOOLS_TO_CHECK: ToolCheck[] = [
           checkCommand: 'cargo',
           checkArgs: ['--version'],
         },
-        {
-          name: 'rtk',
-          checkCommand: 'rtk',
-          checkArgs: ['--version'],
-        },
       ]
     : []),
+  // rtk — available on all platforms
+  {
+    name: 'rtk',
+    checkCommand: 'rtk',
+    checkArgs: ['--version'],
+  },
 ]
 
 type ToolInstallSource =
@@ -173,6 +174,7 @@ const TOOL_METADATA: Record<string, ToolMetadata> = {
     brewCandidates: ['rustup'],
   },
   rtk: {
+    brewCandidates: ['rtk'],
     canUninstall: true,
   },
   'pixel-agents': {
@@ -338,9 +340,6 @@ async function resolveToolInstallSource(tool: string): Promise<ToolInstallResolu
 
   if (tool === 'pixel-agents') {
     return { source: 'internal' }
-  }
-  if (tool === 'rtk') {
-    return { source: 'cargo' }
   }
   if (tool === 'cargo') {
     if (IS_WIN) return { source: 'winget' }
@@ -549,6 +548,24 @@ async function getRemotePixelAgentsCommit(): Promise<string | null> {
   }
 }
 
+/** In dev, rtk source lives under vendor/. In release, under userData/. */
+function getRtkSourcePath(): string {
+  if (VITE_DEV_SERVER_URL) {
+    return path.join(__dirname, '../../vendor/rtk')
+  }
+  return path.join(app.getPath('userData'), 'vendor', 'rtk')
+}
+
+async function isRtkInstalled(): Promise<boolean> {
+  try {
+    const rtkPath = getRtkSourcePath()
+    await fs.access(path.join(rtkPath, 'Cargo.toml'))
+    return true
+  } catch {
+    return false
+  }
+}
+
 async function checkToolUpdates(): Promise<UpdateInfo[]> {
   const results: UpdateInfo[] = []
 
@@ -559,7 +576,7 @@ async function checkToolUpdates(): Promise<UpdateInfo[]> {
     if (!currentVersion) {
       const fallbackSource: ToolInstallSource =
         tool.name === 'cargo' ? (IS_WIN ? 'winget' : 'rustup')
-          : tool.name === 'rtk' ? 'cargo'
+          : tool.name === 'rtk' ? (IS_WIN ? 'winget' : 'brew-formula')
             : tool.name === 'pixel-agents' ? 'internal'
               : (tool.name === 'node'
                 || tool.name === 'git'
@@ -714,7 +731,8 @@ export function registerUpdateHandlers(ipcMain: IpcMain): void {
         const toolCheck = TOOLS_TO_CHECK.find((entry) => entry.name === tool)
         let isInstalled = tool === 'pixel-agents'
           ? await isPixelAgentsInstalled()
-          : Boolean(toolCheck && await getVersion(toolCheck.checkCommand, toolCheck.checkArgs))
+          : Boolean(toolCheck && await getVersion(toolCheck.checkCommand, toolCheck.checkArgs)) ||
+            (tool === 'rtk' && await isRtkInstalled())
         const installResolution = await resolveToolInstallSource(tool)
         if (!isInstalled && installResolution.brew?.installed) {
           isInstalled = true
@@ -897,14 +915,52 @@ export function registerUpdateHandlers(ipcMain: IpcMain): void {
             break
           }
           case 'rtk': {
-            // Verify cargo is installed before attempting
-            try {
-              await enrichedExecFile(getWhichCommand(), ['cargo'], 5000)
-            } catch {
-              throw new Error('Cargo is not installed. Install Rust from https://rustup.rs first.')
+            sendStatus('installing', 10)
+
+            // Check if RTK is installed via brew
+            const isRtkViaBrewInstalled = installResolution.source.startsWith('brew')
+            
+            if (isRtkViaBrewInstalled) {
+              // Use brew for installation/upgrade
+              if (IS_WIN) {
+                command = 'winget'
+                args = [isInstalled ? 'upgrade' : 'install', '--id', 'rtk', '--silent', '--accept-source-agreements', '--accept-package-agreements']
+              } else {
+                command = 'brew'
+                args = [isInstalled ? 'upgrade' : 'install', 'rtk']
+              }
+            } else {
+              // Use vendor/ setup script
+              if (VITE_DEV_SERVER_URL) {
+                // Dev mode: run the setup script from the project tree
+                const projectRoot = path.join(__dirname, '../..')
+                await crossExecFile(
+                  'bash',
+                  [path.join(projectRoot, 'scripts/setup-rtk.sh')],
+                  { timeout: 300000, env: enrichedEnv() },
+                )
+              } else {
+                // Release mode: clone/pull to userData
+                const sourcePath = getRtkSourcePath()
+                const parentDir = path.dirname(sourcePath)
+                await fs.mkdir(parentDir, { recursive: true })
+                
+                sendStatus('installing', 30)
+                if (fsSync.existsSync(path.join(sourcePath, '.git'))) {
+                  // Already cloned, just pull
+                  await crossExecFile('git', ['pull'], { cwd: sourcePath, timeout: 60000, env: enrichedEnv() })
+                } else {
+                  // Clone for the first time
+                  await fs.rm(sourcePath, { recursive: true, force: true }).catch(() => {})
+                  await crossExecFile(
+                    'git', ['clone', '--depth=1', 'https://github.com/rtk-ai/rtk.git', sourcePath],
+                    { timeout: 60000, env: enrichedEnv() },
+                  )
+                }
+              }
+              sendStatus('completed', 100)
+              return { success: true }
             }
-            command = 'cargo'
-            args = ['install', '--git', 'https://github.com/rtk-ai/rtk']
             break
           }
           case 'pixel-agents': {
@@ -1002,14 +1058,33 @@ export function registerUpdateHandlers(ipcMain: IpcMain): void {
         let args: string[]
 
         switch (tool) {
-          case 'rtk': {
-            try {
-              await enrichedExecFile(getWhichCommand(), ['cargo'], 5000)
-            } catch {
-              throw new Error('Cargo is not installed. Install Rust from https://rustup.rs first.')
+        case 'rtk': {
+            // Check if RTK was installed via brew (need to resolve first)
+            const installResolution = await resolveToolInstallSource(tool)
+            const isRtkViaBrewInstalled = installResolution.source.startsWith('brew')
+            
+            if (isRtkViaBrewInstalled) {
+              // Use brew for uninstall
+              if (IS_WIN) {
+                command = 'winget'
+                args = ['uninstall', '--id', 'rtk', '--silent']
+              } else {
+                command = 'brew'
+                args = ['uninstall', 'rtk']
+              }
+            } else {
+              // Remove vendor/ setup
+              if (VITE_DEV_SERVER_URL) {
+                // Dev mode: remove from vendor/
+                const vendorPath = path.join(__dirname, '../../vendor/rtk')
+                await fs.rm(vendorPath, { recursive: true, force: true })
+              } else {
+                // Release mode: remove cloned source
+                await fs.rm(getRtkSourcePath(), { recursive: true, force: true }).catch(() => {})
+              }
+              sendStatus('completed')
+              return { success: true }
             }
-            command = 'cargo'
-            args = ['uninstall', 'rtk']
             break
           }
           case 'pixel-agents': {

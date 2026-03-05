@@ -3430,6 +3430,25 @@ body {
   transition: all 0.15s ease;
 }
 
+.packages-row-update-btn--loading {
+  color: var(--success);
+  opacity: 0.6;
+}
+
+.packages-spinner {
+  display: inline-block;
+  animation: spin-update 1s linear infinite;
+}
+
+@keyframes spin-update {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .packages-row-update-btn:hover:not(:disabled) {
   background: var(--success);
   color: var(--bg-tertiary);
@@ -3454,6 +3473,19 @@ body {
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.packages-update-all-btn--loading {
+  opacity: 0.6;
+}
+
+.packages-spinner-inline {
+  display: inline-block;
+  animation: spin-update 1s linear infinite;
 }
 
 .packages-update-all-btn:hover:not(:disabled) {

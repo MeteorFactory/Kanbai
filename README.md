@@ -166,6 +166,17 @@ The DMG is generated via electron-builder with hardened runtime enabled. Output 
 | `npm run format` | Format with Prettier |
 | `npm run typecheck` | TypeScript type checking |
 
+### Vendor Tools
+
+External tools are managed in the `vendor/` directory and can be set up and updated:
+
+| Command | Description |
+|---------|-------------|
+| `npm run pixel-agents:setup` | Clone and build Pixel Agents from GitHub |
+| `npm run pixel-agents:update` | Update Pixel Agents to the latest version |
+| `npm run rtk:setup` | Clone RTK (Rust Toolkit) from GitHub |
+| `npm run rtk:update` | Update RTK to the latest version |
+
 A `Makefile` is also available with equivalent targets plus `make install`, `make clean`, and `make check` (pre-deploy validation).
 
 ## Project Structure

@@ -85,7 +85,7 @@ export function PackagesContent() {
       default:
         return true
     }
-  })
+  }).sort((a, b) => a.name.localeCompare(b.name))
 
   const handleUpdate = useCallback(
     async (packageName: string) => {
@@ -167,13 +167,15 @@ export function PackagesContent() {
         </span>
         {updatesCount > 0 && (
           <button
-            className="packages-update-all-btn"
+            className={`packages-update-all-btn${updateAllLoading ? ' packages-update-all-btn--loading' : ''}`}
             onClick={handleUpdateAll}
             disabled={updateAllLoading}
           >
-            {updateAllLoading
-              ? '...'
-              : t('packages.updateAllCount', { count: String(updatesCount) })}
+            {updateAllLoading ? (
+              <span className="packages-spinner-inline">⟳</span>
+            ) : (
+              t('packages.updateAllCount', { count: String(updatesCount) })
+            )}
           </button>
         )}
         <button
@@ -292,12 +294,14 @@ export function PackagesContent() {
               </div>
               {pkg.updateAvailable && (
                 <button
-                  className="packages-row-update-btn"
+                  className={`packages-row-update-btn${updatingPackages.has(pkg.name) ? ' packages-row-update-btn--loading' : ''}`}
                   onClick={() => handleUpdate(pkg.name)}
                   disabled={updatingPackages.has(pkg.name) || updateAllLoading}
                   title={t('packages.updatePackage', { name: pkg.name })}
                 >
-                  {updatingPackages.has(pkg.name) ? '...' : '\u2191'}
+                  <span className={updatingPackages.has(pkg.name) ? 'packages-spinner' : ''}>
+                    {updatingPackages.has(pkg.name) ? '⟳' : '\u2191'}
+                  </span>
                 </button>
               )}
               {pkg.isDeprecated && pkg.deprecationMessage && (

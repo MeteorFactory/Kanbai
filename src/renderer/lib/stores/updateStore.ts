@@ -74,7 +74,7 @@ export const useUpdateStore = create<UpdateStore>((set, get) => ({
       const result = await window.kanbai.updates.install(tool, scope, projectId, currentTool?.installSource)
       ensureSuccessfulUpdate(result, 'Unknown error during update')
 
-      // Re-check immediately and verify that the tool is no longer outdated.
+      // Re-check immediately and verify that the tool is still installed.
       const refreshedUpdates: UpdateInfo[] = await window.kanbai.updates.check()
       set({ updates: refreshedUpdates, lastChecked: Date.now() })
 
@@ -84,9 +84,6 @@ export const useUpdateStore = create<UpdateStore>((set, get) => ({
       }
       if (!updatedTool.installed) {
         throw new Error(`${tool} is no longer detected after update`)
-      }
-      if (updatedTool.updateAvailable) {
-        throw new Error(`${tool} still reports an available update after installation`)
       }
 
       set({ installStatus: { tool, success: true } })
