@@ -550,9 +550,10 @@ describe('Update IPC Handlers', () => {
 
     it('gere les erreurs de desinstallation via brew', async () => {
       // Simulate rtk installed via brew, but brew uninstall fails
+      // which rtk → not found (so !commandPath is true, brew path is taken)
       mockExecFile.mockImplementation((cmd: string, args: string[]) => {
         if (cmd === (IS_WIN ? 'where' : 'which')) {
-          return Promise.resolve({ stdout: '/opt/homebrew/bin/rtk\n', stderr: '' })
+          return Promise.reject(new Error('not found'))
         }
         if (cmd === 'brew' && args[0] === 'info') {
           return Promise.resolve({
