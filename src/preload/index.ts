@@ -333,6 +333,10 @@ const api = {
       ipcRenderer.invoke(IPC_CHANNELS.KANBAN_LINK_CONVERSATION, { cwd, taskId, workspaceId }),
     prequalify: (data: { title: string; description: string }): Promise<{ suggestedType: string; suggestedPriority: string; clarifiedDescription: string; isVague: boolean } | null> =>
       ipcRenderer.invoke(IPC_CHANNELS.KANBAN_PREQUALIFY, data),
+    getConfig: (workspaceId: string) =>
+      ipcRenderer.invoke(IPC_CHANNELS.KANBAN_GET_CONFIG, { workspaceId }),
+    setConfig: (workspaceId: string, config: Record<string, boolean>) =>
+      ipcRenderer.invoke(IPC_CHANNELS.KANBAN_SET_CONFIG, { workspaceId, config }),
     onFileChanged: (callback: (data: { workspaceId: string }) => void) => {
       const listener = (_event: Electron.IpcRendererEvent, payload: { workspaceId: string }) =>
         callback(payload)

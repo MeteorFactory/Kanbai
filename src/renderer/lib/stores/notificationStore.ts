@@ -29,6 +29,7 @@ interface NotificationActions {
   dismissToast: (id: string) => void
   markAllRead: () => void
   clearAll: () => void
+  removeByTabId: (tabId: string) => void
 }
 
 type NotificationStore = NotificationState & NotificationActions
@@ -80,6 +81,13 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
 
   clearAll: () => {
     set({ notifications: [], toasts: [] })
+  },
+
+  removeByTabId: (tabId: string) => {
+    set((state) => ({
+      notifications: state.notifications.filter((n) => n.tabId !== tabId),
+      toasts: state.toasts.filter((n) => n.tabId !== tabId),
+    }))
   },
 }))
 

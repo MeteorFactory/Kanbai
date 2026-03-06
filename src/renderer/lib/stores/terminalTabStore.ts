@@ -213,6 +213,16 @@ function getKanbanStore() {
   }
 }
 
+// Lazy getter for notificationStore to avoid circular imports
+function getNotificationStore() {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    return require('./notificationStore').useNotificationStore
+  } catch {
+    return null
+  }
+}
+
 const MAX_TERMINALS_PER_WORKSPACE = 10
 
 export const useTerminalTabStore = create<TerminalTabStore>((set, get) => ({
@@ -401,6 +411,9 @@ export const useTerminalTabStore = create<TerminalTabStore>((set, get) => ({
     // Notify kanban store that this tab was closed (may update WORKING → PENDING)
     getKanbanStore()?.getState().handleTabClosed(id)
 
+    // Remove notifications linked to this tab
+    getNotificationStore()?.getState().removeByTabId(id)
+
     const newTabs = tabs.filter((t) => t.id !== id)
 
     let newActiveId = activeTabId
@@ -492,11 +505,13 @@ export const useTerminalTabStore = create<TerminalTabStore>((set, get) => ({
   closeOtherTabs: (id: string) => {
     const { tabs } = get()
     const removedTabs = tabs.filter((t) => t.id !== id)
-    // Notify kanban and claude stores for each removed tab
+    // Notify kanban, claude, and notification stores for each removed tab
     const kanbanStore = getKanbanStore()?.getState()
     const claudeStoreState = getClaudeStore()?.getState()
+    const notifStore = getNotificationStore()?.getState()
     for (const tab of removedTabs) {
       kanbanStore?.handleTabClosed(tab.id)
+      notifStore?.removeByTabId(tab.id)
       const claudePaneCount = countAiPanes(tab.paneTree)
       if (claudePaneCount > 0 && claudeStoreState) {
         for (let i = 0; i < claudePaneCount; i++) claudeStoreState.decrementWorkspaceClaude(tab.workspaceId)
@@ -513,11 +528,13 @@ export const useTerminalTabStore = create<TerminalTabStore>((set, get) => ({
     const index = tabs.findIndex((t) => t.id === id)
     if (index === -1) return
     const removedTabs = tabs.slice(index + 1)
-    // Notify kanban and claude stores for each removed tab
+    // Notify kanban, claude, and notification stores for each removed tab
     const kanbanStore = getKanbanStore()?.getState()
     const claudeStoreState = getClaudeStore()?.getState()
+    const notifStore = getNotificationStore()?.getState()
     for (const tab of removedTabs) {
       kanbanStore?.handleTabClosed(tab.id)
+      notifStore?.removeByTabId(tab.id)
       const claudePaneCount = countAiPanes(tab.paneTree)
       if (claudePaneCount > 0 && claudeStoreState) {
         for (let i = 0; i < claudePaneCount; i++) claudeStoreState.decrementWorkspaceClaude(tab.workspaceId)

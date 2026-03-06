@@ -4,7 +4,7 @@ import { v4 as uuid } from 'uuid'
 import fs from 'fs'
 import path from 'path'
 import os from 'os'
-import { IPC_CHANNELS, KanbanTask, KanbanTaskType, KanbanStatus, KanbanAttachment } from '../../shared/types'
+import { IPC_CHANNELS, KanbanTask, KanbanTaskType, KanbanStatus, KanbanAttachment, KanbanConfig } from '../../shared/types'
 import {
   getKanbanPath,
   readKanbanTasks,
@@ -12,6 +12,58 @@ import {
   maybeCreateMemoryRefactorTicket,
 } from '../../mcp-server/lib/kanban-store'
 import { callAiCli } from '../services/ai-cli'
+
+const DEFAULT_KANBAN_CONFIG: KanbanConfig = {
+  autoCloseCompletedTerminals: false,
+  autoCloseCtoTerminals: true,
+  autoCreateAiMemoryRefactorTickets: true,
+  autoPrequalifyTickets: false,
+  autoPrioritizeBugs: true,
+}
+
+function getKanbanConfigPath(workspaceId: string): string {
+  const kanbanDir = path.join(os.homedir(), '.kanbai', 'kanban')
+  return path.join(kanbanDir, `${workspaceId}-config.json`)
+}
+
+function readKanbanConfig(workspaceId: string): KanbanConfig {
+  const configPath = getKanbanConfigPath(workspaceId)
+  try {
+    if (fs.existsSync(configPath)) {
+      const raw = fs.readFileSync(configPath, 'utf-8')
+      return { ...DEFAULT_KANBAN_CONFIG, ...JSON.parse(raw) }
+    }
+  } catch { /* fallback to defaults */ }
+
+  // Migration: read from global settings if per-workspace config doesn't exist yet
+  try {
+    const dataPath = path.join(os.homedir(), '.kanbai', 'data.json')
+    if (fs.existsSync(dataPath)) {
+      const appData = JSON.parse(fs.readFileSync(dataPath, 'utf-8'))
+      const s = appData.settings
+      if (s) {
+        return {
+          autoCloseCompletedTerminals: s.autoCloseCompletedTerminals ?? DEFAULT_KANBAN_CONFIG.autoCloseCompletedTerminals,
+          autoCloseCtoTerminals: s.autoCloseCtoTerminals ?? DEFAULT_KANBAN_CONFIG.autoCloseCtoTerminals,
+          autoCreateAiMemoryRefactorTickets: s.autoCreateAiMemoryRefactorTickets ?? DEFAULT_KANBAN_CONFIG.autoCreateAiMemoryRefactorTickets,
+          autoPrequalifyTickets: s.kanbanSettings?.autoPrequalifyTickets ?? DEFAULT_KANBAN_CONFIG.autoPrequalifyTickets,
+          autoPrioritizeBugs: s.kanbanSettings?.autoPrioritizeBugs ?? DEFAULT_KANBAN_CONFIG.autoPrioritizeBugs,
+        }
+      }
+    }
+  } catch { /* fallback to defaults */ }
+
+  return { ...DEFAULT_KANBAN_CONFIG }
+}
+
+function writeKanbanConfig(workspaceId: string, config: KanbanConfig): void {
+  const configPath = getKanbanConfigPath(workspaceId)
+  const dir = path.dirname(configPath)
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true })
+  }
+  fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf-8')
+}
 
 /**
  * Ensures a Claude Stop hook exists to auto-update kanban task status.
@@ -391,21 +443,12 @@ export function registerKanbanHandlers(ipcMain: IpcMain): void {
       // Calculate next ticket number
       const maxTicketNumber = tasks.reduce((max, t) => Math.max(max, t.ticketNumber ?? 0), 0)
 
-      // Auto-prioritize bugs to high if setting enabled
+      // Auto-prioritize bugs to high if setting enabled (per-workspace config)
       let finalPriority = data.priority
       const taskType = data.type ?? 'feature'
       if (taskType === 'bug') {
-        try {
-          const dataPath = path.join(os.homedir(), '.kanbai', 'data.json')
-          if (fs.existsSync(dataPath)) {
-            const appData = JSON.parse(fs.readFileSync(dataPath, 'utf-8'))
-            if (appData.settings?.kanbanSettings?.autoPrioritizeBugs !== false) {
-              finalPriority = 'high'
-            }
-          } else {
-            finalPriority = 'high'
-          }
-        } catch {
+        const config = readKanbanConfig(data.workspaceId)
+        if (config.autoPrioritizeBugs) {
           finalPriority = 'high'
         }
       }
@@ -733,6 +776,23 @@ Description: ${description || '(aucune)'}`
         console.error('[kanban-prequalify] Error:', err)
         return null
       }
+    },
+  )
+
+  ipcMain.handle(
+    IPC_CHANNELS.KANBAN_GET_CONFIG,
+    async (_event, { workspaceId }: { workspaceId: string }) => {
+      return readKanbanConfig(workspaceId)
+    },
+  )
+
+  ipcMain.handle(
+    IPC_CHANNELS.KANBAN_SET_CONFIG,
+    async (_event, { workspaceId, config }: { workspaceId: string; config: Partial<KanbanConfig> }) => {
+      const current = readKanbanConfig(workspaceId)
+      const updated = { ...current, ...config }
+      writeKanbanConfig(workspaceId, updated)
+      return updated
     },
   )
 }

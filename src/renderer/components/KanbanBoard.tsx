@@ -6,7 +6,7 @@ import { useWorkspaceStore } from '../lib/stores/workspaceStore'
 import { useI18n } from '../lib/i18n'
 import { ContextMenu } from './ContextMenu'
 import type { ContextMenuItem } from './ContextMenu'
-import type { KanbanStatus, KanbanTask, KanbanTaskType, KanbanComment, AiDefaults } from '../../shared/types/index'
+import type { KanbanStatus, KanbanTask, KanbanTaskType, KanbanComment, AiDefaults, KanbanConfig } from '../../shared/types/index'
 import { AI_PROVIDERS } from '../../shared/types/ai-provider'
 import type { AiProviderId } from '../../shared/types/ai-provider'
 import '../styles/kanban.css'
@@ -214,6 +214,10 @@ export function KanbanBoard() {
   // Archive state
   const [archiveExpanded, setArchiveExpanded] = useState(false)
 
+  // Kanban config state (per-workspace settings)
+  const [showSettings, setShowSettings] = useState(false)
+  const [kanbanConfig, setKanbanConfig] = useState<KanbanConfig | null>(null)
+
   // Predefined tasks state
   const [dismissedPredefined, setDismissedPredefined] = useState<string[]>([])
   const [editingPredefinedId, setEditingPredefinedId] = useState<string | null>(null)
@@ -276,8 +280,18 @@ export function KanbanBoard() {
   useEffect(() => {
     if (activeWorkspaceId) {
       loadTasks(activeWorkspaceId)
+      window.kanbai.kanban.getConfig(activeWorkspaceId).then(setKanbanConfig).catch(() => {})
     }
   }, [activeWorkspaceId, loadTasks])
+
+  const updateKanbanConfig = useCallback(async (key: keyof KanbanConfig, value: boolean) => {
+    if (!activeWorkspaceId || !kanbanConfig) return
+    const updated = { ...kanbanConfig, [key]: value }
+    setKanbanConfig(updated)
+    try {
+      await window.kanbai.kanban.setConfig(activeWorkspaceId, { [key]: value })
+    } catch { /* best-effort */ }
+  }, [activeWorkspaceId, kanbanConfig])
 
   // Consume pending kanban task selection (from terminal notch navigation)
   useEffect(() => {
@@ -651,8 +665,45 @@ export function KanbanBoard() {
           <button className="kanban-add-btn" onClick={() => setShowCreateForm(!showCreateForm)}>
             {t('kanban.newTask')}
           </button>
+          <button
+            className={`kanban-settings-btn${showSettings ? ' kanban-settings-btn--active' : ''}`}
+            onClick={() => setShowSettings(!showSettings)}
+            title={t('kanban.settings')}
+          >
+            ⚙
+          </button>
         </div>
       </div>
+
+      {/* Settings drawer */}
+      {showSettings && kanbanConfig && (
+        <div className="kanban-settings-drawer">
+          <div className="kanban-settings-drawer-header">
+            <span className="kanban-settings-drawer-title">{t('kanban.settingsTitle')}</span>
+            <button className="kanban-settings-drawer-close" onClick={() => setShowSettings(false)}>&times;</button>
+          </div>
+          {([
+            { key: 'autoCloseCompletedTerminals' as const, label: t('kanban.autoCloseCompletedTerminals'), hint: t('kanban.autoCloseCompletedTerminalsHint') },
+            { key: 'autoCloseCtoTerminals' as const, label: t('kanban.autoCloseCtoTerminals'), hint: t('kanban.autoCloseCtoTerminalsHint') },
+            { key: 'autoCreateAiMemoryRefactorTickets' as const, label: t('kanban.autoCreateAiMemoryRefactorTickets'), hint: t('kanban.autoCreateAiMemoryRefactorTicketsHint') },
+            { key: 'autoPrequalifyTickets' as const, label: t('kanban.autoPrequalifyTickets'), hint: t('kanban.autoPrequalifyTicketsHint') },
+            { key: 'autoPrioritizeBugs' as const, label: t('kanban.autoPrioritizeBugs'), hint: t('kanban.autoPrioritizeBugsHint') },
+          ]).map(({ key, label, hint }) => (
+            <div key={key} className="kanban-settings-row">
+              <div className="kanban-settings-row-info">
+                <span className="kanban-settings-label">{label}</span>
+                <span className="kanban-settings-hint">{hint}</span>
+              </div>
+              <button
+                className={`settings-toggle${kanbanConfig[key] ? ' settings-toggle--active' : ''}`}
+                onClick={() => updateKanbanConfig(key, !kanbanConfig[key])}
+              >
+                <span className="settings-toggle-knob" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Filter bar */}
       <div className="kanban-filter-bar">

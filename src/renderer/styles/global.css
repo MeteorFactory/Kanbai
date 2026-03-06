@@ -521,6 +521,10 @@ body {
   flex-shrink: 0;
 }
 
+.toast-clickable {
+  cursor: pointer;
+}
+
 .toast-close:hover {
   color: var(--text-primary);
 }

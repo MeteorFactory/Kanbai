@@ -188,7 +188,21 @@ Tout le travail doit etre fait dans le **workspace** (pas le projet).
 `,
 }
 
-function readAutoMemoryRefactorSetting(): boolean {
+function readAutoMemoryRefactorSetting(workspaceId?: string): boolean {
+  // Try per-workspace config first
+  if (workspaceId) {
+    try {
+      const configPath = path.join(os.homedir(), '.kanbai', 'kanban', `${workspaceId}-config.json`)
+      if (fs.existsSync(configPath)) {
+        const raw = fs.readFileSync(configPath, 'utf-8')
+        const config = JSON.parse(raw)
+        if (typeof config.autoCreateAiMemoryRefactorTickets === 'boolean') {
+          return config.autoCreateAiMemoryRefactorTickets
+        }
+      }
+    } catch { /* fallback below */ }
+  }
+  // Fallback to global settings
   try {
     const dataPath = path.join(os.homedir(), '.kanbai', 'data.json')
     if (!fs.existsSync(dataPath)) return true
@@ -211,7 +225,7 @@ export function maybeCreateMemoryRefactorTicket(
   workspaceId: string,
   tasks: KanbanTask[],
 ): KanbanTask | null {
-  if (!readAutoMemoryRefactorSetting()) return null
+  if (!readAutoMemoryRefactorSetting(workspaceId)) return null
 
   const isRefactorTicket = (t: KanbanTask) =>
     t.type === 'ia' && t.title === (MEMORY_REFACTOR_TITLES[readLocaleFromSettings()] ?? MEMORY_REFACTOR_TITLES['fr']!)

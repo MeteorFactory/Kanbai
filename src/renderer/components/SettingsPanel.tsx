@@ -53,7 +53,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   autoCreateAiMemoryRefactorTickets: true,
 }
 
-type SettingsSection = 'general' | 'appearance' | 'terminal' | 'git' | 'ssh' | 'claude' | 'ai' | 'kanban' | 'tools' | 'notifications' | 'about'
+type SettingsSection = 'general' | 'appearance' | 'terminal' | 'git' | 'ssh' | 'claude' | 'ai' | 'tools' | 'notifications' | 'about'
 
 const SECTIONS: { id: SettingsSection; icon: string }[] = [
   { id: 'general', icon: '⚙' },
@@ -62,7 +62,6 @@ const SECTIONS: { id: SettingsSection; icon: string }[] = [
   { id: 'git', icon: '⎇' },
   { id: 'ssh', icon: '🔑' },
   { id: 'ai', icon: '✦' },
-  { id: 'kanban', icon: '☰' },
   { id: 'tools', icon: '⬆' },
   { id: 'notifications', icon: '🔔' },
   { id: 'about', icon: 'ℹ' },
@@ -375,7 +374,6 @@ export function SettingsPanel() {
       ssh: t('settings.ssh'),
       claude: t('settings.claude'),
       ai: t('settings.ai') ?? t('settings.claude'),
-      kanban: t('settings.kanban'),
       tools: t('settings.tools'),
       notifications: t('settings.notifications'),
       about: t('settings.about'),
@@ -902,80 +900,6 @@ export function SettingsPanel() {
                   <button
                     className={`settings-toggle${settings.autoApprove ? ' settings-toggle--active' : ''}`}
                     onClick={() => updateSetting('autoApprove', !settings.autoApprove)}
-                  >
-                    <span className="settings-toggle-knob" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Kanban */}
-          {activeSection === 'kanban' && (
-            <div className="settings-section">
-              <div className="settings-card">
-                <div className="settings-row">
-                  <div className="settings-row-info">
-                    <label className="settings-label">{t('settings.autoCloseCompletedTerminals')}</label>
-                    <span className="settings-hint">{locale === 'fr' ? 'Ferme automatiquement les terminaux des tickets termines' : 'Automatically close terminals of completed tickets'}</span>
-                  </div>
-                  <button
-                    className={`settings-toggle${settings.autoCloseCompletedTerminals ? ' settings-toggle--active' : ''}`}
-                    onClick={() => updateSetting('autoCloseCompletedTerminals', !settings.autoCloseCompletedTerminals)}
-                  >
-                    <span className="settings-toggle-knob" />
-                  </button>
-                </div>
-              </div>
-              <div className="settings-card">
-                <div className="settings-row">
-                  <div className="settings-row-info">
-                    <label className="settings-label">{t('settings.autoCloseCtoTerminals')}</label>
-                    <span className="settings-hint">{locale === 'fr' ? 'Ferme automatiquement les terminaux des sessions CTO terminees' : 'Automatically close terminals when CTO sessions end'}</span>
-                  </div>
-                  <button
-                    className={`settings-toggle${settings.autoCloseCtoTerminals ? ' settings-toggle--active' : ''}`}
-                    onClick={() => updateSetting('autoCloseCtoTerminals', !settings.autoCloseCtoTerminals)}
-                  >
-                    <span className="settings-toggle-knob" />
-                  </button>
-                </div>
-              </div>
-              <div className="settings-card">
-                <div className="settings-row">
-                  <div className="settings-row-info">
-                    <label className="settings-label">{t('settings.autoCreateAiMemoryRefactorTickets')}</label>
-                    <span className="settings-hint">{t('settings.autoCreateAiMemoryRefactorTicketsHint')}</span>
-                  </div>
-                  <button
-                    className={`settings-toggle${settings.autoCreateAiMemoryRefactorTickets ? ' settings-toggle--active' : ''}`}
-                    onClick={() => updateSetting('autoCreateAiMemoryRefactorTickets', !settings.autoCreateAiMemoryRefactorTickets)}
-                  >
-                    <span className="settings-toggle-knob" />
-                  </button>
-                </div>
-              </div>
-              <div className="settings-card">
-                <div className="settings-row">
-                  <div className="settings-row-info">
-                    <label className="settings-label">{t('settings.autoPrequalifyTickets')}</label>
-                    <span className="settings-hint">{t('settings.autoPrequalifyTicketsHint')}</span>
-                  </div>
-                  <button
-                    className={`settings-toggle${settings.kanbanSettings?.autoPrequalifyTickets ? ' settings-toggle--active' : ''}`}
-                    onClick={() => updateSetting('kanbanSettings', { autoPrequalifyTickets: !settings.kanbanSettings?.autoPrequalifyTickets, autoPrioritizeBugs: settings.kanbanSettings?.autoPrioritizeBugs ?? true })}
-                  >
-                    <span className="settings-toggle-knob" />
-                  </button>
-                </div>
-                <div className="settings-row">
-                  <div className="settings-row-info">
-                    <label className="settings-label">{t('settings.autoPrioritizeBugs')}</label>
-                    <span className="settings-hint">{t('settings.autoPrioritizeBugsHint')}</span>
-                  </div>
-                  <button
-                    className={`settings-toggle${settings.kanbanSettings?.autoPrioritizeBugs !== false ? ' settings-toggle--active' : ''}`}
-                    onClick={() => updateSetting('kanbanSettings', { autoPrequalifyTickets: settings.kanbanSettings?.autoPrequalifyTickets ?? false, autoPrioritizeBugs: settings.kanbanSettings?.autoPrioritizeBugs === false })}
                   >
                     <span className="settings-toggle-knob" />
                   </button>

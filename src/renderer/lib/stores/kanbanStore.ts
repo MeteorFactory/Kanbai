@@ -341,11 +341,11 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
   },
 
   createTask: async (workspaceId, title, description, priority, type?, targetProjectId?, isCtoTicket?, aiProvider?) => {
-    // Check if prequalification is enabled (defaults to false)
+    // Check if prequalification is enabled (per-workspace config)
     let prequalifyEnabled = false
     try {
-      const settings = await window.kanbai.settings.get()
-      prequalifyEnabled = settings.kanbanSettings?.autoPrequalifyTickets === true
+      const kanbanConfig = await window.kanbai.kanban.getConfig(workspaceId)
+      prequalifyEnabled = kanbanConfig?.autoPrequalifyTickets === true
     } catch { /* default to false */ }
 
     const task: KanbanTask = await window.kanbai.kanban.create({

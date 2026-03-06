@@ -164,6 +164,14 @@ export interface KanbanTask {
 
 export type KanbanStatus = 'TODO' | 'WORKING' | 'PENDING' | 'DONE' | 'FAILED'
 
+export interface KanbanConfig {
+  autoCloseCompletedTerminals: boolean
+  autoCloseCtoTerminals: boolean
+  autoCreateAiMemoryRefactorTickets: boolean
+  autoPrequalifyTickets: boolean
+  autoPrioritizeBugs: boolean
+}
+
 export interface UpdateInfo {
   tool: string
   currentVersion: string
@@ -892,6 +900,8 @@ export const IPC_CHANNELS = {
   KANBAN_FILE_CHANGED: 'kanban:fileChanged',
   KANBAN_LINK_CONVERSATION: 'kanban:linkConversation',
   KANBAN_PREQUALIFY: 'kanban:prequalify',
+  KANBAN_GET_CONFIG: 'kanban:getConfig',
+  KANBAN_SET_CONFIG: 'kanban:setConfig',
 
   // Updates
   UPDATE_CHECK: 'update:check',
