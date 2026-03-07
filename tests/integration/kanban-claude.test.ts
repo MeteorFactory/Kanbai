@@ -131,6 +131,7 @@ describe('Kanban → Claude Integration (PTY interactif)', () => {
         '/tmp/workspace-env',
         '[Claude] Fix bug in auth',
         expect.stringContaining('claude --dangerously-skip-permissions'),
+        true,
       )
 
       // Verify the command includes Claude with the prompt as a CLI argument (not -p flag)
@@ -169,6 +170,7 @@ describe('Kanban → Claude Integration (PTY interactif)', () => {
         '/tmp/backend',
         '[Claude] Fix bug in auth',
         expect.any(String),
+        true,
       )
       // workspaceEnv.setup should NOT have been called since we have a target project
       expect(mockWorkspaceEnvSetup).not.toHaveBeenCalled()
@@ -197,6 +199,7 @@ describe('Kanban → Claude Integration (PTY interactif)', () => {
         '/tmp/workspace-env',
         expect.any(String),
         expect.any(String),
+        true,
       )
     })
 

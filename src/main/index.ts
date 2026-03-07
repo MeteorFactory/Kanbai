@@ -34,6 +34,7 @@ import { registerPixelAgentsHandlers, shutdownPixelAgentsService } from './ipc/p
 import { cleanupTerminals } from './ipc/terminal'
 import { ensureActivityHookScript, ensureAutoApproveScript, ensureKanbanDoneScript, ensurePixelAgentsHookScript, syncAllWorkspaceEnvHooks, startActivityWatcher } from './services/activityHooks'
 import { clearDockBadge } from './services/notificationService'
+import { healthCheckScheduler } from './services/healthCheckScheduler'
 import { databaseService } from './services/database'
 import { StorageService } from './services/storage'
 import { readKanbanTasks, maybeCreateMemoryRefactorTicket } from '../mcp-server/lib/kanban-store'
@@ -391,6 +392,16 @@ app.whenReady().then(() => {
     // Non-critical: skip if storage is unavailable (e.g. first launch)
   }
 
+  // Auto-start health check schedulers for all projects with enabled checks
+  try {
+    const storage = new StorageService()
+    const projects = storage.getProjects()
+    const projectPaths = projects.map((p) => p.path)
+    healthCheckScheduler.autoStartAll(projectPaths)
+  } catch {
+    // Non-critical: health checks will still work when manually started
+  }
+
   // DevTools shortcut: Cmd+Alt+I
   globalShortcut.register('CommandOrControl+Alt+I', () => {
     mainWindow?.webContents.toggleDevTools()
@@ -426,6 +437,7 @@ app.on('before-quit', (event) => {
   cleanupClaudeSessions()
   databaseService.disconnectAll()
   shutdownPixelAgentsService()
+  healthCheckScheduler.stopAll()
 
   // Give native PTY read threads time to detect closed fds, then
   // force-exit via app.exit() which skips FreeEnvironment/uv_run.

@@ -131,7 +131,7 @@ interface KanbanActions {
   duplicateTask: (task: KanbanTask) => Promise<void>
   setDragged: (taskId: string | null) => void
   getTasksByStatus: (status: KanbanStatus) => KanbanTask[]
-  sendToAi: (task: KanbanTask, explicitWorkspaceId?: string) => Promise<void>
+  sendToAi: (task: KanbanTask, explicitWorkspaceId?: string, options?: { activate?: boolean }) => Promise<void>
   syncBackgroundWorkspace: (workspaceId: string) => Promise<void>
   attachFiles: (taskId: string) => Promise<void>
   attachFromClipboard: (taskId: string, dataBase64: string, filename: string, mimeType: string) => Promise<void>
@@ -206,7 +206,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
           (t) => t.status === 'WORKING' && !kanbanTabIds[t.id],
         )
         if (workingWithoutTerminal) {
-          get().sendToAi(workingWithoutTerminal)
+          get().sendToAi(workingWithoutTerminal, undefined, { activate: false })
           return
         }
 
@@ -214,7 +214,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
         const hasWorking = tasks.some((t) => t.status === 'WORKING')
         if (!hasWorking) {
           const next = pickNextTask(tasks)
-          if (next) get().sendToAi(next)
+          if (next) get().sendToAi(next, undefined, { activate: false })
         }
       }, 500)
     } finally {
@@ -376,7 +376,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
           setTimeout(() => {
             const currentTasks = get().tasks
             const next = pickNextTask(currentTasks)
-            if (next) get().sendToAi(next)
+            if (next) get().sendToAi(next, undefined, { activate: false })
           }, 1000)
         }
       }
@@ -426,13 +426,37 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
             updates.description = result.clarifiedDescription
           }
           if (result.splitSuggestions && Array.isArray(result.splitSuggestions) && result.splitSuggestions.length > 0) {
-            updates.splitSuggestions = result.splitSuggestions as KanbanSplitSuggestion[]
+            // Auto-split: create child tickets and delete the original immediately
+            for (const suggestion of result.splitSuggestions) {
+              await window.kanbai.kanban.create({
+                workspaceId,
+                targetProjectId: task.targetProjectId,
+                title: suggestion.title,
+                description: suggestion.description,
+                status: 'TODO',
+                priority: suggestion.priority,
+                type: suggestion.type,
+              })
+            }
+            await window.kanbai.kanban.delete(task.id, workspaceId)
+
+            const newTasks: KanbanTask[] = await window.kanbai.kanban.list(workspaceId)
+            for (const t of newTasks) {
+              delete t.isPrequalifying
+            }
+            set({ tasks: newTasks })
+
+            const hasWorking = newTasks.some((t) => t.status === 'WORKING')
+            if (!hasWorking) {
+              const next = pickNextTask(newTasks)
+              if (next) get().sendToAi(next, undefined, { activate: false })
+            }
+            return
           }
         }
         // Only persist non-transient fields to file
-        const { splitSuggestions: _split, ...persistedUpdates } = updates
-        if (Object.keys(persistedUpdates).length > 0) {
-          await window.kanbai.kanban.update({ id: task.id, ...persistedUpdates, workspaceId })
+        if (Object.keys(updates).length > 0) {
+          await window.kanbai.kanban.update({ id: task.id, ...updates, workspaceId })
         }
         set((state) => ({
           tasks: state.tasks.map((t) => (t.id === task.id ? { ...t, ...updates, isPrequalifying: false } : t)),
@@ -442,7 +466,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
         const hasWorking = get().tasks.some((t) => t.status === 'WORKING')
         if (!hasWorking) {
           const next = pickNextTask(get().tasks)
-          if (next) get().sendToAi(next)
+          if (next) get().sendToAi(next, undefined, { activate: false })
         }
       } catch {
         // On failure, clear prequalifying flag so the task becomes sendable
@@ -453,7 +477,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
         const hasWorking = get().tasks.some((t) => t.status === 'WORKING')
         if (!hasWorking) {
           const next = pickNextTask(get().tasks)
-          if (next) get().sendToAi(next)
+          if (next) get().sendToAi(next, undefined, { activate: false })
         }
       }
     })()
@@ -462,7 +486,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
       const hasWorking = get().tasks.some((t) => t.status === 'WORKING')
       if (!hasWorking) {
         const next = pickNextTask(get().tasks)
-        if (next) get().sendToAi(next)
+        if (next) get().sendToAi(next, undefined, { activate: false })
       }
     }
   },
@@ -516,7 +540,8 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
     return get().tasks.filter((t) => t.status === status)
   },
 
-  sendToAi: async (task: KanbanTask, explicitWorkspaceId?: string) => {
+  sendToAi: async (task: KanbanTask, explicitWorkspaceId?: string, options?: { activate?: boolean }) => {
+    const shouldActivate = options?.activate ?? true
     if (task.disabled) return
     const workspaceId = explicitWorkspaceId ?? get().currentWorkspaceId
     if (!workspaceId) return
@@ -528,7 +553,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
       const termStore = useTerminalTabStore.getState()
       const tab = termStore.tabs.find((t) => t.id === existingTabId)
       if (tab) {
-        termStore.setActiveTab(existingTabId)
+        if (shouldActivate) termStore.setActiveTab(existingTabId)
         return
       }
       // Tab was closed — remove stale mapping and proceed to create a new one
@@ -743,7 +768,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
       const termStore = useTerminalTabStore.getState()
       if (workspaceId) {
         const tabLabel = task.isCtoTicket ? 'CTO' : isCtoMode ? `[CTO] ${task.title}` : task.ticketNumber != null ? `[${ticketLabel}] ${task.title}` : `[${providerConfig.displayName}] ${task.title}`
-        tabId = termStore.createTab(workspaceId, cwd, tabLabel, initialCommand) || null
+        tabId = termStore.createTab(workspaceId, cwd, tabLabel, initialCommand, shouldActivate) || null
         if (tabId) {
           termStore.setTabColor(tabId, providerConfig.detectionColor)
           set((state) => ({
@@ -903,7 +928,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
           setTimeout(() => {
             const bgTasks = get().backgroundTasks[wsId] ?? []
             const next = pickNextTask(bgTasks)
-            if (next) get().sendToAi(next, wsId)
+            if (next) get().sendToAi(next, wsId, { activate: false })
           }, 1000)
         }
       }
@@ -1093,7 +1118,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
     const hasWorking = newTasks.some((t) => t.status === 'WORKING')
     if (!hasWorking) {
       const next = pickNextTask(newTasks)
-      if (next) get().sendToAi(next)
+      if (next) get().sendToAi(next, undefined, { activate: false })
     }
   },
 

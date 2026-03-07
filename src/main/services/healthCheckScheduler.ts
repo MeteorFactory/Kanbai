@@ -1,5 +1,7 @@
 import http from 'http'
 import https from 'https'
+import fs from 'fs'
+import path from 'path'
 import { URL } from 'url'
 import { BrowserWindow } from 'electron'
 import { sendNotification } from './notificationService'
@@ -201,6 +203,37 @@ class HealthCheckScheduler {
 
   isRunning(projectPath: string): boolean {
     return this.schedulers.has(projectPath)
+  }
+
+  /**
+   * Auto-start schedulers for all projects that have health checks with enabled schedules.
+   * Called once at app startup so checks run in the background without requiring the UI tab.
+   */
+  autoStartAll(projectPaths: string[]): void {
+    for (const projectPath of projectPaths) {
+      const filePath = path.join(projectPath, '.kanbai', 'health-checks.json')
+      if (!fs.existsSync(filePath)) continue
+
+      try {
+        const raw = fs.readFileSync(filePath, 'utf-8')
+        const data = JSON.parse(raw) as HealthCheckFile
+        const hasEnabledChecks = data.checks.some((c) => c.schedule.enabled)
+        if (!hasEnabledChecks) continue
+
+        const onDataChanged = (updated: HealthCheckFile): void => {
+          try {
+            fs.writeFileSync(filePath, JSON.stringify(updated, null, 2), 'utf-8')
+          } catch (err) {
+            console.error(`[HealthCheck] Failed to save ${filePath}:`, err)
+          }
+        }
+
+        this.startScheduler(projectPath, data, onDataChanged)
+        console.log(`[HealthCheck] Auto-started scheduler for ${projectPath}`)
+      } catch (err) {
+        console.error(`[HealthCheck] Failed to auto-start for ${projectPath}:`, err)
+      }
+    }
   }
 
   private scheduleCheck(

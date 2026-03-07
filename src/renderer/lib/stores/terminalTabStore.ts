@@ -44,7 +44,7 @@ interface TerminalTabState {
 }
 
 interface TerminalTabActions {
-  createTab: (workspaceId: string, cwd: string, label?: string, initialCommand?: string) => string
+  createTab: (workspaceId: string, cwd: string, label?: string, initialCommand?: string, activate?: boolean) => string
   createSplitTab: (workspaceId: string, cwd: string, label: string, leftCommand: string | null, rightCommand: string | null) => string
   createViewOnlyTab: (workspaceId: string, cwd: string, label: string, externalSessionId: string) => string
   createPixelAgentsTab: (workspaceId: string, cwd: string) => string
@@ -229,7 +229,7 @@ export const useTerminalTabStore = create<TerminalTabStore>((set, get) => ({
   tabs: [],
   activeTabId: null,
 
-  createTab: (workspaceId: string, cwd: string, label?: string, initialCommand?: string) => {
+  createTab: (workspaceId: string, cwd: string, label?: string, initialCommand?: string, activate = true) => {
     const workspaceTabs = get().tabs.filter((t) => t.workspaceId === workspaceId)
     if (workspaceTabs.length >= MAX_TERMINALS_PER_WORKSPACE) {
       // eslint-disable-next-line no-console
@@ -253,7 +253,7 @@ export const useTerminalTabStore = create<TerminalTabStore>((set, get) => ({
     }
     set((state) => ({
       tabs: [...state.tabs, tab],
-      activeTabId: id,
+      ...(activate ? { activeTabId: id } : {}),
     }))
     if (isAiCommand(initialCommand)) {
       getClaudeStore()?.getState().incrementWorkspaceClaude(workspaceId)
