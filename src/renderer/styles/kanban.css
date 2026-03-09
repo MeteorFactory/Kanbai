@@ -1253,9 +1253,6 @@
   box-sizing: border-box;
 }
 
-.kanban-card-footer {
-  display: none;
-}
 
 .kanban-card-ai-badge {
   display: flex;
