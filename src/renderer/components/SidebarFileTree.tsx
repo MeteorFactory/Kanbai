@@ -3,6 +3,23 @@ import type { FileEntry } from '../../shared/types'
 import { useViewStore } from '../lib/stores/viewStore'
 import { ContextMenu, ContextMenuItem } from './ContextMenu'
 
+function FolderIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6C8CFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" />
+    </svg>
+  )
+}
+
+function FileIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#565C66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+      <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+    </svg>
+  )
+}
+
 interface SidebarFileTreeProps {
   projectPath: string
 }
@@ -186,29 +203,6 @@ function FileNode({ entry, depth, onRefresh }: FileNodeProps) {
     ]
   }
 
-  const getFileIcon = (name: string, isDir: boolean): string => {
-    if (isDir) return '\u{1F4C1}'
-    const ext = name.split('.').pop()?.toLowerCase()
-    switch (ext) {
-      case 'ts':
-      case 'tsx':
-        return '\u{1F535}'
-      case 'js':
-      case 'jsx':
-        return '\u{1F7E1}'
-      case 'json':
-        return '\u{1F7E2}'
-      case 'css':
-        return '\u{1F7E3}'
-      case 'md':
-        return '\u{1F4DD}'
-      case 'html':
-        return '\u{1F7E0}'
-      default:
-        return '\u{1F4C4}'
-    }
-  }
-
   const isSelected = !entry.isDirectory && selectedFiles.includes(entry.path)
   const isHighlighted = entry.path === highlightedFilePath
 
@@ -220,7 +214,7 @@ function FileNode({ entry, depth, onRefresh }: FileNodeProps) {
         onClick={handleClick}
         onContextMenu={handleContextMenu}
       >
-        {entry.isDirectory && (
+        {entry.isDirectory ? (
           <span className={`sidebar-ft-chevron${expanded ? ' sidebar-ft-chevron--expanded' : ''}`}>
             <svg width="7" height="7" viewBox="0 0 10 10" fill="none">
               <path
@@ -232,8 +226,12 @@ function FileNode({ entry, depth, onRefresh }: FileNodeProps) {
               />
             </svg>
           </span>
+        ) : (
+          <span className="sidebar-ft-chevron-spacer" />
         )}
-        <span className="sidebar-ft-icon">{getFileIcon(entry.name, entry.isDirectory)}</span>
+        <span className="sidebar-ft-icon">
+          {entry.isDirectory ? <FolderIcon /> : <FileIcon />}
+        </span>
         {isRenaming ? (
           <input
             ref={renameInputRef}

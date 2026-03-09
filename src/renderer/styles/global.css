@@ -1216,11 +1216,18 @@ body {
   transform: rotate(90deg);
 }
 
+.sidebar-ft-chevron-spacer {
+  width: 10px;
+  flex-shrink: 0;
+}
+
 .sidebar-ft-icon {
-  font-size: 10px;
   flex-shrink: 0;
   width: 14px;
-  text-align: center;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .sidebar-ft-name {

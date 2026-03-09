@@ -7,6 +7,23 @@ import '../styles/fileexplorer.css'
 
 type SortField = 'name' | 'size' | 'date'
 
+function FolderIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6C8CFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" />
+    </svg>
+  )
+}
+
+function FileIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#565C66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+      <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+    </svg>
+  )
+}
+
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
@@ -173,29 +190,6 @@ function FileTreeNode({ entry, depth, sortField, onRename, onRefreshParent: _onR
     return items
   }, [handleCopyPath, handleOpenInFinder, handleRenameStart, entry.isDirectory, handleCreateFile, handleCreateFolder])
 
-  const getFileIcon = (name: string, isDir: boolean): string => {
-    if (isDir) return '\u{1F4C1}'
-    const ext = name.split('.').pop()?.toLowerCase()
-    switch (ext) {
-      case 'ts':
-      case 'tsx':
-        return '\u{1F535}'
-      case 'js':
-      case 'jsx':
-        return '\u{1F7E1}'
-      case 'json':
-        return '\u{1F7E2}'
-      case 'css':
-        return '\u{1F7E3}'
-      case 'md':
-        return '\u{1F4DD}'
-      case 'html':
-        return '\u{1F7E0}'
-      default:
-        return '\u{1F4C4}'
-    }
-  }
-
   const sortedChildren = sortEntries(children, sortField)
 
   return (
@@ -207,7 +201,7 @@ function FileTreeNode({ entry, depth, sortField, onRename, onRefreshParent: _onR
         onDoubleClick={handleRenameStart}
         onContextMenu={handleContextMenu}
       >
-        {entry.isDirectory && (
+        {entry.isDirectory ? (
           <span className={`file-tree-chevron${expanded ? ' file-tree-chevron--expanded' : ''}`}>
             <svg width="8" height="8" viewBox="0 0 10 10" fill="none">
               <path
@@ -219,8 +213,12 @@ function FileTreeNode({ entry, depth, sortField, onRename, onRefreshParent: _onR
               />
             </svg>
           </span>
+        ) : (
+          <span className="file-tree-chevron-spacer" />
         )}
-        <span className="file-tree-icon">{getFileIcon(entry.name, entry.isDirectory)}</span>
+        <span className="file-tree-icon">
+          {entry.isDirectory ? <FolderIcon /> : <FileIcon />}
+        </span>
         {isRenaming ? (
           <input
             className="file-tree-rename"
@@ -254,7 +252,7 @@ function FileTreeNode({ entry, depth, sortField, onRename, onRefreshParent: _onR
                   style={{ paddingLeft: `${(depth + 1) * 16 + 8}px` }}
                 >
                   <span className="file-tree-icon">
-                    {isCreating === 'folder' ? '\u{1F4C1}' : '\u{1F4C4}'}
+                    {isCreating === 'folder' ? <FolderIcon /> : <FileIcon />}
                   </span>
                   <input
                     className="file-tree-rename"
@@ -450,7 +448,7 @@ export function FileExplorer() {
             {isCreating && (
               <div className="file-tree-row file-tree-row--creating" style={{ paddingLeft: '8px' }}>
                 <span className="file-tree-icon">
-                  {isCreating === 'folder' ? '\u{1F4C1}' : '\u{1F4C4}'}
+                  {isCreating === 'folder' ? <FolderIcon /> : <FileIcon />}
                 </span>
                 <input
                   className="file-tree-rename"

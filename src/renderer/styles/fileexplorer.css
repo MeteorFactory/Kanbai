@@ -110,11 +110,18 @@
   transform: rotate(90deg);
 }
 
-.file-tree-icon {
-  font-size: 11px;
+.file-tree-chevron-spacer {
+  width: 12px;
   flex-shrink: 0;
-  width: 16px;
-  text-align: center;
+}
+
+.file-tree-icon {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .file-tree-name {
