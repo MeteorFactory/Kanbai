@@ -1,6 +1,5 @@
 import { useEffect, useCallback, useState, useMemo } from 'react'
-import { useShallow } from 'zustand/react/shallow'
-import { useDevOpsStore, selectGlobalPipelineStatus } from '../lib/stores/devopsStore'
+import { useDevOpsStore } from '../lib/stores/devopsStore'
 import { useWorkspaceStore } from '../lib/stores/workspaceStore'
 import { pushNotification } from '../lib/stores/notificationStore'
 import { useI18n } from '../lib/i18n'
@@ -1199,8 +1198,6 @@ export function DevOpsPanel() {
     [],
   )
 
-  const globalStatus = useDevOpsStore(useShallow(selectGlobalPipelineStatus))
-
   const handleRefresh = useCallback(() => {
     if (!activeConnection) return
     loadPipelines(activeConnection)
@@ -1292,12 +1289,6 @@ export function DevOpsPanel() {
       {/* Header */}
       <div className="devops-header">
         <h2>{t('devops.pipelines')}</h2>
-        {globalStatus && (
-          <div className={`devops-global-status devops-global-status--${globalStatus.status}`} title={globalStatus.pipelineName}>
-            <span className={statusClassName(globalStatus.status)}>{statusIcon(globalStatus.status)}</span>
-            <span className="devops-global-status-label">{globalStatus.pipelineName}</span>
-          </div>
-        )}
         <div className="devops-header-actions">
           <button className="devops-btn devops-btn--primary" onClick={openNewConnection}>
             + {t('devops.addConnection')}

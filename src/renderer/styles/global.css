@@ -224,26 +224,6 @@ body {
   gap: 4px;
 }
 
-/* Titlebar status dot for pipeline global status */
-.titlebar-status-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.titlebar-status-dot--succeeded { background: #4caf50; }
-.titlebar-status-dot--failed { background: #f44336; }
-.titlebar-status-dot--canceled { background: #ff9800; }
-.titlebar-status-dot--running { background: #2196f3; animation: titlebar-dot-pulse 1.5s ease-in-out infinite; }
-.titlebar-status-dot--notStarted { background: #9e9e9e; }
-.titlebar-status-dot--unknown { background: #757575; }
-
-@keyframes titlebar-dot-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
-
 .dropdown-chevron {
   flex-shrink: 0;
   opacity: 0.6;
