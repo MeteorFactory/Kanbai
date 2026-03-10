@@ -215,6 +215,7 @@ function collectJobIssues(
   jobId: string,
   records: AzureTimelineRecord[],
 ): { type: 'error' | 'warning'; message: string }[] {
+  // Tasks are children of Jobs in the timeline hierarchy
   const tasks = records.filter((r) => r.parentId === jobId && r.type === 'Task')
   const issues: { type: 'error' | 'warning'; message: string }[] = []
   for (const task of tasks) {

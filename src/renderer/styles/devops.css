@@ -283,6 +283,62 @@
   white-space: nowrap;
 }
 
+/* Run item with pending approval highlight */
+.devops-run-item--pending {
+  border-left: 3px solid #ff9800;
+  border-radius: 6px;
+}
+
+/* Inline approval actions (visible without expanding) */
+.devops-run-inline-approvals {
+  padding: 8px 12px;
+  background: rgba(255, 152, 0, 0.04);
+  border: 1px solid var(--border-color, #333);
+  border-top: none;
+  border-bottom-left-radius: 6px;
+  border-bottom-right-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.devops-inline-approval {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.devops-inline-approval-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.devops-inline-approval-instructions {
+  font-size: 11px;
+  color: var(--text-secondary, #aaa);
+  font-style: italic;
+}
+
+.devops-inline-approval-assignees {
+  font-size: 11px;
+  color: var(--text-tertiary, #777);
+}
+
+.devops-inline-approval-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.devops-approval-comment--inline {
+  width: 160px;
+  flex: none;
+}
+
 /* Expanded run content */
 .devops-run-expanded {
   padding: 12px 14px;

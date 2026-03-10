@@ -524,8 +524,7 @@ function PipelineRunsDetail({
     expandedRunId,
     runStages,
     stagesLoading,
-    runApprovals,
-    approvalsLoading,
+    allRunApprovals,
     approving,
     expandRun,
     collapseRun,
@@ -557,8 +556,9 @@ function PipelineRunsDetail({
     return <div className="devops-runs-empty">{t('devops.noRuns')}</div>
   }
 
+  // Build pending approvals map from allRunApprovals (loaded with pipeline runs)
   const pendingApprovalsByBuild = new Map<number, PipelineApproval[]>()
-  for (const approval of runApprovals) {
+  for (const approval of allRunApprovals) {
     if (approval.status === 'pending') {
       const existing = pendingApprovalsByBuild.get(approval.buildId) ?? []
       existing.push(approval)
@@ -573,9 +573,10 @@ function PipelineRunsDetail({
         {runs.map((run) => {
           const isExpanded = expandedRunId === run.id
           const pendingApprovals = pendingApprovalsByBuild.get(run.id) ?? []
+          const hasPendingApprovals = pendingApprovals.length > 0
 
           return (
-            <div key={run.id} className="devops-run-item">
+            <div key={run.id} className={`devops-run-item${hasPendingApprovals ? ' devops-run-item--pending' : ''}`}>
               <div
                 className={`devops-run-row devops-run-row--expandable${isExpanded ? ' devops-run-row--expanded' : ''}`}
                 onClick={() => handleToggleRun(run.id)}
@@ -586,7 +587,7 @@ function PipelineRunsDetail({
                 <span className="devops-run-branch">{run.sourceBranch}</span>
                 <span className="devops-run-time">{formatRelativeTime(run.finishTime ?? run.startTime)}</span>
                 <span className="devops-run-by">{run.requestedBy}</span>
-                {isExpanded && pendingApprovals.length > 0 && (
+                {hasPendingApprovals && (
                   <span className="devops-run-approval-badge">{t('devops.pendingApproval')}</span>
                 )}
                 {run.url && (
@@ -600,6 +601,48 @@ function PipelineRunsDetail({
                 )}
               </div>
 
+              {/* Inline approval actions — visible without expanding */}
+              {hasPendingApprovals && !isExpanded && (
+                <div className="devops-run-inline-approvals">
+                  {pendingApprovals.map((approval) => (
+                    <div key={approval.id} className="devops-inline-approval">
+                      <div className="devops-inline-approval-info">
+                        {approval.instructions && (
+                          <span className="devops-inline-approval-instructions">{approval.instructions}</span>
+                        )}
+                        <span className="devops-inline-approval-assignees">
+                          {approval.steps.map((s) => s.assignedApprover).join(', ')}
+                        </span>
+                      </div>
+                      <div className="devops-inline-approval-actions">
+                        <input
+                          className="devops-approval-comment devops-approval-comment--inline"
+                          type="text"
+                          placeholder={t('devops.approvalComment')}
+                          value={approvalComment}
+                          onChange={(e) => setApprovalComment(e.target.value)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <button
+                          className="devops-btn devops-btn--approve"
+                          disabled={approving === approval.id}
+                          onClick={(e) => { e.stopPropagation(); handleApprove(approval.id, 'approved') }}
+                        >
+                          {approving === approval.id ? '...' : t('devops.approve')}
+                        </button>
+                        <button
+                          className="devops-btn devops-btn--reject"
+                          disabled={approving === approval.id}
+                          onClick={(e) => { e.stopPropagation(); handleApprove(approval.id, 'rejected') }}
+                        >
+                          {t('devops.reject')}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {isExpanded && (
                 <div className="devops-run-expanded">
                   {/* Stages */}
@@ -608,8 +651,8 @@ function PipelineRunsDetail({
                     <InlineStageDetail stages={runStages} loading={stagesLoading} />
                   </div>
 
-                  {/* Approvals */}
-                  {!approvalsLoading && pendingApprovals.length > 0 && (
+                  {/* Approvals — detailed view when expanded */}
+                  {hasPendingApprovals && (
                     <div className="devops-approvals-section">
                       <h5>{t('devops.approvals')}</h5>
                       {pendingApprovals.map((approval) => (
