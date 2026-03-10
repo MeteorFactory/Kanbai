@@ -19,56 +19,6 @@
   margin-left: auto;
 }
 
-/* Global status indicator */
-.devops-global-status {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 500;
-  border: 1px solid transparent;
-}
-
-.devops-global-status--succeeded {
-  background: rgba(76, 175, 80, 0.1);
-  border-color: rgba(76, 175, 80, 0.2);
-  color: #4caf50;
-}
-
-.devops-global-status--failed {
-  background: rgba(244, 67, 54, 0.1);
-  border-color: rgba(244, 67, 54, 0.2);
-  color: #f44336;
-}
-
-.devops-global-status--canceled {
-  background: rgba(255, 152, 0, 0.1);
-  border-color: rgba(255, 152, 0, 0.2);
-  color: #ff9800;
-}
-
-.devops-global-status--running {
-  background: rgba(33, 150, 243, 0.1);
-  border-color: rgba(33, 150, 243, 0.2);
-  color: #2196f3;
-}
-
-.devops-global-status--notStarted,
-.devops-global-status--unknown {
-  background: rgba(158, 158, 158, 0.1);
-  border-color: rgba(158, 158, 158, 0.2);
-  color: #9e9e9e;
-}
-
-.devops-global-status-label {
-  max-width: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .devops-header h2 {
   margin: 0;
   font-size: 16px;
