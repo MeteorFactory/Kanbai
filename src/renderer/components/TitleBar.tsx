@@ -20,6 +20,7 @@ const SERVICES_DROPDOWN: DropdownConfig = {
     { mode: 'database', labelKey: 'view.database' },
     { mode: 'api', labelKey: 'view.api' },
     { mode: 'healthcheck', labelKey: 'view.healthcheck' },
+    { mode: 'devops', labelKey: 'view.devops' },
   ],
 }
 

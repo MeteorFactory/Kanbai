@@ -31,6 +31,7 @@ import { registerCopilotConfigHandlers } from './ipc/copilotConfig'
 import { registerGeminiConfigHandlers } from './ipc/geminiConfig'
 import { registerAiProviderHandlers } from './ipc/aiProvider'
 import { registerPixelAgentsHandlers, shutdownPixelAgentsService } from './ipc/pixel-agents'
+import { registerDevOpsHandlers } from './ipc/devops'
 import { cleanupTerminals } from './ipc/terminal'
 import { ensureActivityHookScript, ensureAutoApproveScript, ensureKanbanDoneScript, ensurePixelAgentsHookScript, syncAllWorkspaceEnvHooks, startActivityWatcher } from './services/activityHooks'
 import { clearDockBadge } from './services/notificationService'
@@ -367,6 +368,7 @@ app.whenReady().then(() => {
   registerGeminiConfigHandlers(ipcMain)
   registerAiProviderHandlers(ipcMain)
   registerPixelAgentsHandlers(ipcMain, () => mainWindow)
+  registerDevOpsHandlers(ipcMain)
 
   // Ensure a Default namespace exists (first launch or migration)
   new StorageService().ensureDefaultNamespace()
