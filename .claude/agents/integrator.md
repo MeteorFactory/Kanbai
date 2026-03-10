@@ -12,7 +12,7 @@ Verification d'integration visuelle de bout en bout. Tu lances l'application, in
 
 ## Contexte technique
 
-- **Stack** : Electron 33+, React 19, Zustand, xterm.js, Monaco Editor
+- **Stack** : Electron 40+, React 19, Zustand 5, xterm.js 6, Monaco Editor
 - **Build** : `npm run dev` lance electron-vite (hot-reload main + renderer)
 - **Tests** : Vitest pour unit/integration, Playwright possible pour E2E
 - **IPC** : canaux `namespace:action` definis dans `IPC_CHANNELS`

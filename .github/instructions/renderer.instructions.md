@@ -13,7 +13,7 @@ applyTo: "src/renderer/**"
 
 ## State Management (Zustand)
 
-- Each domain has its own store (terminal, workspace, claude, kanban, update, view)
+- Each domain has its own store (terminalTab, workspace, claude, kanban, view, update, appUpdate, notification, devops, packages, database, databaseTab, healthCheck)
 - Stores cache data from main process via IPC
 - Main process is source of truth — stores are read caches + UI state
 - Use `zustand` actions for state mutations, not direct state assignment

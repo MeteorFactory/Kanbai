@@ -467,21 +467,46 @@ Workspaces/
 │   ├── main/                          # --- MAIN PROCESS ---
 │   │   ├── index.ts                   # Entry point, app lifecycle, BrowserWindow
 │   │   │
-│   │   ├── ipc/                       # IPC handlers (1 fichier par domaine)
+│   │   ├── ipc/                       # IPC handlers (1 fichier par domaine, ~29 handlers)
 │   │   │   ├── terminal.ts            # Terminal/PTY handlers
 │   │   │   ├── workspace.ts           # Workspace CRUD handlers
 │   │   │   ├── project.ts            # Project management handlers
 │   │   │   ├── claude.ts             # Claude session handlers
+│   │   │   ├── claudeDefaults.ts     # Claude defaults library handlers
+│   │   │   ├── claudeMemory.ts       # Claude memory management handlers
 │   │   │   ├── kanban.ts             # Kanban CRUD handlers
 │   │   │   ├── git.ts                # Git operations handlers (20+ canaux)
+│   │   │   ├── gitConfig.ts          # Git configuration handlers
 │   │   │   ├── filesystem.ts         # File system operations handlers
+│   │   │   ├── database.ts           # Database explorer handlers (SQLite, PG, MySQL, MSSQL, MongoDB)
+│   │   │   ├── packages.ts           # Package management handlers
+│   │   │   ├── analysis.ts           # Code analysis handlers
+│   │   │   ├── healthcheck.ts        # Health check monitoring handlers
+│   │   │   ├── devops.ts             # DevOps CI/CD handlers
+│   │   │   ├── ssh.ts                # SSH management handlers
+│   │   │   ├── mcp.ts                # MCP server handlers
+│   │   │   ├── api.ts                # API tester handlers
 │   │   │   ├── updates.ts            # Update checker handlers
+│   │   │   ├── appUpdate.ts          # App auto-update handlers
 │   │   │   ├── session.ts            # Session save/load handlers
 │   │   │   ├── workspaceEnv.ts       # Workspace env (symlinks) handlers
-│   │   │   └── app.ts                # Settings & notifications handlers
+│   │   │   ├── app.ts                # Settings & notifications handlers
+│   │   │   ├── namespace.ts          # Namespace handlers
+│   │   │   ├── aiProvider.ts         # AI provider config handlers
+│   │   │   ├── codexConfig.ts        # Codex config handlers
+│   │   │   ├── copilotConfig.ts      # Copilot config handlers
+│   │   │   ├── geminiConfig.ts       # Gemini config handlers
+│   │   │   └── pixel-agents.ts       # Pixel agents (gamification) handlers
 │   │   │
 │   │   └── services/
-│   │       └── storage.ts            # StorageService (singleton, JSON file)
+│   │       ├── storage.ts            # StorageService (singleton, JSON file)
+│   │       ├── healthCheckScheduler.ts # Health check scheduler
+│   │       ├── notificationService.ts # Notification service
+│   │       ├── activityHooks.ts      # Activity hooks for AI providers
+│   │       ├── ai-cli.ts             # AI CLI service
+│   │       ├── pixel-agents-service.ts # Pixel agents service
+│   │       ├── database/             # Database connection services
+│   │       └── packages/             # Package analysis services
 │   │
 │   ├── preload/                       # --- PRELOAD SCRIPTS ---
 │   │   └── index.ts                   # contextBridge: expose window.kanbai (API par domaine)
@@ -521,13 +546,20 @@ Workspaces/
 │   │   │
 │   │   ├── lib/                       # Utilitaires et stores
 │   │   │   ├── monacoSetup.ts         # Configuration Monaco Editor
-│   │   │   └── stores/                # Zustand stores
+│   │   │   └── stores/                # Zustand stores (13 stores)
 │   │   │       ├── workspaceStore.ts  # Workspaces + projets
 │   │   │       ├── terminalTabStore.ts # Onglets et panes terminal
 │   │   │       ├── claudeStore.ts     # Sessions Claude
 │   │   │       ├── kanbanStore.ts     # Taches Kanban
 │   │   │       ├── updateStore.ts     # Mises a jour
-│   │   │       └── viewStore.ts       # Etat de l'UI (panels, vues)
+│   │   │       ├── appUpdateStore.ts  # Auto-update app
+│   │   │       ├── viewStore.ts       # Etat de l'UI (panels, vues)
+│   │   │       ├── notificationStore.ts # Notifications
+│   │   │       ├── devopsStore.ts     # DevOps CI/CD
+│   │   │       ├── packagesStore.ts   # Package management
+│   │   │       ├── databaseStore.ts   # Database connections
+│   │   │       ├── databaseTabStore.ts # Database tabs
+│   │   │       └── healthCheckStore.ts # Health check monitoring
 │   │   │
 │   │   ├── types/
 │   │   │   └── global.d.ts           # Declaration window.kanbai
@@ -587,19 +619,22 @@ Workspaces/
 
 | Technologie | Version | Justification |
 |-------------|---------|---------------|
-| **Electron 33+** | ^33.0.0 | Framework desktop cross-platform, acces natif macOS, mature pour les terminaux |
-| **TypeScript 5.x** | ^5.8.0 | Typage strict, refactoring safe, DX superieure |
-| **React 19** | ^19.1.0 | Renderer UI, vaste ecosysteme, hooks pour xterm.js lifecycle |
-| **Vite 6** | ^6.3.0 | Build rapide pour renderer ET main process (via vite-plugin-electron) |
-| **Zustand 5** | ^5.0.0 | State management leger, TypeScript-first, pas de boilerplate, stores par domaine |
+| **Electron 40+** | ^40.6.1 | Framework desktop cross-platform, acces natif macOS, mature pour les terminaux |
+| **TypeScript 5.9+** | ^5.9.3 | Typage strict, refactoring safe, DX superieure |
+| **React 19** | ^19.2.4 | Renderer UI, vaste ecosysteme, hooks pour xterm.js lifecycle |
+| **Vite 7 / electron-vite** | ^7.3.1 | Build rapide pour renderer ET main process |
+| **Zustand 5** | ^5.0.11 | State management leger, TypeScript-first, pas de boilerplate, stores par domaine |
 | **@xterm/xterm 6** | ^6.0.0 | Terminal emulator standard, avec addons: fit, webgl, search, web-links, unicode11 |
-| **node-pty** | ^1.0.0 | Pseudo-terminal natif, seule option viable pour un vrai shell dans Electron |
+| **node-pty** | ^1.1.0 | Pseudo-terminal natif, seule option viable pour un vrai shell dans Electron |
 | **Monaco Editor** | ^0.55.1 | Editeur de code complet (via @monaco-editor/react ^4.7.0) pour visualiser/editer les fichiers |
-| **electron-store** | ^10.0.0 | Persistance locale des settings (complement a StorageService) |
-| **uuid** | ^11.1.0 | Generation d'identifiants uniques (workspaces, projets, taches) |
+| **electron-store** | ^11.0.2 | Persistance locale des settings (complement a StorageService) |
+| **uuid** | ^13.0.0 | Generation d'identifiants uniques (workspaces, projets, taches) |
 | **CSS custom properties** | — | Styles via CSS pur avec variables CSS, pas de framework CSS |
-| **Vitest** | ^3.1.0 | Tests rapides, compatible Vite, API Jest-compatible |
-| **electron-builder** | ^26.0.0 | Packaging macOS (.dmg, .app), code signing, notarization |
+| **Vitest** | ^4.0.18 | Tests rapides, compatible Vite, API Jest-compatible |
+| **electron-builder** | ^26.8.1 | Packaging macOS (.dmg, .app), code signing, notarization |
+| **better-sqlite3** | ^12.6.2 | Driver SQLite pour l'explorateur de bases de donnees |
+| **pg / mysql2 / mssql / mongodb** | latest | Support multi-bases de donnees |
+| **@modelcontextprotocol/sdk** | ^1.27.1 | Integration MCP servers |
 
 ### Dependances alternatives considerees et rejetees
 
