@@ -67,6 +67,7 @@ interface DevOpsState {
   expandRun: (connection: DevOpsConnection, buildId: number) => Promise<void>
   collapseRun: () => void
   approveRun: (connection: DevOpsConnection, approvalId: string, status: 'approved' | 'rejected', comment?: string) => Promise<{ success: boolean; error?: string }>
+  reorderPipelines: (projectPath: string, fromIndex: number, toIndex: number) => Promise<void>
 }
 
 function generateId(): string {
@@ -100,6 +101,32 @@ function detectAndNotifyChanges(pipelines: PipelineDefinition[]): void {
 
     previousStatuses.set(pipeline.id, { runId: run.id, status: run.status })
   }
+}
+
+function applySavedOrder(pipelines: PipelineDefinition[], savedOrder: number[] | undefined): PipelineDefinition[] {
+  if (!savedOrder || savedOrder.length === 0) return pipelines
+  const pipelineMap = new Map(pipelines.map((p) => [p.id, p]))
+  const ordered: PipelineDefinition[] = []
+  for (const id of savedOrder) {
+    const pipeline = pipelineMap.get(id)
+    if (pipeline) {
+      ordered.push(pipeline)
+      pipelineMap.delete(id)
+    }
+  }
+  // Append any new pipelines not in saved order
+  for (const pipeline of pipelineMap.values()) {
+    ordered.push(pipeline)
+  }
+  return ordered
+}
+
+function sortRunsByDate(runs: PipelineRun[]): PipelineRun[] {
+  return [...runs].sort((a, b) => {
+    const timeA = a.startTime ? new Date(a.startTime).getTime() : 0
+    const timeB = b.startTime ? new Date(b.startTime).getTime() : 0
+    return timeB - timeA
+  })
 }
 
 export const useDevOpsStore = create<DevOpsState>((set, get) => ({
@@ -195,12 +222,10 @@ export const useDevOpsStore = create<DevOpsState>((set, get) => ({
     const result = await window.kanbai.devops.listPipelines(connection)
     if (result.success) {
       detectAndNotifyChanges(result.pipelines)
-      const sorted = [...result.pipelines].sort((a, b) => {
-        const timeA = a.latestRun?.startTime ? new Date(a.latestRun.startTime).getTime() : 0
-        const timeB = b.latestRun?.startTime ? new Date(b.latestRun.startTime).getTime() : 0
-        return timeB - timeA
-      })
-      set({ pipelines: sorted, pipelinesLoading: false })
+      const { data, activeConnectionId } = get()
+      const savedOrder = activeConnectionId ? data?.pipelineOrder?.[activeConnectionId] : undefined
+      const ordered = applySavedOrder(result.pipelines, savedOrder)
+      set({ pipelines: ordered, pipelinesLoading: false })
     } else {
       set({ pipelines: [], pipelinesLoading: false, pipelinesError: result.error ?? 'Unknown error' })
     }
@@ -214,7 +239,7 @@ export const useDevOpsStore = create<DevOpsState>((set, get) => ({
     set({ runsLoading: true })
     const result = await window.kanbai.devops.getPipelineRuns(connection, pipelineId)
     if (result.success) {
-      set({ pipelineRuns: result.runs, runsLoading: false })
+      set({ pipelineRuns: sortRunsByDate(result.runs), runsLoading: false })
     } else {
       set({ pipelineRuns: [], runsLoading: false })
     }
@@ -295,6 +320,25 @@ export const useDevOpsStore = create<DevOpsState>((set, get) => ({
       }
     }
     return { success: result.success, error: result.error }
+  },
+
+  reorderPipelines: async (projectPath, fromIndex, toIndex) => {
+    const { pipelines, data, activeConnectionId } = get()
+    if (!data || !activeConnectionId) return
+    const reordered = [...pipelines]
+    const [moved] = reordered.splice(fromIndex, 1)
+    if (!moved) return
+    reordered.splice(toIndex, 0, moved)
+    const newOrder = reordered.map((p) => p.id)
+    const updatedData: DevOpsFile = {
+      ...data,
+      pipelineOrder: {
+        ...data.pipelineOrder,
+        [activeConnectionId]: newOrder,
+      },
+    }
+    set({ pipelines: reordered, data: updatedData })
+    await window.kanbai.devops.save(projectPath, updatedData)
   },
 }))
 

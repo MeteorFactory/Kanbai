@@ -345,26 +345,44 @@ function ConnectionFormModal({
 
 function PipelineCard({
   pipeline,
+  index,
   isSelected,
   onSelect,
   onRun,
   onOpenUrl,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  onDragEnd,
+  isDragOver,
 }: {
   pipeline: PipelineDefinition
+  index: number
   isSelected: boolean
   onSelect: () => void
   onRun: () => void
   onOpenUrl: () => void
+  onDragStart: (e: React.DragEvent, index: number) => void
+  onDragOver: (e: React.DragEvent, index: number) => void
+  onDrop: (e: React.DragEvent, index: number) => void
+  onDragEnd: () => void
+  isDragOver: boolean
 }) {
   const latestRun = pipeline.latestRun
   const status = latestRun?.status ?? 'unknown'
 
   return (
     <div
-      className={`devops-pipeline-card${isSelected ? ' devops-pipeline-card--selected' : ''}`}
+      className={`devops-pipeline-card${isSelected ? ' devops-pipeline-card--selected' : ''}${isDragOver ? ' devops-pipeline-card--drag-over' : ''}`}
       onClick={onSelect}
+      draggable
+      onDragStart={(e) => onDragStart(e, index)}
+      onDragOver={(e) => onDragOver(e, index)}
+      onDrop={(e) => onDrop(e, index)}
+      onDragEnd={onDragEnd}
     >
       <div className="devops-pipeline-card-header">
+        <span className="devops-pipeline-card-drag-handle">{'\u2261'}</span>
         <span className={statusClassName(status)}>{statusIcon(status)}</span>
         <span className="devops-pipeline-card-name">{pipeline.name}</span>
         {pipeline.folder !== '\\' && (
@@ -677,7 +695,11 @@ export function DevOpsPanel() {
     runPipeline,
     startMonitoring,
     stopMonitoring,
+    reorderPipelines,
   } = useDevOpsStore()
+
+  const [dragIndex, setDragIndex] = useState<number | null>(null)
+  const [dropTarget, setDropTarget] = useState<number | null>(null)
 
   const activeConnection = useMemo(
     () => data?.connections.find((c) => c.id === activeConnectionId) ?? null,
@@ -789,6 +811,39 @@ export function DevOpsPanel() {
     }
   }, [activeConnection, selectedPipelineId, loadPipelines, loadPipelineRuns])
 
+  const handlePipelineDragStart = useCallback((e: React.DragEvent, index: number) => {
+    setDragIndex(index)
+    e.dataTransfer.effectAllowed = 'move'
+  }, [])
+
+  const handlePipelineDragOver = useCallback(
+    (e: React.DragEvent, index: number) => {
+      e.preventDefault()
+      e.dataTransfer.dropEffect = 'move'
+      if (dragIndex !== null && dragIndex !== index) {
+        setDropTarget(index)
+      }
+    },
+    [dragIndex],
+  )
+
+  const handlePipelineDrop = useCallback(
+    (e: React.DragEvent, toIndex: number) => {
+      e.preventDefault()
+      if (dragIndex !== null && dragIndex !== toIndex && workspacePath) {
+        reorderPipelines(workspacePath, dragIndex, toIndex)
+      }
+      setDragIndex(null)
+      setDropTarget(null)
+    },
+    [dragIndex, workspacePath, reorderPipelines],
+  )
+
+  const handlePipelineDragEnd = useCallback(() => {
+    setDragIndex(null)
+    setDropTarget(null)
+  }, [])
+
   if (!activeWorkspace) {
     return (
       <div className="devops-panel">
@@ -884,14 +939,20 @@ export function DevOpsPanel() {
             {!pipelinesLoading && !pipelinesError && pipelines.length === 0 && (
               <div className="devops-empty">{t('devops.noPipelines')}</div>
             )}
-            {pipelines.map((pipeline) => (
+            {pipelines.map((pipeline, index) => (
               <PipelineCard
                 key={pipeline.id}
                 pipeline={pipeline}
+                index={index}
                 isSelected={selectedPipelineId === pipeline.id}
                 onSelect={() => selectPipeline(pipeline.id)}
                 onRun={() => handleRunPipeline(pipeline.id)}
                 onOpenUrl={() => handleOpenPipelineUrl(pipeline.url)}
+                onDragStart={handlePipelineDragStart}
+                onDragOver={handlePipelineDragOver}
+                onDrop={handlePipelineDrop}
+                onDragEnd={handlePipelineDragEnd}
+                isDragOver={dropTarget === index}
               />
             ))}
           </div>

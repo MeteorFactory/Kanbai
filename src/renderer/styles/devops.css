@@ -137,6 +137,29 @@
   background: var(--card-bg-selected, #1a2a3a);
 }
 
+.devops-pipeline-card--drag-over {
+  border-color: var(--accent-color, #4fc3f7);
+  border-style: dashed;
+  background: var(--card-bg-hover, #252525);
+}
+
+.devops-pipeline-card[draggable="true"] {
+  cursor: grab;
+}
+
+.devops-pipeline-card[draggable="true"]:active {
+  cursor: grabbing;
+  opacity: 0.6;
+}
+
+.devops-pipeline-card-drag-handle {
+  color: var(--text-tertiary, #777);
+  font-size: 16px;
+  line-height: 1;
+  user-select: none;
+  flex-shrink: 0;
+}
+
 .devops-pipeline-card-header {
   display: flex;
   align-items: center;
