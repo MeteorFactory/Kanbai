@@ -1569,6 +1569,10 @@ function TaskDetailPanel({
   const [titleValue, setTitleValue] = useState(task.title)
   const [editingDesc, setEditingDesc] = useState(false)
   const [descValue, setDescValue] = useState(task.description)
+  const [showConversationHistory, setShowConversationHistory] = useState(false)
+  const [conversationContent, setConversationContent] = useState<Array<{ role: string; message: string; timestamp?: string }>>([])
+  const [conversationLoading, setConversationLoading] = useState(false)
+  const [conversationError, setConversationError] = useState<string | null>(null)
   const titleRef = useRef<HTMLInputElement>(null)
   const descRef = useRef<HTMLTextAreaElement>(null)
 
@@ -1604,6 +1608,54 @@ function TaskDetailPanel({
     }
     setEditingDesc(false)
   }, [descValue, task.description, onUpdate])
+
+  const openConversationHistory = useCallback(async () => {
+    if (!task.conversationHistoryPath) return
+    setShowConversationHistory(true)
+    setConversationLoading(true)
+    setConversationError(null)
+    setConversationContent([])
+    try {
+      const result = await window.kanbai.fs.readFile(task.conversationHistoryPath)
+      if (result.error || !result.content) {
+        setConversationError(result.error || t('kanban.conversationHistoryErrorRead'))
+        return
+      }
+      const lines = result.content.split('\n').filter((line: string) => line.trim())
+      const entries: Array<{ role: string; message: string; timestamp?: string }> = []
+      for (const line of lines) {
+        try {
+          const parsed = JSON.parse(line)
+          if (parsed.type === 'human' || parsed.type === 'assistant') {
+            const message = typeof parsed.message === 'string'
+              ? parsed.message
+              : parsed.message?.content
+                ? (Array.isArray(parsed.message.content)
+                  ? parsed.message.content
+                      .filter((block: { type: string }) => block.type === 'text')
+                      .map((block: { text: string }) => block.text)
+                      .join('\n')
+                  : String(parsed.message.content))
+                : ''
+            if (message.trim()) {
+              entries.push({
+                role: parsed.type,
+                message,
+                timestamp: parsed.timestamp,
+              })
+            }
+          }
+        } catch {
+          // skip malformed lines
+        }
+      }
+      setConversationContent(entries)
+    } catch {
+      setConversationError(t('kanban.conversationHistoryErrorRead'))
+    } finally {
+      setConversationLoading(false)
+    }
+  }, [task.conversationHistoryPath, t])
 
   const priorityColors: Record<string, string> = {
     low: '#565C66',
@@ -1896,6 +1948,54 @@ function TaskDetailPanel({
             <span className="kanban-detail-conversation-path" title={task.conversationHistoryPath}>
               {task.conversationHistoryPath.split(/[\\/]/).pop()}
             </span>
+            <button
+              className="kanban-detail-conversation-view-btn"
+              onClick={openConversationHistory}
+              title={t('kanban.conversationHistoryView')}
+            >
+              {t('kanban.conversationHistoryView')}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Conversation History Modal */}
+      {showConversationHistory && (
+        <div className="modal-overlay" onClick={() => setShowConversationHistory(false)}>
+          <div className="conversation-history-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="conversation-history-modal-header">
+              <h3>{t('kanban.conversationHistory')}</h3>
+              <span className="conversation-history-modal-filename">
+                {task.conversationHistoryPath?.split(/[\\/]/).pop()}
+              </span>
+              <button className="kanban-detail-close" onClick={() => setShowConversationHistory(false)}>&times;</button>
+            </div>
+            <div className="conversation-history-modal-body">
+              {conversationLoading && (
+                <div className="conversation-history-loading">{t('kanban.conversationHistoryLoading')}</div>
+              )}
+              {conversationError && (
+                <div className="conversation-history-error">{conversationError}</div>
+              )}
+              {!conversationLoading && !conversationError && conversationContent.length === 0 && (
+                <div className="conversation-history-empty">{t('kanban.conversationHistoryEmpty')}</div>
+              )}
+              {conversationContent.map((entry, index) => (
+                <div key={index} className={`conversation-history-entry conversation-history-entry--${entry.role}`}>
+                  <div className="conversation-history-entry-header">
+                    <span className="conversation-history-entry-role">
+                      {entry.role === 'human' ? t('kanban.conversationRoleUser') : t('kanban.conversationRoleAssistant')}
+                    </span>
+                    {entry.timestamp && (
+                      <span className="conversation-history-entry-time">
+                        {new Date(entry.timestamp).toLocaleString(locale === 'en' ? 'en-US' : 'fr-FR')}
+                      </span>
+                    )}
+                  </div>
+                  <pre className="conversation-history-entry-message">{entry.message}</pre>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
