@@ -37,10 +37,14 @@ describe('Git Worktree IPC Handlers', () => {
   beforeEach(async () => {
     vi.resetModules()
 
-    // Create a temporary git repo with an initial commit
+    // Create a temporary git repo with local user config and an initial commit.
+    // Local config is required because IPC handlers (FINALIZE, MERGE_AND_CLEANUP)
+    // run `git commit` without -c overrides — fails on systems without global git config.
     repoDir = fs.mkdtempSync(path.join(os.tmpdir(), 'kanbai-worktree-test-'))
     git(['init'], repoDir)
-    git(['-c', 'user.name=Test', '-c', 'user.email=test@test.com', 'commit', '--allow-empty', '-m', 'initial commit'], repoDir)
+    git(['config', 'user.name', 'Test'], repoDir)
+    git(['config', 'user.email', 'test@test.com'], repoDir)
+    git(['commit', '--allow-empty', '-m', 'initial commit'], repoDir)
     defaultBranch = getDefaultBranch(repoDir)
 
     const { registerGitHandlers } = await import('../../src/main/ipc/git')
@@ -118,7 +122,9 @@ describe('Git Worktree IPC Handlers', () => {
       // Create a repo with master as default branch
       const masterRepoDir = fs.mkdtempSync(path.join(os.tmpdir(), 'kanbai-worktree-master-test-'))
       git(['init', '-b', 'master'], masterRepoDir)
-      git(['-c', 'user.name=Test', '-c', 'user.email=test@test.com', 'commit', '--allow-empty', '-m', 'initial'], masterRepoDir)
+      git(['config', 'user.name', 'Test'], masterRepoDir)
+      git(['config', 'user.email', 'test@test.com'], masterRepoDir)
+      git(['commit', '--allow-empty', '-m', 'initial'], masterRepoDir)
 
       const worktreePath = path.join(masterRepoDir, '.kanbai-worktrees', 'test-task-3')
 
