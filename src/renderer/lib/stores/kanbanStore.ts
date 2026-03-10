@@ -36,8 +36,9 @@ function repoPathFromWorktree(worktreePath: string): string {
 }
 
 /**
- * Auto-merge a completed task's worktree branch into the main branch,
+ * Auto-merge a completed task's worktree branch into the working branch,
  * then remove the worktree and delete the branch.
+ * Uses worktreeBaseBranch to merge into the branch that was active at worktree creation.
  * Only runs if the task has worktree info and autoMergeWorktrees is enabled.
  */
 async function autoMergeWorktree(
@@ -55,6 +56,7 @@ async function autoMergeWorktree(
       task.worktreePath,
       task.worktreeBranch,
       ticketLabel,
+      task.worktreeBaseBranch,
     )
     if (!result?.success) {
       // eslint-disable-next-line no-console
@@ -401,7 +403,35 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
           continue
         }
 
-        if (!tabId) continue
+        // Handle DONE/FAILED when tab is already closed (race: tab closed before sync detected status)
+        if (!tabId) {
+          if ((newTask.status === 'DONE' || newTask.status === 'FAILED') && newTask.worktreePath && currentWorkspaceId) {
+            taskFinished = true
+            relaunchedTaskIds.delete(newTask.id)
+            const ticketLabel = formatTicketLabel(newTask)
+            // Finalize + merge directly since no tab is left to defer to
+            if (newTask.status === 'DONE') {
+              autoMergeWorktree(newTask, currentWorkspaceId).catch(() => { /* best-effort */ })
+            }
+            const promptCwd = kanbanPromptCwds[newTask.id]
+            if (promptCwd) {
+              window.kanbai.kanban.cleanupPrompt(promptCwd, newTask.id).catch(() => { /* best-effort */ })
+            }
+            const t = useI18n.getState().t
+            const wsName = useWorkspaceStore.getState().workspaces.find((w) => w.id === currentWorkspaceId)?.name ?? ''
+            const todoCount = newTasks.filter((tt) => tt.status === 'TODO' && !tt.disabled).length
+            if (newTask.status === 'DONE') {
+              const body = todoCount > 0
+                ? t('notifications.ticketsRemaining', { ticket: ticketLabel, count: todoCount })
+                : t('notifications.noMoreTickets', { ticket: ticketLabel })
+              pushNotification('success', wsName, `${ticketLabel} — ${body}`, { workspaceId: currentWorkspaceId })
+            } else {
+              pushNotification('error', wsName, `${ticketLabel} — ${t('notifications.taskFailed', { ticket: ticketLabel })}${todoCount > 0 ? `. ${t('notifications.ticketsRemaining', { ticket: ticketLabel, count: todoCount })}` : ''}`,
+                { workspaceId: currentWorkspaceId })
+            }
+          }
+          continue
+        }
 
         const termStore = useTerminalTabStore.getState()
         if (newTask.status === 'DONE') {
@@ -804,16 +834,20 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
             const result = await window.kanbai.git.worktreeAdd(projectPath, worktreeDir, ticketBranch)
             if (result?.success) {
               cwd = worktreeDir
+              // Store the base branch (the branch that was active when worktree was created)
+              // so we can merge back into it when the task completes
+              const baseBranch = result.baseBranch ?? 'main'
               // Persist worktree info on the task
               await window.kanbai.kanban.update({
                 id: task.id,
                 workspaceId,
                 worktreePath: worktreeDir,
                 worktreeBranch: ticketBranch,
+                worktreeBaseBranch: baseBranch,
               })
               set((state) => ({
                 tasks: state.tasks.map((t) =>
-                  t.id === task.id ? { ...t, worktreePath: worktreeDir, worktreeBranch: ticketBranch } : t,
+                  t.id === task.id ? { ...t, worktreePath: worktreeDir, worktreeBranch: ticketBranch, worktreeBaseBranch: baseBranch } : t,
                 ),
               }))
             }
@@ -1108,7 +1142,34 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
           continue
         }
 
-        if (!tabId) continue
+        // Handle DONE/FAILED when tab is already closed (race: tab closed before sync detected status)
+        if (!tabId) {
+          if ((newTask.status === 'DONE' || newTask.status === 'FAILED') && newTask.worktreePath) {
+            taskFinished = true
+            relaunchedTaskIds.delete(newTask.id)
+            const ticketLabel = formatTicketLabel(newTask)
+            if (newTask.status === 'DONE') {
+              autoMergeWorktree(newTask, wsId).catch(() => { /* best-effort */ })
+            }
+            const promptCwd = kanbanPromptCwds[newTask.id]
+            if (promptCwd) {
+              window.kanbai.kanban.cleanupPrompt(promptCwd, newTask.id).catch(() => { /* best-effort */ })
+            }
+            const t = useI18n.getState().t
+            const wsName = useWorkspaceStore.getState().workspaces.find((w) => w.id === wsId)?.name ?? ''
+            const todoCount = newTasks.filter((tt) => tt.status === 'TODO' && !tt.disabled).length
+            if (newTask.status === 'DONE') {
+              const body = todoCount > 0
+                ? t('notifications.ticketsRemaining', { ticket: ticketLabel, count: todoCount })
+                : t('notifications.noMoreTickets', { ticket: ticketLabel })
+              pushNotification('success', wsName, `${ticketLabel} — ${body}`, { workspaceId: wsId })
+            } else {
+              pushNotification('error', wsName, `${ticketLabel} — ${t('notifications.taskFailed', { ticket: ticketLabel })}${todoCount > 0 ? `. ${t('notifications.ticketsRemaining', { ticket: ticketLabel, count: todoCount })}` : ''}`,
+                { workspaceId: wsId })
+            }
+          }
+          continue
+        }
 
         const termStore = useTerminalTabStore.getState()
         if (newTask.status === 'DONE') {
@@ -1211,7 +1272,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
   },
 
   handleTabClosed: (tabId: string) => {
-    const { kanbanTabIds, tasks, currentWorkspaceId } = get()
+    const { kanbanTabIds, tasks, currentWorkspaceId, backgroundTasks } = get()
     // Find the task linked to this tab
     const taskId = Object.keys(kanbanTabIds).find((id) => kanbanTabIds[id] === tabId)
     if (!taskId) return
@@ -1221,19 +1282,14 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
     delete newTabIds[taskId]
     set({ kanbanTabIds: newTabIds })
 
-    // If task was WORKING, set it to PENDING
-    const task = tasks.find((t) => t.id === taskId)
-    if (task && task.status === 'WORKING' && currentWorkspaceId) {
-      const updatedTasks = tasks.map((t) =>
-        t.id === taskId ? { ...t, status: 'PENDING' as KanbanStatus, updatedAt: Date.now() } : t,
-      )
-      set({ tasks: updatedTasks })
-      // Persist to file
-      window.kanbai.kanban.update({
-        id: taskId,
-        status: 'PENDING',
-        workspaceId: currentWorkspaceId,
-      }).catch(() => { /* best-effort */ })
+    // Find the task across current and background workspaces
+    let task = tasks.find((t) => t.id === taskId)
+    let wsId = currentWorkspaceId
+    if (!task) {
+      for (const [bgWsId, bgTasks] of Object.entries(backgroundTasks)) {
+        task = bgTasks.find((t) => t.id === taskId)
+        if (task) { wsId = bgWsId; break }
+      }
     }
 
     // Unlock the worktree session lock now that the terminal process has exited
@@ -1241,11 +1297,59 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
       window.kanbai.git.worktreeUnlock(task.worktreePath).catch(() => { /* best-effort */ })
     }
 
-    // Auto-merge worktree if the task is DONE (deferred from status change detection)
-    if (task?.worktreePath && task.worktreeBranch && task.status === 'DONE' && currentWorkspaceId) {
-      autoMergeWorktree(task, currentWorkspaceId).catch(() => { /* best-effort */ })
+    // If task is already DONE in memory, merge directly
+    if (task?.worktreePath && task.worktreeBranch && task.status === 'DONE' && wsId) {
+      autoMergeWorktree(task, wsId).catch(() => { /* best-effort */ })
+      return
+    }
+
+    // If task was WORKING, check actual file status before setting to PENDING.
+    // The agent may have already written DONE to the file — avoid overwriting it.
+    if (task && task.status === 'WORKING' && wsId) {
+      const capturedTask = task
+      const capturedWsId = wsId
+      window.kanbai.kanban.list(capturedWsId).then((fileTasks: KanbanTask[]) => {
+        const fileTask = fileTasks.find((t) => t.id === taskId)
+        if (fileTask && (fileTask.status === 'DONE' || fileTask.status === 'FAILED')) {
+          // File says DONE/FAILED — update in-memory and trigger merge
+          const currentTasks = get().tasks
+          const updatedTasks = currentTasks.map((t) =>
+            t.id === taskId ? { ...t, status: fileTask.status as KanbanStatus, result: fileTask.result, error: fileTask.error, updatedAt: Date.now() } : t,
+          )
+          set({ tasks: updatedTasks })
+          if (fileTask.status === 'DONE' && capturedTask.worktreePath && capturedTask.worktreeBranch) {
+            autoMergeWorktree({ ...capturedTask, status: 'DONE' }, capturedWsId).catch(() => { /* best-effort */ })
+          }
+        } else {
+          // File is not DONE — safe to set to PENDING
+          const currentTasks = get().tasks
+          const updatedTasks = currentTasks.map((t) =>
+            t.id === taskId ? { ...t, status: 'PENDING' as KanbanStatus, updatedAt: Date.now() } : t,
+          )
+          set({ tasks: updatedTasks })
+          window.kanbai.kanban.update({
+            id: taskId,
+            status: 'PENDING',
+            workspaceId: capturedWsId,
+          }).catch(() => { /* best-effort */ })
+        }
+      }).catch(() => {
+        // Fallback: set to PENDING if file read fails
+        const currentTasks = get().tasks
+        const updatedTasks = currentTasks.map((t) =>
+          t.id === taskId ? { ...t, status: 'PENDING' as KanbanStatus, updatedAt: Date.now() } : t,
+        )
+        set({ tasks: updatedTasks })
+        if (wsId) {
+          window.kanbai.kanban.update({
+            id: taskId,
+            status: 'PENDING',
+            workspaceId: wsId,
+          }).catch(() => { /* best-effort */ })
+        }
+      })
     } else if (task?.worktreePath && task.worktreeBranch) {
-      // Cleanup worktree if its branch has been merged into the current working branch
+      // Task not WORKING and not DONE — cleanup worktree if branch was already merged
       const repoPath = repoPathFromWorktree(task.worktreePath)
       const worktreePath = task.worktreePath
       const worktreeBranch = task.worktreeBranch

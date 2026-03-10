@@ -662,7 +662,28 @@ export function registerGitHandlers(ipcMain: IpcMain): void {
         if (!hasCommits(cwd)) {
           return { success: false, error: 'Cannot create worktree without initial commit.' }
         }
-        execGit(['worktree', 'add', worktreePath, '-b', validateRef(branch)], cwd)
+
+        // Detect the current working branch before creating the worktree
+        const currentBranch = execGit(['rev-parse', '--abbrev-ref', 'HEAD'], cwd).trim()
+
+        // Detect default branch (main/master) to use as start point
+        let defaultBranch = 'main'
+        try {
+          // Check if 'main' exists
+          execGit(['rev-parse', '--verify', 'main'], cwd)
+        } catch {
+          try {
+            // Fallback to 'master'
+            execGit(['rev-parse', '--verify', 'master'], cwd)
+            defaultBranch = 'master'
+          } catch {
+            // Neither main nor master — use current branch as start point
+            defaultBranch = currentBranch
+          }
+        }
+
+        // Create worktree from the default branch (main/master) as start point
+        execGit(['worktree', 'add', worktreePath, '-b', validateRef(branch), defaultBranch], cwd)
 
         // Propagate .claude/settings.local.json to the worktree so Claude Code
         // hooks (Stop, PreToolUse, etc.) fire correctly in the worktree context.
@@ -694,7 +715,7 @@ export function registerGitHandlers(ipcMain: IpcMain): void {
           }
         } catch { /* gitignore update is best-effort */ }
 
-        return { success: true }
+        return { success: true, baseBranch: currentBranch, startPoint: defaultBranch }
       } catch (err) {
         return { success: false, error: String(err) }
       }
@@ -757,11 +778,13 @@ export function registerGitHandlers(ipcMain: IpcMain): void {
         worktreePath,
         worktreeBranch,
         ticketLabel,
+        targetBranch,
       }: {
         repoPath: string
         worktreePath: string
         worktreeBranch: string
         ticketLabel: string
+        targetBranch?: string
       },
     ) => {
       try {
@@ -770,7 +793,19 @@ export function registerGitHandlers(ipcMain: IpcMain): void {
           return { success: false, merged: false, locked: true, error: 'Worktree has an active session — cleanup deferred' }
         }
 
-        const mainBranch = execGit(['rev-parse', '--abbrev-ref', 'HEAD'], repoPath).trim()
+        const currentBranch = execGit(['rev-parse', '--abbrev-ref', 'HEAD'], repoPath).trim()
+        // Use targetBranch (the branch that was active when the worktree was created)
+        // to merge into the correct working branch, falling back to current HEAD
+        const mainBranch = targetBranch ?? currentBranch
+
+        // Checkout the target branch if not already on it
+        if (targetBranch && currentBranch !== targetBranch) {
+          try {
+            execGit(['checkout', validateRef(targetBranch)], repoPath)
+          } catch {
+            // If checkout fails, fall back to current branch
+          }
+        }
         const worktreeExists = fs.existsSync(worktreePath)
 
         // Step 1: Finalize — auto-commit any uncommitted changes in the worktree
@@ -818,6 +853,15 @@ export function registerGitHandlers(ipcMain: IpcMain): void {
             execGit(['branch', '-d', validateRef(worktreeBranch)], repoPath)
           } catch {
             // Branch deletion is best-effort — may already be gone
+          }
+        }
+
+        // Step 6: Restore the original branch if we switched away from it
+        if (targetBranch && currentBranch !== targetBranch) {
+          try {
+            execGit(['checkout', validateRef(currentBranch)], repoPath)
+          } catch {
+            // Restore is best-effort — user may need to switch manually
           }
         }
 
