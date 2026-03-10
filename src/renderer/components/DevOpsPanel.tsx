@@ -26,10 +26,18 @@ function formatRelativeTime(isoString: string | null): string {
   const date = new Date(isoString)
   const now = Date.now()
   const diffSec = Math.floor((now - date.getTime()) / 1000)
-  if (diffSec < 60) return `${diffSec}s ago`
-  if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`
-  if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`
-  return `${Math.floor(diffSec / 86400)}d ago`
+
+  const pad = (n: number): string => String(n).padStart(2, '0')
+  const dateStr = `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}`
+
+  let relative: string
+  if (diffSec < 60) relative = `${diffSec}s`
+  else if (diffSec < 3600) relative = `${Math.floor(diffSec / 60)}m`
+  else if (diffSec < 86400) relative = `${Math.floor(diffSec / 3600)}h`
+  else if (diffSec < 2592000) relative = `${Math.floor(diffSec / 86400)}j`
+  else relative = `${Math.floor(diffSec / 2592000)} mois`
+
+  return `${dateStr} (${relative})`
 }
 
 function formatDuration(startTime: string | null, finishTime: string | null): string {
