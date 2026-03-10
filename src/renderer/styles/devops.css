@@ -27,35 +27,6 @@
   gap: 8px;
 }
 
-/* Sub-tabs */
-.devops-subtabs {
-  display: flex;
-  gap: 4px;
-  border-bottom: 1px solid var(--border-color, #333);
-  padding-bottom: 0;
-  flex-shrink: 0;
-}
-
-.devops-subtab {
-  padding: 6px 14px;
-  border: none;
-  background: none;
-  color: var(--text-secondary, #aaa);
-  font-size: 13px;
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-  transition: color 0.15s, border-color 0.15s;
-}
-
-.devops-subtab:hover {
-  color: var(--text-primary, #e0e0e0);
-}
-
-.devops-subtab--active {
-  color: var(--accent-color, #4fc3f7);
-  border-bottom-color: var(--accent-color, #4fc3f7);
-}
-
 /* Connection bar */
 .devops-connection-bar {
   display: flex;
@@ -276,7 +247,6 @@
 .devops-auth-toggle {
   display: flex;
   gap: 4px;
-  margin-bottom: 8px;
 }
 
 .devops-auth-btn {
@@ -296,51 +266,9 @@
   border-color: var(--accent-color, #4fc3f7);
 }
 
-/* Connection Form */
-.devops-connection-form {
-  max-width: 500px;
-}
-
-.devops-connection-form h3 {
-  margin: 0 0 16px 0;
-  font-size: 15px;
-  color: var(--text-primary, #e0e0e0);
-}
-
-.devops-connection-form label {
-  display: block;
-  margin: 10px 0 4px;
-  font-size: 12px;
-  color: var(--text-secondary, #aaa);
-  font-weight: 500;
-}
-
-.devops-connection-form input {
-  width: 100%;
-  padding: 8px 10px;
-  border-radius: 6px;
-  border: 1px solid var(--border-color, #333);
-  background: var(--input-bg, #2a2a2a);
-  color: var(--text-primary, #e0e0e0);
-  font-size: 13px;
-  box-sizing: border-box;
-}
-
-.devops-connection-form input:focus {
-  outline: none;
-  border-color: var(--accent-color, #4fc3f7);
-}
-
-.devops-form-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 16px;
-  justify-content: flex-end;
-}
-
 /* Test result */
 .devops-test-result {
-  margin-top: 10px;
+  margin-top: 4px;
   padding: 8px 12px;
   border-radius: 6px;
   font-size: 12px;
@@ -372,4 +300,171 @@
 
 .devops-error {
   color: #f44336;
+}
+
+/* Empty state (no connections) */
+.devops-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  gap: 12px;
+  padding: 48px 24px;
+}
+
+.devops-empty-state h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary, #e0e0e0);
+}
+
+.devops-empty-state p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-secondary, #aaa);
+  max-width: 320px;
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* Modal overrides for DevOps */
+.devops-modal {
+  min-width: 420px;
+  max-width: 520px;
+}
+
+.devops-modal--form {
+  min-width: 460px;
+  max-width: 540px;
+}
+
+.devops-modal-subtitle {
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: var(--text-secondary, #aaa);
+  line-height: 1.5;
+}
+
+.devops-modal-header-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.devops-modal-header-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.devops-modal-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--text-secondary, #aaa);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.devops-modal-back:hover {
+  background: var(--bg-surface, #333);
+  color: var(--text-primary, #e0e0e0);
+}
+
+.devops-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+/* Provider selection grid */
+.devops-provider-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.devops-provider-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 24px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border, #333);
+  background: var(--bg-secondary, #1e1e1e);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+}
+
+.devops-provider-card:hover:not(.devops-provider-card--disabled) {
+  border-color: var(--accent-color, #4fc3f7);
+  background: var(--bg-surface, #252525);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.devops-provider-card--disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.devops-provider-icon-placeholder {
+  color: var(--text-tertiary, #555);
+}
+
+.devops-provider-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary, #e0e0e0);
+}
+
+.devops-provider-desc {
+  font-size: 11px;
+  color: var(--text-secondary, #aaa);
+  line-height: 1.4;
+}
+
+/* Form groups (modal) */
+.devops-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.devops-form-label {
+  font-size: 12px;
+  color: var(--text-secondary, #aaa);
+  font-weight: 500;
+}
+
+.devops-form-input {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border, #333);
+  background: var(--bg-primary, #1a1a1a);
+  color: var(--text-primary, #e0e0e0);
+  font-size: 13px;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+}
+
+.devops-form-input:focus {
+  outline: none;
+  border-color: var(--accent-color, #4fc3f7);
+}
+
+.devops-form-input::placeholder {
+  color: var(--text-tertiary, #555);
 }

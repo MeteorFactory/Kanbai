@@ -20,7 +20,13 @@ const SERVICES_DROPDOWN: DropdownConfig = {
     { mode: 'database', labelKey: 'view.database' },
     { mode: 'api', labelKey: 'view.api' },
     { mode: 'healthcheck', labelKey: 'view.healthcheck' },
-    { mode: 'devops', labelKey: 'view.devops' },
+  ],
+}
+
+const DEVOPS_DROPDOWN: DropdownConfig = {
+  label: 'DevOps',
+  items: [
+    { mode: 'devops', labelKey: 'devops.pipelines' },
   ],
 }
 
@@ -184,6 +190,7 @@ export function TitleBar(_props: TitleBarProps) {
         </button>
 
         <TabDropdown config={SERVICES_DROPDOWN} viewMode={viewMode} setViewMode={setViewMode} t={t} />
+        <TabDropdown config={DEVOPS_DROPDOWN} viewMode={viewMode} setViewMode={setViewMode} t={t} />
         <TabDropdown config={PROJECTS_DROPDOWN} viewMode={viewMode} setViewMode={setViewMode} t={t} />
 
         <button
