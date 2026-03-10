@@ -191,6 +191,7 @@ interface AzureTimelineRecord {
   errorCount: number | null
   warningCount: number | null
   issues: AzureTimelineIssue[] | null
+  log: { id: number; url: string } | null
 }
 
 function mapTimelineStatus(state: string, result: string | null): PipelineStatus {
@@ -253,6 +254,7 @@ function mapTimelineToStages(records: AzureTimelineRecord[]): PipelineStage[] {
             errorCount,
             warningCount,
             issues: jobIssues,
+            logId: job.log?.id ?? null,
           }
         })
 
@@ -464,6 +466,33 @@ export function registerDevOpsHandlers(ipcMain: IpcMain): void {
         return { success: true }
       } catch (err) {
         return { success: false, error: String(err) }
+      }
+    },
+  )
+
+  // Get build log content
+  ipcMain.handle(
+    IPC_CHANNELS.DEVOPS_GET_BUILD_LOG,
+    async (_event, { connection, buildId, logId }: { connection: DevOpsConnection; buildId: number; logId: number }) => {
+      try {
+        const url = `${connection.organizationUrl}/${encodeURIComponent(connection.projectName)}/_apis/build/builds/${buildId}/logs/${logId}?api-version=7.1`
+        const authHeader = await getAuthHeader(connection.auth)
+        const response = await fetch(url, {
+          headers: {
+            Authorization: authHeader,
+            Accept: 'text/plain',
+          },
+        })
+
+        if (!response.ok) {
+          const errorText = await response.text()
+          throw new Error(`Azure DevOps API error: ${response.status} - ${errorText}`)
+        }
+
+        const content = await response.text()
+        return { success: true, content }
+      } catch (err) {
+        return { success: false, content: '', error: String(err) }
       }
     },
   )

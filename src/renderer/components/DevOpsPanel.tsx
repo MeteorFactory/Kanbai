@@ -415,12 +415,27 @@ function PipelineCard({
 function InlineStageDetail({
   stages,
   loading,
+  buildId,
+  activeConnection,
 }: {
   stages: PipelineStage[]
   loading: boolean
+  buildId: number | null
+  activeConnection: DevOpsConnection | null
 }) {
   const { t } = useI18n()
+  const { jobLogs, jobLogsLoading, loadJobLog } = useDevOpsStore()
   const [expandedStageId, setExpandedStageId] = useState<string | null>(null)
+  const [expandedJobId, setExpandedJobId] = useState<string | null>(null)
+
+  // Auto-expand the first failed stage
+  useEffect(() => {
+    if (stages.length === 0) return
+    const failedStage = stages.find((s) => s.status === 'failed')
+    if (failedStage) {
+      setExpandedStageId(failedStage.id)
+    }
+  }, [stages])
 
   if (loading) {
     return <div className="devops-stages-loading">{t('devops.loadingStages')}</div>
@@ -430,8 +445,47 @@ function InlineStageDetail({
     return <div className="devops-stages-empty">{t('devops.noStages')}</div>
   }
 
+  // Collect all errors across stages for a summary
+  const allErrors = stages.flatMap((stage) =>
+    stage.jobs.flatMap((job) =>
+      job.issues
+        .filter((i) => i.type === 'error')
+        .map((i) => ({ stageName: stage.name, jobName: job.name, message: i.message }))
+    )
+  )
+
+  const handleViewLogs = (jobId: string, logId: number | null) => {
+    if (!activeConnection || !buildId || !logId) return
+    if (expandedJobId === jobId) {
+      setExpandedJobId(null)
+    } else {
+      setExpandedJobId(jobId)
+      loadJobLog(activeConnection, buildId, jobId, logId)
+    }
+  }
+
   return (
     <div className="devops-stages-list">
+      {/* Error summary for failed runs */}
+      {allErrors.length > 0 && (
+        <div className="devops-error-summary">
+          <div className="devops-error-summary-header">
+            <span className="devops-error-summary-icon">{'\u274C'}</span>
+            <span className="devops-error-summary-title">
+              {allErrors.length} {allErrors.length === 1 ? 'error' : 'errors'}
+            </span>
+          </div>
+          <div className="devops-error-summary-list">
+            {allErrors.map((err, idx) => (
+              <div key={idx} className="devops-error-summary-item">
+                <span className="devops-error-summary-location">{err.stageName} / {err.jobName}</span>
+                <span className="devops-error-summary-message">{err.message}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {stages.map((stage) => {
         const isExpanded = expandedStageId === stage.id
         const hasIssues = stage.errorCount > 0 || stage.warningCount > 0
@@ -439,7 +493,7 @@ function InlineStageDetail({
         return (
           <div key={stage.id} className="devops-stage-item">
             <div
-              className={`devops-stage-row${isExpanded ? ' devops-stage-row--expanded' : ''}`}
+              className={`devops-stage-row${isExpanded ? ' devops-stage-row--expanded' : ''}${stage.status === 'failed' ? ' devops-stage-row--failed' : ''}`}
               onClick={() => setExpandedStageId(isExpanded ? null : stage.id)}
             >
               <span className={`devops-stage-expand-icon${isExpanded ? ' devops-stage-expand-icon--open' : ''}`}>{'\u25B6'}</span>
@@ -463,38 +517,62 @@ function InlineStageDetail({
               <div className="devops-stage-expanded">
                 {stage.jobs.length > 0 && (
                   <div className="devops-jobs-list">
-                    {stage.jobs.map((job) => (
-                      <div key={job.id} className="devops-job-item">
-                        <div className="devops-job-row">
-                          <span className={`devops-status devops-status--${job.status}`}>
-                            {statusIcon(job.status)}
-                          </span>
-                          <span className="devops-job-name">{job.name}</span>
-                          {job.errorCount > 0 && (
-                            <span className="devops-badge devops-badge--error">{job.errorCount}</span>
-                          )}
-                          {job.warningCount > 0 && (
-                            <span className="devops-badge devops-badge--warning">{job.warningCount}</span>
-                          )}
-                          <span className="devops-job-duration">{formatDuration(job.startTime, job.finishTime)}</span>
-                          {job.workerName && (
-                            <span className="devops-job-worker" title={t('devops.worker')}>
-                              {job.workerName}
+                    {stage.jobs.map((job) => {
+                      const isJobExpanded = expandedJobId === job.id
+                      const logContent = jobLogs[job.id]
+                      const logLoading = jobLogsLoading[job.id]
+
+                      return (
+                        <div key={job.id} className="devops-job-item">
+                          <div className="devops-job-row">
+                            <span className={`devops-status devops-status--${job.status}`}>
+                              {statusIcon(job.status)}
                             </span>
+                            <span className="devops-job-name">{job.name}</span>
+                            {job.errorCount > 0 && (
+                              <span className="devops-badge devops-badge--error">{job.errorCount}</span>
+                            )}
+                            {job.warningCount > 0 && (
+                              <span className="devops-badge devops-badge--warning">{job.warningCount}</span>
+                            )}
+                            <span className="devops-job-duration">{formatDuration(job.startTime, job.finishTime)}</span>
+                            {job.workerName && (
+                              <span className="devops-job-worker" title={t('devops.worker')}>
+                                {job.workerName}
+                              </span>
+                            )}
+                            {job.logId && (
+                              <button
+                                className={`devops-btn devops-btn--small devops-btn--log${isJobExpanded ? ' devops-btn--log-active' : ''}`}
+                                onClick={(e) => { e.stopPropagation(); handleViewLogs(job.id, job.logId) }}
+                                title={t('devops.viewLogs')}
+                              >
+                                {'\uD83D\uDCCB'}
+                              </button>
+                            )}
+                          </div>
+                          {job.issues.length > 0 && (
+                            <div className="devops-job-issues">
+                              {job.issues.map((issue, idx) => (
+                                <div key={idx} className={`devops-issue devops-issue--${issue.type}`}>
+                                  <span className="devops-issue-icon">{issue.type === 'error' ? '\u274C' : '\u26A0\uFE0F'}</span>
+                                  <span className="devops-issue-message">{issue.message}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          {isJobExpanded && (
+                            <div className="devops-job-log">
+                              {logLoading ? (
+                                <div className="devops-job-log-loading">{t('devops.loadingLogs')}</div>
+                              ) : (
+                                <pre className="devops-job-log-content">{logContent ?? ''}</pre>
+                              )}
+                            </div>
                           )}
                         </div>
-                        {job.issues.length > 0 && (
-                          <div className="devops-job-issues">
-                            {job.issues.map((issue, idx) => (
-                              <div key={idx} className={`devops-issue devops-issue--${issue.type}`}>
-                                <span className="devops-issue-icon">{issue.type === 'error' ? '\u274C' : '\u26A0\uFE0F'}</span>
-                                <span className="devops-issue-message">{issue.message}</span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 )}
               </div>
@@ -648,7 +726,12 @@ function PipelineRunsDetail({
                   {/* Stages */}
                   <div className="devops-stages-section">
                     <h5>{t('devops.stages')}</h5>
-                    <InlineStageDetail stages={runStages} loading={stagesLoading} />
+                    <InlineStageDetail
+                      stages={runStages}
+                      loading={stagesLoading}
+                      buildId={run.id}
+                      activeConnection={activeConnection}
+                    />
                   </div>
 
                   {/* Approvals — detailed view when expanded */}

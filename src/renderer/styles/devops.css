@@ -1140,3 +1140,106 @@
 .devops-field-input::placeholder {
   color: var(--text-tertiary, #555);
 }
+
+/* Error summary */
+.devops-error-summary {
+  background: rgba(244, 67, 54, 0.08);
+  border: 1px solid rgba(244, 67, 54, 0.25);
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+}
+
+.devops-error-summary-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  font-weight: 600;
+  font-size: 12px;
+  color: #ef9a9a;
+}
+
+.devops-error-summary-icon {
+  font-size: 12px;
+}
+
+.devops-error-summary-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.devops-error-summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+.devops-error-summary-location {
+  color: #999;
+  font-size: 10px;
+}
+
+.devops-error-summary-message {
+  color: #ef9a9a;
+  font-family: monospace;
+  word-break: break-word;
+}
+
+/* Failed stage highlight */
+.devops-stage-row--failed {
+  border-left: 3px solid #f44336;
+}
+
+/* Log viewer */
+.devops-job-log {
+  margin: 4px 12px 8px 24px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.devops-job-log-loading {
+  padding: 12px;
+  font-size: 12px;
+  color: #888;
+  text-align: center;
+}
+
+.devops-job-log-content {
+  margin: 0;
+  padding: 12px;
+  font-size: 11px;
+  font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+  line-height: 1.5;
+  overflow-x: auto;
+  max-height: 400px;
+  overflow-y: auto;
+  color: #ccc;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Log button */
+.devops-btn--log {
+  font-size: 12px;
+  padding: 1px 4px;
+  background: transparent;
+  opacity: 0.6;
+}
+
+.devops-btn--log:hover:not(:disabled) {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.devops-btn--log-active {
+  opacity: 1;
+  background: rgba(79, 195, 247, 0.15);
+}

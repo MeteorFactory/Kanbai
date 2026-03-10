@@ -50,6 +50,8 @@ interface DevOpsState {
   approving: string | null
   allRunApprovals: PipelineApproval[]
   allApprovalsLoading: boolean
+  jobLogs: Record<string, string>
+  jobLogsLoading: Record<string, boolean>
 
   loadData: (projectPath: string) => Promise<void>
   saveData: (projectPath: string) => Promise<void>
@@ -71,6 +73,7 @@ interface DevOpsState {
   approveRun: (connection: DevOpsConnection, approvalId: string, status: 'approved' | 'rejected', comment?: string) => Promise<{ success: boolean; error?: string }>
   reorderPipelines: (projectPath: string, fromIndex: number, toIndex: number) => Promise<void>
   loadApprovalsForRuns: (connection: DevOpsConnection, buildIds: number[]) => Promise<void>
+  loadJobLog: (connection: DevOpsConnection, buildId: number, jobId: string, logId: number) => Promise<void>
 }
 
 function generateId(): string {
@@ -152,6 +155,8 @@ export const useDevOpsStore = create<DevOpsState>((set, get) => ({
   approving: null,
   allRunApprovals: [],
   allApprovalsLoading: false,
+  jobLogs: {},
+  jobLogsLoading: {},
 
   loadData: async (projectPath) => {
     set({ loading: true })
@@ -318,7 +323,7 @@ export const useDevOpsStore = create<DevOpsState>((set, get) => ({
   },
 
   collapseRun: () => {
-    set({ expandedRunId: null, runStages: [], runApprovals: [] })
+    set({ expandedRunId: null, runStages: [], runApprovals: [], jobLogs: {}, jobLogsLoading: {} })
   },
 
   approveRun: async (connection, approvalId, status, comment) => {
@@ -366,6 +371,17 @@ export const useDevOpsStore = create<DevOpsState>((set, get) => ({
     set({
       allRunApprovals: result.success ? result.approvals : [],
       allApprovalsLoading: false,
+    })
+  },
+
+  loadJobLog: async (connection, buildId, jobId, logId) => {
+    const { jobLogs, jobLogsLoading } = get()
+    if (jobLogs[jobId] || jobLogsLoading[jobId]) return
+    set({ jobLogsLoading: { ...get().jobLogsLoading, [jobId]: true } })
+    const result = await window.kanbai.devops.getBuildLog(connection, buildId, logId)
+    set({
+      jobLogs: { ...get().jobLogs, [jobId]: result.success ? result.content : `Error: ${result.error}` },
+      jobLogsLoading: { ...get().jobLogsLoading, [jobId]: false },
     })
   },
 }))

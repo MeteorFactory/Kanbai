@@ -1821,6 +1821,8 @@ export const en = {
   'devops.approve': 'Approve',
   'devops.reject': 'Reject',
   'devops.approvalComment': 'Comment (optional)',
+  'devops.viewLogs': 'View logs',
+  'devops.loadingLogs': 'Loading logs...',
 
   // Namespace
   'namespace.create': 'New namespace',

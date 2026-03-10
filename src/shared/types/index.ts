@@ -957,6 +957,7 @@ export interface PipelineJob {
   errorCount: number
   warningCount: number
   issues: TimelineIssue[]
+  logId: number | null
 }
 
 export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'canceled' | 'skipped' | 'undefined'
@@ -1400,4 +1401,5 @@ export const IPC_CHANNELS = {
   DEVOPS_GET_BUILD_TIMELINE: 'devops:getBuildTimeline',
   DEVOPS_GET_APPROVALS: 'devops:getApprovals',
   DEVOPS_APPROVE: 'devops:approve',
+  DEVOPS_GET_BUILD_LOG: 'devops:getBuildLog',
 } as const

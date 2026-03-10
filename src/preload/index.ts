@@ -818,6 +818,8 @@ const api = {
       ipcRenderer.invoke(IPC_CHANNELS.DEVOPS_GET_APPROVALS, { connection, buildIds }),
     approve: (connection: DevOpsConnection, approvalId: string, status: 'approved' | 'rejected', comment?: string): Promise<{ success: boolean; error?: string }> =>
       ipcRenderer.invoke(IPC_CHANNELS.DEVOPS_APPROVE, { connection, approvalId, status, comment }),
+    getBuildLog: (connection: DevOpsConnection, buildId: number, logId: number): Promise<{ success: boolean; content: string; error?: string }> =>
+      ipcRenderer.invoke(IPC_CHANNELS.DEVOPS_GET_BUILD_LOG, { connection, buildId, logId }),
   },
 
   // Notifications
