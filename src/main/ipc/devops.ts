@@ -10,6 +10,7 @@ import {
   PipelineRun,
   PipelineStage,
   PipelineJob,
+  PipelineTask,
   PipelineStatus,
   PipelineApproval,
   ApprovalStatus,
@@ -216,13 +217,28 @@ function collectJobIssues(
   jobId: string,
   records: AzureTimelineRecord[],
 ): { type: 'error' | 'warning'; message: string }[] {
-  // Tasks are children of Jobs in the timeline hierarchy
-  const tasks = records.filter((r) => r.parentId === jobId && r.type === 'Task')
+  // Collect issues from ALL child records (Tasks, Checkpoints, etc.)
+  const children = records.filter((r) => r.parentId === jobId)
   const issues: { type: 'error' | 'warning'; message: string }[] = []
-  for (const task of tasks) {
-    issues.push(...mapIssues(task.issues))
+  for (const child of children) {
+    issues.push(...mapIssues(child.issues))
   }
   return issues
+}
+
+function findJobLogId(
+  jobId: string,
+  jobLog: { id: number; url: string } | null,
+  records: AzureTimelineRecord[],
+): number | null {
+  // Use the job-level log if available
+  if (jobLog?.id) return jobLog.id
+  // Fallback: find the highest logId from child task records
+  const children = records.filter((r) => r.parentId === jobId && r.log?.id)
+  if (children.length === 0) return null
+  // Return the last task's logId (typically the most comprehensive)
+  const sorted = children.sort((a, b) => a.order - b.order)
+  return sorted[sorted.length - 1]!.log!.id
 }
 
 function mapTimelineToStages(records: AzureTimelineRecord[]): PipelineStage[] {
@@ -243,6 +259,27 @@ function mapTimelineToStages(records: AzureTimelineRecord[]): PipelineStage[] {
           const errorCount = jobIssues.filter((i) => i.type === 'error').length
           const warningCount = jobIssues.filter((i) => i.type === 'warning').length
 
+          // Build task list for this job
+          const jobTasks: PipelineTask[] = records
+            .filter((r) => r.parentId === job.id && r.type === 'Task')
+            .sort((a, b) => a.order - b.order)
+            .map((task): PipelineTask => {
+              const taskIssues = mapIssues(task.issues)
+              return {
+                id: task.id,
+                name: task.name,
+                status: mapTimelineStatus(task.state, task.result),
+                startTime: task.startTime ?? null,
+                finishTime: task.finishTime ?? null,
+                result: task.result || '',
+                order: task.order,
+                errorCount: taskIssues.filter((i) => i.type === 'error').length,
+                warningCount: taskIssues.filter((i) => i.type === 'warning').length,
+                issues: taskIssues,
+                logId: task.log?.id ?? null,
+              }
+            })
+
           return {
             id: job.id,
             name: job.name,
@@ -254,7 +291,8 @@ function mapTimelineToStages(records: AzureTimelineRecord[]): PipelineStage[] {
             errorCount,
             warningCount,
             issues: jobIssues,
-            logId: job.log?.id ?? null,
+            logId: findJobLogId(job.id, job.log, records),
+            tasks: jobTasks,
           }
         })
 

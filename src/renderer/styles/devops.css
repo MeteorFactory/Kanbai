@@ -670,7 +670,84 @@
   white-space: nowrap;
 }
 
-/* Issues (errors/warnings within jobs) */
+/* Jobs -- expandable */
+.devops-job-row--expandable {
+  cursor: pointer;
+}
+
+.devops-job-row--expandable:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.devops-job-item--failed {
+  border-left: 2px solid rgba(244, 67, 54, 0.4);
+}
+
+.devops-job-expand-icon {
+  font-size: 8px;
+  color: var(--text-tertiary, #666);
+  transition: transform 0.15s;
+  flex-shrink: 0;
+}
+
+.devops-job-expand-icon--open {
+  transform: rotate(90deg);
+}
+
+/* Tasks (sub-steps within jobs) */
+.devops-tasks-list {
+  display: flex;
+  flex-direction: column;
+  padding-left: 16px;
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  margin-left: 36px;
+}
+
+.devops-task-item {
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.devops-task-item:last-child {
+  border-bottom: none;
+}
+
+.devops-task-item--failed {
+  border-left: 2px solid rgba(244, 67, 54, 0.3);
+}
+
+.devops-task-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  font-size: 11px;
+}
+
+.devops-task-name {
+  color: var(--text-secondary, #bbb);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.devops-task-duration {
+  font-size: 10px;
+  color: var(--text-tertiary, #777);
+  font-family: monospace;
+  flex-shrink: 0;
+}
+
+.devops-task-issues {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 2px 8px 6px 20px;
+}
+
+/* Issues (errors/warnings within jobs/tasks) */
 .devops-job-issues {
   display: flex;
   flex-direction: column;
@@ -708,6 +785,56 @@
   word-break: break-word;
   font-family: monospace;
   font-size: 11px;
+  flex: 1;
+}
+
+/* Error actions (copy + create ticket) */
+.devops-error-actions {
+  display: inline-flex;
+  gap: 2px;
+  flex-shrink: 0;
+  margin-left: 4px;
+}
+
+.devops-btn--icon {
+  padding: 1px 4px;
+  font-size: 11px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  opacity: 0.4;
+  border-radius: 3px;
+  transition: opacity 0.15s, background 0.15s;
+}
+
+.devops-btn--icon:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Error summary actions */
+.devops-error-summary-actions {
+  display: inline-flex;
+  gap: 2px;
+  margin-left: auto;
+}
+
+.devops-error-summary-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+.devops-error-summary-item-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
 }
 
 /* Inline buttons */
@@ -1170,16 +1297,6 @@
   gap: 4px;
 }
 
-.devops-error-summary-item {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  padding: 4px 8px;
-  background: rgba(0, 0, 0, 0.15);
-  border-radius: 4px;
-  font-size: 11px;
-}
-
 .devops-error-summary-location {
   color: #999;
   font-size: 10px;
@@ -1224,6 +1341,19 @@
   color: #ccc;
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+.devops-job-log-error {
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #e06c75;
+}
+
+.devops-job-log-error span {
+  flex: 1;
 }
 
 /* Log button */

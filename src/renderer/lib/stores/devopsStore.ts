@@ -52,6 +52,7 @@ interface DevOpsState {
   allApprovalsLoading: boolean
   jobLogs: Record<string, string>
   jobLogsLoading: Record<string, boolean>
+  jobLogsError: Record<string, boolean>
 
   loadData: (projectPath: string) => Promise<void>
   saveData: (projectPath: string) => Promise<void>
@@ -157,6 +158,7 @@ export const useDevOpsStore = create<DevOpsState>((set, get) => ({
   allApprovalsLoading: false,
   jobLogs: {},
   jobLogsLoading: {},
+  jobLogsError: {},
 
   loadData: async (projectPath) => {
     set({ loading: true })
@@ -323,7 +325,7 @@ export const useDevOpsStore = create<DevOpsState>((set, get) => ({
   },
 
   collapseRun: () => {
-    set({ expandedRunId: null, runStages: [], runApprovals: [], jobLogs: {}, jobLogsLoading: {} })
+    set({ expandedRunId: null, runStages: [], runApprovals: [], jobLogs: {}, jobLogsLoading: {}, jobLogsError: {} })
   },
 
   approveRun: async (connection, approvalId, status, comment) => {
@@ -375,14 +377,27 @@ export const useDevOpsStore = create<DevOpsState>((set, get) => ({
   },
 
   loadJobLog: async (connection, buildId, jobId, logId) => {
-    const { jobLogs, jobLogsLoading } = get()
-    if (jobLogs[jobId] || jobLogsLoading[jobId]) return
-    set({ jobLogsLoading: { ...get().jobLogsLoading, [jobId]: true } })
-    const result = await window.kanbai.devops.getBuildLog(connection, buildId, logId)
+    const { jobLogs, jobLogsLoading, jobLogsError } = get()
+    // Skip if already loaded successfully or currently loading
+    if ((jobLogs[jobId] && !jobLogsError[jobId]) || jobLogsLoading[jobId]) return
     set({
-      jobLogs: { ...get().jobLogs, [jobId]: result.success ? result.content : `Error: ${result.error}` },
-      jobLogsLoading: { ...get().jobLogsLoading, [jobId]: false },
+      jobLogsLoading: { ...get().jobLogsLoading, [jobId]: true },
+      jobLogsError: { ...get().jobLogsError, [jobId]: false },
     })
+    const result = await window.kanbai.devops.getBuildLog(connection, buildId, logId)
+    if (result.success) {
+      set({
+        jobLogs: { ...get().jobLogs, [jobId]: result.content },
+        jobLogsLoading: { ...get().jobLogsLoading, [jobId]: false },
+        jobLogsError: { ...get().jobLogsError, [jobId]: false },
+      })
+    } else {
+      set({
+        jobLogs: { ...get().jobLogs, [jobId]: `Error: ${result.error}` },
+        jobLogsLoading: { ...get().jobLogsLoading, [jobId]: false },
+        jobLogsError: { ...get().jobLogsError, [jobId]: true },
+      })
+    }
   },
 }))
 

@@ -946,6 +946,20 @@ export interface PipelineStage {
   jobs: PipelineJob[]
 }
 
+export interface PipelineTask {
+  id: string
+  name: string
+  status: PipelineStatus
+  startTime: string | null
+  finishTime: string | null
+  result: string
+  order: number
+  errorCount: number
+  warningCount: number
+  issues: TimelineIssue[]
+  logId: number | null
+}
+
 export interface PipelineJob {
   id: string
   name: string
@@ -958,6 +972,7 @@ export interface PipelineJob {
   warningCount: number
   issues: TimelineIssue[]
   logId: number | null
+  tasks: PipelineTask[]
 }
 
 export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'canceled' | 'skipped' | 'undefined'

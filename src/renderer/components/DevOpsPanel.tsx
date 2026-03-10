@@ -2,6 +2,7 @@ import { useEffect, useCallback, useState, useMemo } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { useDevOpsStore, selectGlobalPipelineStatus } from '../lib/stores/devopsStore'
 import { useWorkspaceStore } from '../lib/stores/workspaceStore'
+import { pushNotification } from '../lib/stores/notificationStore'
 import { useI18n } from '../lib/i18n'
 import type {
   DevOpsConnection,
@@ -10,6 +11,7 @@ import type {
   PipelineDefinition,
   PipelineRun,
   PipelineStage,
+  PipelineTask,
   PipelineStatus,
   StageStatus,
   PipelineApproval,
@@ -410,6 +412,158 @@ function PipelineCard({
   )
 }
 
+// --- Error action buttons (copy + create ticket) ---
+
+function ErrorActions({
+  message,
+  location,
+  pipelineName,
+  onCreateTicket,
+}: {
+  message: string
+  location: string
+  pipelineName?: string
+  onCreateTicket: (title: string, description: string) => void
+}) {
+  const { t } = useI18n()
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = useCallback(() => {
+    navigator.clipboard.writeText(message).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }, [message])
+
+  const handleCreateTicket = useCallback(() => {
+    const title = `[Pipeline${pipelineName ? ` ${pipelineName}` : ''}] ${location}`
+    const description = `**Source:** ${location}\n\n**Error:**\n\`\`\`\n${message}\n\`\`\``
+    onCreateTicket(title, description)
+  }, [message, location, pipelineName, onCreateTicket])
+
+  return (
+    <span className="devops-error-actions">
+      <button
+        className="devops-btn devops-btn--icon"
+        onClick={(e) => { e.stopPropagation(); handleCopy() }}
+        title={t('devops.copyError')}
+      >
+        {copied ? '\u2705' : '\uD83D\uDCCB'}
+      </button>
+      <button
+        className="devops-btn devops-btn--icon"
+        onClick={(e) => { e.stopPropagation(); handleCreateTicket() }}
+        title={t('devops.createTicket')}
+      >
+        {'\uD83C\uDFAB'}
+      </button>
+    </span>
+  )
+}
+
+// --- Task row (within a job) ---
+
+function TaskRow({
+  task,
+  buildId,
+  activeConnection,
+  pipelineName,
+  stageName,
+  jobName,
+  onCreateTicket,
+}: {
+  task: PipelineTask
+  buildId: number | null
+  activeConnection: DevOpsConnection | null
+  pipelineName?: string
+  stageName: string
+  jobName: string
+  onCreateTicket: (title: string, description: string) => void
+}) {
+  const { t } = useI18n()
+  const { jobLogs, jobLogsLoading, jobLogsError, loadJobLog } = useDevOpsStore()
+  const [showLog, setShowLog] = useState(false)
+
+  const logContent = jobLogs[task.id]
+  const logLoading = jobLogsLoading[task.id]
+
+  const handleViewLogs = () => {
+    if (!activeConnection || !buildId || !task.logId) return
+    if (showLog) {
+      setShowLog(false)
+    } else {
+      setShowLog(true)
+      loadJobLog(activeConnection, buildId, task.id, task.logId)
+    }
+  }
+
+  const location = `${stageName} / ${jobName} / ${task.name}`
+
+  return (
+    <div className={`devops-task-item${task.status === 'failed' ? ' devops-task-item--failed' : ''}`}>
+      <div className="devops-task-row">
+        <span className={`devops-status devops-status--${task.status}`}>
+          {statusIcon(task.status)}
+        </span>
+        <span className="devops-task-name">{task.name}</span>
+        {task.errorCount > 0 && (
+          <span className="devops-badge devops-badge--error">{task.errorCount}</span>
+        )}
+        {task.warningCount > 0 && (
+          <span className="devops-badge devops-badge--warning">{task.warningCount}</span>
+        )}
+        <span className="devops-task-duration">{formatDuration(task.startTime, task.finishTime)}</span>
+        {task.logId && (
+          <button
+            className={`devops-btn devops-btn--small devops-btn--log${showLog ? ' devops-btn--log-active' : ''}`}
+            onClick={(e) => { e.stopPropagation(); handleViewLogs() }}
+            title={t('devops.viewLogs')}
+          >
+            {'\uD83D\uDCCB'}
+          </button>
+        )}
+      </div>
+      {task.issues.length > 0 && (
+        <div className="devops-task-issues">
+          {task.issues.map((issue, idx) => (
+            <div key={idx} className={`devops-issue devops-issue--${issue.type}`}>
+              <span className="devops-issue-icon">{issue.type === 'error' ? '\u274C' : '\u26A0\uFE0F'}</span>
+              <span className="devops-issue-message">{issue.message}</span>
+              {issue.type === 'error' && (
+                <ErrorActions
+                  message={issue.message}
+                  location={location}
+                  pipelineName={pipelineName}
+                  onCreateTicket={onCreateTicket}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+      {showLog && (
+        <div className="devops-job-log">
+          {logLoading ? (
+            <div className="devops-job-log-loading">{t('devops.loadingLogs')}</div>
+          ) : jobLogsError[task.id] ? (
+            <div className="devops-job-log-error">
+              <span>{logContent}</span>
+              <button
+                className="devops-btn devops-btn--small"
+                onClick={() => { if (activeConnection && buildId && task.logId) loadJobLog(activeConnection, buildId, task.id, task.logId) }}
+              >
+                {t('devops.retry')}
+              </button>
+            </div>
+          ) : (
+            <pre className="devops-job-log-content">{logContent ?? ''}</pre>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // --- Inline Stage Detail (expandable within run) ---
 
 function InlineStageDetail({
@@ -417,25 +571,54 @@ function InlineStageDetail({
   loading,
   buildId,
   activeConnection,
+  pipelineName,
+  onCreateTicket,
 }: {
   stages: PipelineStage[]
   loading: boolean
   buildId: number | null
   activeConnection: DevOpsConnection | null
+  pipelineName?: string
+  onCreateTicket: (title: string, description: string) => void
 }) {
   const { t } = useI18n()
-  const { jobLogs, jobLogsLoading, loadJobLog } = useDevOpsStore()
+  const { jobLogs, jobLogsLoading, jobLogsError, loadJobLog } = useDevOpsStore()
   const [expandedStageId, setExpandedStageId] = useState<string | null>(null)
-  const [expandedJobId, setExpandedJobId] = useState<string | null>(null)
+  const [expandedJobIds, setExpandedJobIds] = useState<Set<string>>(new Set())
 
-  // Auto-expand the first failed stage
+  const toggleJob = useCallback((jobId: string) => {
+    setExpandedJobIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(jobId)) {
+        next.delete(jobId)
+      } else {
+        next.add(jobId)
+      }
+      return next
+    })
+  }, [])
+
+  // Auto-expand the first failed stage and its failed jobs
   useEffect(() => {
     if (stages.length === 0) return
     const failedStage = stages.find((s) => s.status === 'failed')
     if (failedStage) {
       setExpandedStageId(failedStage.id)
+      // Auto-expand failed jobs and load their logs
+      const failedJobIds = new Set<string>()
+      for (const job of failedStage.jobs) {
+        if (job.status === 'failed') {
+          failedJobIds.add(job.id)
+          if (activeConnection && buildId && job.logId) {
+            loadJobLog(activeConnection, buildId, job.id, job.logId)
+          }
+        }
+      }
+      if (failedJobIds.size > 0) {
+        setExpandedJobIds(failedJobIds)
+      }
     }
-  }, [stages])
+  }, [stages, activeConnection, buildId, loadJobLog])
 
   if (loading) {
     return <div className="devops-stages-loading">{t('devops.loadingStages')}</div>
@@ -454,14 +637,22 @@ function InlineStageDetail({
     )
   )
 
-  const handleViewLogs = (jobId: string, logId: number | null) => {
+  const handleViewJobLogs = (jobId: string, logId: number | null) => {
     if (!activeConnection || !buildId || !logId) return
-    if (expandedJobId === jobId) {
-      setExpandedJobId(null)
-    } else {
-      setExpandedJobId(jobId)
-      loadJobLog(activeConnection, buildId, jobId, logId)
-    }
+    toggleJob(jobId)
+    loadJobLog(activeConnection, buildId, jobId, logId)
+  }
+
+  const handleCopyAllErrors = () => {
+    const text = allErrors.map((e) => `[${e.stageName} / ${e.jobName}] ${e.message}`).join('\n')
+    navigator.clipboard.writeText(text)
+  }
+
+  const handleCreateTicketFromAllErrors = () => {
+    const errorsText = allErrors.map((e) => `- **${e.stageName} / ${e.jobName}:** ${e.message}`).join('\n')
+    const title = `[Pipeline${pipelineName ? ` ${pipelineName}` : ''}] ${allErrors.length} error${allErrors.length > 1 ? 's' : ''}`
+    const description = `**Pipeline:** ${pipelineName ?? 'Unknown'}\n**Errors:**\n${errorsText}`
+    onCreateTicket(title, description)
   }
 
   return (
@@ -474,12 +665,36 @@ function InlineStageDetail({
             <span className="devops-error-summary-title">
               {allErrors.length} {allErrors.length === 1 ? 'error' : 'errors'}
             </span>
+            <span className="devops-error-summary-actions">
+              <button
+                className="devops-btn devops-btn--icon"
+                onClick={handleCopyAllErrors}
+                title={t('devops.copyAllErrors')}
+              >
+                {'\uD83D\uDCCB'}
+              </button>
+              <button
+                className="devops-btn devops-btn--icon"
+                onClick={handleCreateTicketFromAllErrors}
+                title={t('devops.createTicketFromErrors')}
+              >
+                {'\uD83C\uDFAB'}
+              </button>
+            </span>
           </div>
           <div className="devops-error-summary-list">
             {allErrors.map((err, idx) => (
               <div key={idx} className="devops-error-summary-item">
-                <span className="devops-error-summary-location">{err.stageName} / {err.jobName}</span>
-                <span className="devops-error-summary-message">{err.message}</span>
+                <div className="devops-error-summary-item-content">
+                  <span className="devops-error-summary-location">{err.stageName} / {err.jobName}</span>
+                  <span className="devops-error-summary-message">{err.message}</span>
+                </div>
+                <ErrorActions
+                  message={err.message}
+                  location={`${err.stageName} / ${err.jobName}`}
+                  pipelineName={pipelineName}
+                  onCreateTicket={onCreateTicket}
+                />
               </div>
             ))}
           </div>
@@ -518,13 +733,22 @@ function InlineStageDetail({
                 {stage.jobs.length > 0 && (
                   <div className="devops-jobs-list">
                     {stage.jobs.map((job) => {
-                      const isJobExpanded = expandedJobId === job.id
+                      const isJobExpanded = expandedJobIds.has(job.id)
                       const logContent = jobLogs[job.id]
                       const logLoading = jobLogsLoading[job.id]
+                      const hasAutoLoadedLog = job.status === 'failed' && job.logId && jobLogs[job.id] && !jobLogsError[job.id]
+                      const showJobLog = isJobExpanded || hasAutoLoadedLog
+                      const hasTasks = job.tasks.length > 0
 
                       return (
-                        <div key={job.id} className="devops-job-item">
-                          <div className="devops-job-row">
+                        <div key={job.id} className={`devops-job-item${job.status === 'failed' ? ' devops-job-item--failed' : ''}`}>
+                          <div
+                            className={`devops-job-row${hasTasks ? ' devops-job-row--expandable' : ''}`}
+                            onClick={() => { if (hasTasks) toggleJob(job.id) }}
+                          >
+                            {hasTasks && (
+                              <span className={`devops-job-expand-icon${isJobExpanded ? ' devops-job-expand-icon--open' : ''}`}>{'\u25B6'}</span>
+                            )}
                             <span className={`devops-status devops-status--${job.status}`}>
                               {statusIcon(job.status)}
                             </span>
@@ -543,28 +767,68 @@ function InlineStageDetail({
                             )}
                             {job.logId && (
                               <button
-                                className={`devops-btn devops-btn--small devops-btn--log${isJobExpanded ? ' devops-btn--log-active' : ''}`}
-                                onClick={(e) => { e.stopPropagation(); handleViewLogs(job.id, job.logId) }}
+                                className={`devops-btn devops-btn--small devops-btn--log${showJobLog ? ' devops-btn--log-active' : ''}`}
+                                onClick={(e) => { e.stopPropagation(); handleViewJobLogs(job.id, job.logId) }}
                                 title={t('devops.viewLogs')}
                               >
                                 {'\uD83D\uDCCB'}
                               </button>
                             )}
                           </div>
-                          {job.issues.length > 0 && (
+
+                          {/* Job-level issues (bubbled up from tasks) */}
+                          {job.issues.length > 0 && !isJobExpanded && (
                             <div className="devops-job-issues">
                               {job.issues.map((issue, idx) => (
                                 <div key={idx} className={`devops-issue devops-issue--${issue.type}`}>
                                   <span className="devops-issue-icon">{issue.type === 'error' ? '\u274C' : '\u26A0\uFE0F'}</span>
                                   <span className="devops-issue-message">{issue.message}</span>
+                                  {issue.type === 'error' && (
+                                    <ErrorActions
+                                      message={issue.message}
+                                      location={`${stage.name} / ${job.name}`}
+                                      pipelineName={pipelineName}
+                                      onCreateTicket={onCreateTicket}
+                                    />
+                                  )}
                                 </div>
                               ))}
                             </div>
                           )}
-                          {isJobExpanded && (
+
+                          {/* Expanded: show tasks hierarchy */}
+                          {isJobExpanded && hasTasks && (
+                            <div className="devops-tasks-list">
+                              {job.tasks.map((task) => (
+                                <TaskRow
+                                  key={task.id}
+                                  task={task}
+                                  buildId={buildId}
+                                  activeConnection={activeConnection}
+                                  pipelineName={pipelineName}
+                                  stageName={stage.name}
+                                  jobName={job.name}
+                                  onCreateTicket={onCreateTicket}
+                                />
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Job-level log viewer */}
+                          {showJobLog && (
                             <div className="devops-job-log">
                               {logLoading ? (
                                 <div className="devops-job-log-loading">{t('devops.loadingLogs')}</div>
+                              ) : jobLogsError[job.id] ? (
+                                <div className="devops-job-log-error">
+                                  <span>{logContent}</span>
+                                  <button
+                                    className="devops-btn devops-btn--small"
+                                    onClick={() => { if (activeConnection && buildId && job.logId) loadJobLog(activeConnection, buildId, job.id, job.logId) }}
+                                  >
+                                    {t('devops.retry')}
+                                  </button>
+                                </div>
                               ) : (
                                 <pre className="devops-job-log-content">{logContent ?? ''}</pre>
                               )}
@@ -591,11 +855,13 @@ function PipelineRunsDetail({
   loading,
   pipelineName,
   activeConnection,
+  onCreateTicket,
 }: {
   runs: PipelineRun[]
   loading: boolean
   pipelineName: string
   activeConnection: DevOpsConnection | null
+  onCreateTicket: (title: string, description: string) => void
 }) {
   const { t } = useI18n()
   const {
@@ -731,6 +997,8 @@ function PipelineRunsDetail({
                       loading={stagesLoading}
                       buildId={run.id}
                       activeConnection={activeConnection}
+                      pipelineName={pipelineName}
+                      onCreateTicket={onCreateTicket}
                     />
                   </div>
 
@@ -970,6 +1238,19 @@ export function DevOpsPanel() {
     setDropTarget(null)
   }, [])
 
+  const handleCreateTicket = useCallback(async (title: string, description: string) => {
+    if (!activeWorkspaceId) return
+    await window.kanbai.kanban.create({
+      workspaceId: activeWorkspaceId,
+      title,
+      description,
+      priority: 'high',
+      type: 'bug',
+      status: 'TODO',
+    })
+    pushNotification('success', t('devops.ticketCreated'), title)
+  }, [activeWorkspaceId, t])
+
   if (!activeWorkspace) {
     return (
       <div className="devops-panel">
@@ -1089,6 +1370,7 @@ export function DevOpsPanel() {
                 loading={runsLoading}
                 pipelineName={selectedPipeline.name}
                 activeConnection={activeConnection}
+                onCreateTicket={handleCreateTicket}
               />
             ) : (
               <div className="devops-empty">{t('devops.selectPipeline')}</div>
