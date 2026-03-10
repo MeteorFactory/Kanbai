@@ -873,6 +873,63 @@ export interface SshKeyInfo {
   isDefault: boolean
 }
 
+// --- DevOps types ---
+
+export type DevOpsAuthMethod = 'pat' | 'oauth2'
+
+export interface DevOpsAuthPat {
+  method: 'pat'
+  token: string
+}
+
+export interface DevOpsAuthOAuth2 {
+  method: 'oauth2'
+  clientId: string
+  clientSecret: string
+  tenantId: string
+}
+
+export type DevOpsAuth = DevOpsAuthPat | DevOpsAuthOAuth2
+
+export interface DevOpsConnection {
+  id: string
+  name: string
+  organizationUrl: string
+  projectName: string
+  auth: DevOpsAuth
+  createdAt: number
+  updatedAt: number
+}
+
+export type PipelineStatus = 'succeeded' | 'failed' | 'canceled' | 'running' | 'notStarted' | 'unknown'
+
+export interface PipelineRun {
+  id: number
+  name: string
+  status: PipelineStatus
+  result: string
+  startTime: string | null
+  finishTime: string | null
+  url: string
+  sourceBranch: string
+  sourceVersion: string
+  requestedBy: string
+}
+
+export interface PipelineDefinition {
+  id: number
+  name: string
+  folder: string
+  revision: number
+  url: string
+  latestRun: PipelineRun | null
+}
+
+export interface DevOpsFile {
+  version: 1
+  connections: DevOpsConnection[]
+}
+
 // IPC Channel types
 export const IPC_CHANNELS = {
   // Terminal
@@ -1275,4 +1332,12 @@ export const IPC_CHANNELS = {
   PIXEL_AGENTS_EVENT: 'pixel-agents:event',
   PIXEL_AGENTS_WEBVIEW_READY: 'pixel-agents:webviewReady',
   PIXEL_AGENTS_SAVE_LAYOUT: 'pixel-agents:saveLayout',
+
+  // DevOps
+  DEVOPS_LOAD: 'devops:load',
+  DEVOPS_SAVE: 'devops:save',
+  DEVOPS_TEST_CONNECTION: 'devops:testConnection',
+  DEVOPS_LIST_PIPELINES: 'devops:listPipelines',
+  DEVOPS_GET_PIPELINE_RUNS: 'devops:getPipelineRuns',
+  DEVOPS_RUN_PIPELINE: 'devops:runPipeline',
 } as const

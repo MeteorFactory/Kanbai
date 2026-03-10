@@ -1,0 +1,375 @@
+/* DevOps Panel */
+.devops-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  padding: 16px;
+  gap: 12px;
+}
+
+.devops-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.devops-header h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary, #e0e0e0);
+}
+
+.devops-header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Sub-tabs */
+.devops-subtabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--border-color, #333);
+  padding-bottom: 0;
+  flex-shrink: 0;
+}
+
+.devops-subtab {
+  padding: 6px 14px;
+  border: none;
+  background: none;
+  color: var(--text-secondary, #aaa);
+  font-size: 13px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.devops-subtab:hover {
+  color: var(--text-primary, #e0e0e0);
+}
+
+.devops-subtab--active {
+  color: var(--accent-color, #4fc3f7);
+  border-bottom-color: var(--accent-color, #4fc3f7);
+}
+
+/* Connection bar */
+.devops-connection-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.devops-connection-select {
+  flex: 1;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color, #333);
+  background: var(--input-bg, #2a2a2a);
+  color: var(--text-primary, #e0e0e0);
+  font-size: 13px;
+}
+
+/* Content layout */
+.devops-content {
+  display: flex;
+  flex: 1;
+  gap: 16px;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.devops-pipelines-list {
+  flex: 0 0 380px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.devops-detail-panel {
+  flex: 1;
+  overflow-y: auto;
+  min-width: 0;
+}
+
+/* Pipeline Card */
+.devops-pipeline-card {
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color, #333);
+  background: var(--card-bg, #1e1e1e);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.devops-pipeline-card:hover {
+  border-color: var(--accent-color, #4fc3f7);
+  background: var(--card-bg-hover, #252525);
+}
+
+.devops-pipeline-card--selected {
+  border-color: var(--accent-color, #4fc3f7);
+  background: var(--card-bg-selected, #1a2a3a);
+}
+
+.devops-pipeline-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.devops-pipeline-card-name {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-primary, #e0e0e0);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.devops-pipeline-card-folder {
+  font-size: 11px;
+  color: var(--text-tertiary, #777);
+}
+
+.devops-pipeline-card-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--text-secondary, #aaa);
+  margin-bottom: 6px;
+}
+
+.devops-pipeline-card-branch {
+  background: var(--tag-bg, #333);
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 11px;
+}
+
+.devops-pipeline-card-actions {
+  display: flex;
+  gap: 4px;
+  justify-content: flex-end;
+}
+
+/* Status */
+.devops-status {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.devops-status--succeeded { color: #4caf50; }
+.devops-status--failed { color: #f44336; }
+.devops-status--canceled { color: #ff9800; }
+.devops-status--running { color: #2196f3; }
+.devops-status--notStarted { color: #9e9e9e; }
+.devops-status--unknown { color: #757575; }
+
+/* Pipeline Runs */
+.devops-runs-detail h4 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  color: var(--text-primary, #e0e0e0);
+}
+
+.devops-runs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.devops-run-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--card-bg, #1e1e1e);
+  border: 1px solid var(--border-color, #333);
+  font-size: 12px;
+}
+
+.devops-run-name {
+  font-weight: 600;
+  color: var(--text-primary, #e0e0e0);
+  min-width: 80px;
+}
+
+.devops-run-branch {
+  background: var(--tag-bg, #333);
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 11px;
+  color: var(--text-secondary, #aaa);
+}
+
+.devops-run-time {
+  color: var(--text-tertiary, #777);
+  font-size: 11px;
+}
+
+.devops-run-by {
+  color: var(--text-secondary, #aaa);
+  font-size: 11px;
+  margin-left: auto;
+}
+
+/* Buttons */
+.devops-btn {
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.devops-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.devops-btn--primary {
+  background: var(--accent-color, #4fc3f7);
+  color: #000;
+  padding: 6px 14px;
+  font-weight: 600;
+}
+
+.devops-btn--primary:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.devops-btn--secondary {
+  background: var(--btn-secondary-bg, #333);
+  color: var(--text-primary, #e0e0e0);
+  padding: 6px 14px;
+}
+
+.devops-btn--secondary:hover:not(:disabled) {
+  background: var(--btn-secondary-bg-hover, #444);
+}
+
+.devops-btn--small {
+  padding: 4px 8px;
+  font-size: 12px;
+  background: var(--btn-secondary-bg, #333);
+  color: var(--text-secondary, #aaa);
+}
+
+.devops-btn--small:hover:not(:disabled) {
+  background: var(--btn-secondary-bg-hover, #444);
+  color: var(--text-primary, #e0e0e0);
+}
+
+/* Auth toggle */
+.devops-auth-toggle {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.devops-auth-btn {
+  padding: 6px 16px;
+  border: 1px solid var(--border-color, #333);
+  border-radius: 6px;
+  background: var(--btn-secondary-bg, #333);
+  color: var(--text-secondary, #aaa);
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.15s;
+}
+
+.devops-auth-btn--active {
+  background: var(--accent-color, #4fc3f7);
+  color: #000;
+  border-color: var(--accent-color, #4fc3f7);
+}
+
+/* Connection Form */
+.devops-connection-form {
+  max-width: 500px;
+}
+
+.devops-connection-form h3 {
+  margin: 0 0 16px 0;
+  font-size: 15px;
+  color: var(--text-primary, #e0e0e0);
+}
+
+.devops-connection-form label {
+  display: block;
+  margin: 10px 0 4px;
+  font-size: 12px;
+  color: var(--text-secondary, #aaa);
+  font-weight: 500;
+}
+
+.devops-connection-form input {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color, #333);
+  background: var(--input-bg, #2a2a2a);
+  color: var(--text-primary, #e0e0e0);
+  font-size: 13px;
+  box-sizing: border-box;
+}
+
+.devops-connection-form input:focus {
+  outline: none;
+  border-color: var(--accent-color, #4fc3f7);
+}
+
+.devops-form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  justify-content: flex-end;
+}
+
+/* Test result */
+.devops-test-result {
+  margin-top: 10px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.devops-test-result--success {
+  background: rgba(76, 175, 80, 0.15);
+  color: #4caf50;
+  border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+.devops-test-result--error {
+  background: rgba(244, 67, 54, 0.15);
+  color: #f44336;
+  border: 1px solid rgba(244, 67, 54, 0.3);
+}
+
+/* States */
+.devops-loading,
+.devops-empty,
+.devops-error,
+.devops-runs-loading,
+.devops-runs-empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--text-secondary, #aaa);
+  font-size: 13px;
+}
+
+.devops-error {
+  color: #f44336;
+}
