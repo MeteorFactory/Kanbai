@@ -700,18 +700,19 @@ export function registerGitHandlers(ipcMain: IpcMain): void {
           }
         } catch { /* hook propagation is best-effort */ }
 
-        // Ensure .kanbai-worktrees/ is in .gitignore
+        // Ensure worktree-related entries are in .gitignore
         const gitignorePath = path.join(cwd, '.gitignore')
-        const entry = '.kanbai-worktrees/'
+        const entries = ['.kanbai-worktrees/', WORKTREE_LOCK_FILE]
         try {
           let content = ''
           if (fs.existsSync(gitignorePath)) {
             content = fs.readFileSync(gitignorePath, 'utf-8')
           }
           const lines = content.split('\n')
-          if (!lines.some((l) => l.trim() === entry)) {
+          const missing = entries.filter((e) => !lines.some((l) => l.trim() === e))
+          if (missing.length > 0) {
             const suffix = content.length > 0 && !content.endsWith('\n') ? '\n' : ''
-            fs.writeFileSync(gitignorePath, content + suffix + entry + '\n', 'utf-8')
+            fs.writeFileSync(gitignorePath, content + suffix + missing.join('\n') + '\n', 'utf-8')
           }
         } catch { /* gitignore update is best-effort */ }
 
