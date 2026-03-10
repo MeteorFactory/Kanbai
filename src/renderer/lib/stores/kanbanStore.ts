@@ -537,7 +537,16 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
     // Run prequalification in the background
     ;(async () => {
       try {
-        const result = await window.kanbai.kanban.prequalify({ title, description })
+        const result = await window.kanbai.kanban.prequalify({
+          title,
+          description,
+          priority,
+          type: type ?? 'feature',
+          targetProjectId,
+          isCtoTicket,
+          hasAttachments: false,
+          hasComments: false,
+        })
         if (!result) {
           const t = useI18n.getState().t
           const ticketLabel = formatTicketLabel(task)
@@ -552,12 +561,14 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
             updates.priority = result.suggestedPriority as KanbanTask['priority']
           }
           if (result.clarifiedDescription && result.clarifiedDescription !== description) {
+            updates.originalDescription = description
             updates.description = result.clarifiedDescription
           }
           if (result.splitSuggestions && Array.isArray(result.splitSuggestions) && result.splitSuggestions.length > 0) {
-            // Auto-split: create child tickets and delete the original immediately
+            // Auto-split: create child tickets inheriting metadata from the original
+            const childIds: string[] = []
             for (const suggestion of result.splitSuggestions) {
-              await window.kanbai.kanban.create({
+              const child = await window.kanbai.kanban.create({
                 workspaceId,
                 targetProjectId: task.targetProjectId,
                 title: suggestion.title,
@@ -565,9 +576,21 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
                 status: 'TODO',
                 priority: suggestion.priority as KanbanTask['priority'],
                 type: suggestion.type as KanbanTaskType,
+                isCtoTicket: task.isCtoTicket,
+                aiProvider: task.aiProvider,
+                splitFromId: task.id,
               })
+              childIds.push(child.id)
             }
-            await window.kanbai.kanban.delete(task.id, workspaceId)
+            // Archive the original ticket instead of deleting — preserves audit trail
+            await window.kanbai.kanban.update({
+              id: task.id,
+              workspaceId,
+              status: 'DONE' as KanbanStatus,
+              archived: true,
+              childTicketIds: childIds,
+              result: `Ticket auto-split en ${childIds.length} sous-tickets lors de la pre-qualification`,
+            })
 
             const newTasks: KanbanTask[] = await window.kanbai.kanban.list(workspaceId)
             for (const t of newTasks) {
@@ -831,8 +854,10 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
         `- **Numero**: ${ticketLabel}`,
         `- **Titre**: ${task.title}`,
         task.description ? `- **Description**: ${task.description}` : null,
+        task.originalDescription ? `- **Description originale** (avant pre-qualification): ${task.originalDescription}` : null,
         `- **Priorite**: ${task.priority}`,
         task.targetProjectId ? `- **Scope**: Projet ${task.targetProjectId}` : `- **Scope**: Workspace entier`,
+        task.splitFromId ? `- **Issu du ticket**: ${task.splitFromId} (split automatique)` : null,
       ]
 
       // Add attachments section if any

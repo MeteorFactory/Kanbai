@@ -169,8 +169,10 @@ export interface KanbanTask {
   aiProvider?: import('./ai-provider').AiProviderId
   isPrequalifying?: boolean
   splitSuggestions?: KanbanSplitSuggestion[]
+  originalDescription?: string
   worktreePath?: string
   worktreeBranch?: string
+  splitFromId?: string
   createdAt: number
   updatedAt: number
 }

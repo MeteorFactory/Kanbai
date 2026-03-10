@@ -534,6 +534,7 @@ export function registerKanbanHandlers(ipcMain: IpcMain): void {
         isCtoTicket?: boolean
         disabled?: boolean
         aiProvider?: string
+        splitFromId?: string
         error?: string
         result?: string
         question?: string
@@ -568,6 +569,7 @@ export function registerKanbanHandlers(ipcMain: IpcMain): void {
         isCtoTicket: data.isCtoTicket,
         disabled: data.disabled,
         aiProvider: data.aiProvider as KanbanTask['aiProvider'],
+        splitFromId: data.splitFromId,
         error: data.error,
         result: data.result,
         question: data.question,
@@ -855,19 +857,51 @@ export function registerKanbanHandlers(ipcMain: IpcMain): void {
     IPC_CHANNELS.KANBAN_PREQUALIFY,
     async (
       _event,
-      { title, description }: { title: string; description: string },
+      {
+        title,
+        description,
+        priority,
+        type,
+        targetProjectId,
+        isCtoTicket,
+        hasAttachments,
+        hasComments,
+      }: {
+        title: string
+        description: string
+        priority?: string
+        type?: string
+        targetProjectId?: string
+        isCtoTicket?: boolean
+        hasAttachments?: boolean
+        hasComments?: boolean
+      },
     ) => {
+      const metadataLines: string[] = []
+      if (priority) metadataLines.push(`Priorite actuelle: ${priority}`)
+      if (type) metadataLines.push(`Type actuel: ${type}`)
+      if (targetProjectId) metadataLines.push(`Projet cible: ${targetProjectId}`)
+      if (isCtoTicket) metadataLines.push(`Mode CTO: oui`)
+      if (hasAttachments) metadataLines.push(`Pieces jointes: oui (ne pas les ignorer lors de l'execution)`)
+      if (hasComments) metadataLines.push(`Commentaires utilisateur: oui (contexte supplementaire disponible)`)
+
+      const metadataSection = metadataLines.length > 0
+        ? `\nMetadonnees du ticket:\n${metadataLines.join('\n')}\n`
+        : ''
+
       const prompt = `Analyse ce ticket Kanban et retourne UNIQUEMENT un JSON valide (pas de markdown, pas de texte autour) avec cette structure exacte :
 {"suggestedType":"bug"|"feature"|"test"|"doc"|"ia"|"refactor","suggestedPriority":"low"|"medium"|"high","clarifiedDescription":"description amelioree","isVague":true|false,"splitSuggestions":[]}
 
 REGLES IMPORTANTES :
-1. La "clarifiedDescription" doit IMPERATIVEMENT conserver l'idee originale du ticket. Tu ameliores la formulation pour qu'elle soit claire et actionnable par une IA, mais tu ne remplaces JAMAIS l'intention de l'utilisateur. Si le titre dit "fix le bug X", la description amelioree doit toujours parler de corriger le bug X, pas d'autre chose.
+1. La "clarifiedDescription" doit IMPERATIVEMENT conserver INTEGRALEMENT l'idee originale du ticket, y compris tous les details techniques, noms de fichiers, exemples, et contexte specifique fournis par l'utilisateur. Tu ameliores la formulation pour qu'elle soit claire et actionnable par une IA, mais tu ne supprimes, ne resumes et ne remplaces JAMAIS aucun detail de l'intention originale. Si le titre dit "fix le bug X", la description amelioree doit toujours parler de corriger le bug X, pas d'autre chose. En cas de doute, preserve le texte original verbatim plutot que de le reformuler.
 
 2. DETECTION MULTI-ITEMS : Analyse si le ticket contient plusieurs elements DISTINCTS et NON-LIES (ex: un bug + une feature, ou plusieurs features independantes). Si oui, remplis "splitSuggestions" avec un tableau d'objets {"title":"...","description":"...","type":"bug"|"feature"|...,"priority":"low"|"medium"|"high"} pour chaque sous-ticket propose.
    - EXCEPTION : Si une SEULE feature impacte plusieurs applications ou environnements, ne PAS decouper — c'est un seul ticket.
    - "splitSuggestions" doit etre un tableau VIDE [] si le ticket ne contient qu'un seul element ou si les elements sont lies.
-   - Chaque suggestion doit avoir un titre clair et une description actionnable.
+   - Chaque suggestion doit avoir un titre clair et une description actionnable qui preserve TOUS les details du ticket original pertinents a ce sous-ticket.
 
+3. RESPECT DES METADONNEES : Si une priorite ou un type est deja defini par l'utilisateur, ne le change que si c'est clairement incorrect. Privilegie le choix explicite de l'utilisateur.
+${metadataSection}
 Titre: ${title}
 Description: ${description || '(aucune)'}`
 

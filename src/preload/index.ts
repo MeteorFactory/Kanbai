@@ -349,7 +349,7 @@ const api = {
       ipcRenderer.invoke(IPC_CHANNELS.KANBAN_WATCH_REMOVE, { workspaceId }),
     linkConversation: (cwd: string, taskId: string, workspaceId: string): Promise<string | null> =>
       ipcRenderer.invoke(IPC_CHANNELS.KANBAN_LINK_CONVERSATION, { cwd, taskId, workspaceId }),
-    prequalify: (data: { title: string; description: string }): Promise<{ suggestedType: string; suggestedPriority: string; clarifiedDescription: string; isVague: boolean; splitSuggestions?: Array<{ title: string; description: string; type: string; priority: string }> } | null> =>
+    prequalify: (data: { title: string; description: string; priority?: string; type?: string; targetProjectId?: string; isCtoTicket?: boolean; hasAttachments?: boolean; hasComments?: boolean }): Promise<{ suggestedType: string; suggestedPriority: string; clarifiedDescription: string; isVague: boolean; splitSuggestions?: Array<{ title: string; description: string; type: string; priority: string }> } | null> =>
       ipcRenderer.invoke(IPC_CHANNELS.KANBAN_PREQUALIFY, data),
     getConfig: (workspaceId: string) =>
       ipcRenderer.invoke(IPC_CHANNELS.KANBAN_GET_CONFIG, { workspaceId }),
