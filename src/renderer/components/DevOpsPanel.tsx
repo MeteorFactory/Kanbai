@@ -424,18 +424,26 @@ function InlineStageDetail({
   activeConnection: DevOpsConnection | null
 }) {
   const { t } = useI18n()
-  const { jobLogs, jobLogsLoading, loadJobLog } = useDevOpsStore()
+  const { jobLogs, jobLogsLoading, jobLogsError, loadJobLog } = useDevOpsStore()
   const [expandedStageId, setExpandedStageId] = useState<string | null>(null)
   const [expandedJobId, setExpandedJobId] = useState<string | null>(null)
 
-  // Auto-expand the first failed stage
+  // Auto-expand the first failed stage and auto-load logs for failed jobs
   useEffect(() => {
     if (stages.length === 0) return
     const failedStage = stages.find((s) => s.status === 'failed')
     if (failedStage) {
       setExpandedStageId(failedStage.id)
+      // Auto-load logs for failed jobs in this stage
+      if (activeConnection && buildId) {
+        for (const job of failedStage.jobs) {
+          if (job.status === 'failed' && job.logId) {
+            loadJobLog(activeConnection, buildId, job.id, job.logId)
+          }
+        }
+      }
     }
-  }, [stages])
+  }, [stages, activeConnection, buildId, loadJobLog])
 
   if (loading) {
     return <div className="devops-stages-loading">{t('devops.loadingStages')}</div>
@@ -522,6 +530,10 @@ function InlineStageDetail({
                       const logContent = jobLogs[job.id]
                       const logLoading = jobLogsLoading[job.id]
 
+                      // Auto-show logs for failed jobs that have been pre-loaded
+                      const hasAutoLoadedLog = job.status === 'failed' && job.logId && jobLogs[job.id] && !jobLogsError[job.id]
+                      const showLog = isJobExpanded || hasAutoLoadedLog
+
                       return (
                         <div key={job.id} className="devops-job-item">
                           <div className="devops-job-row">
@@ -561,10 +573,20 @@ function InlineStageDetail({
                               ))}
                             </div>
                           )}
-                          {isJobExpanded && (
+                          {showLog && (
                             <div className="devops-job-log">
                               {logLoading ? (
                                 <div className="devops-job-log-loading">{t('devops.loadingLogs')}</div>
+                              ) : jobLogsError[job.id] ? (
+                                <div className="devops-job-log-error">
+                                  <span>{logContent}</span>
+                                  <button
+                                    className="devops-btn devops-btn--small"
+                                    onClick={() => { if (activeConnection && buildId && job.logId) loadJobLog(activeConnection, buildId, job.id, job.logId) }}
+                                  >
+                                    {t('devops.retry')}
+                                  </button>
+                                </div>
                               ) : (
                                 <pre className="devops-job-log-content">{logContent ?? ''}</pre>
                               )}

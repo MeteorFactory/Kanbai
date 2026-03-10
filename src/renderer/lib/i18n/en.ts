@@ -1823,6 +1823,7 @@ export const en = {
   'devops.approvalComment': 'Comment (optional)',
   'devops.viewLogs': 'View logs',
   'devops.loadingLogs': 'Loading logs...',
+  'devops.retry': 'Retry',
 
   // Namespace
   'namespace.create': 'New namespace',

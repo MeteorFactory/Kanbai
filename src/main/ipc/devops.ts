@@ -216,13 +216,28 @@ function collectJobIssues(
   jobId: string,
   records: AzureTimelineRecord[],
 ): { type: 'error' | 'warning'; message: string }[] {
-  // Tasks are children of Jobs in the timeline hierarchy
-  const tasks = records.filter((r) => r.parentId === jobId && r.type === 'Task')
+  // Collect issues from ALL child records (Tasks, Checkpoints, etc.)
+  const children = records.filter((r) => r.parentId === jobId)
   const issues: { type: 'error' | 'warning'; message: string }[] = []
-  for (const task of tasks) {
-    issues.push(...mapIssues(task.issues))
+  for (const child of children) {
+    issues.push(...mapIssues(child.issues))
   }
   return issues
+}
+
+function findJobLogId(
+  jobId: string,
+  jobLog: { id: number; url: string } | null,
+  records: AzureTimelineRecord[],
+): number | null {
+  // Use the job-level log if available
+  if (jobLog?.id) return jobLog.id
+  // Fallback: find the highest logId from child task records
+  const children = records.filter((r) => r.parentId === jobId && r.log?.id)
+  if (children.length === 0) return null
+  // Return the last task's logId (typically the most comprehensive)
+  const sorted = children.sort((a, b) => a.order - b.order)
+  return sorted[sorted.length - 1]!.log!.id
 }
 
 function mapTimelineToStages(records: AzureTimelineRecord[]): PipelineStage[] {
@@ -254,7 +269,7 @@ function mapTimelineToStages(records: AzureTimelineRecord[]): PipelineStage[] {
             errorCount,
             warningCount,
             issues: jobIssues,
-            logId: job.log?.id ?? null,
+            logId: findJobLogId(job.id, job.log, records),
           }
         })
 
