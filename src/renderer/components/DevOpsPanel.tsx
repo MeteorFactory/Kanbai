@@ -494,13 +494,11 @@ function PipelineRunsDetail({
   runs,
   loading,
   pipelineName,
-  selectedRunId,
   activeConnection,
 }: {
   runs: PipelineRun[]
   loading: boolean
   pipelineName: string
-  selectedRunId: number | null
   activeConnection: DevOpsConnection | null
 }) {
   const { t } = useI18n()
@@ -561,7 +559,7 @@ function PipelineRunsDetail({
           return (
             <div key={run.id} className="devops-run-item">
               <div
-                className={`devops-run-row devops-run-row--expandable${isExpanded ? ' devops-run-row--expanded' : ''}${selectedRunId === run.id ? ' devops-run-row--selected' : ''}`}
+                className={`devops-run-row devops-run-row--expandable${isExpanded ? ' devops-run-row--expanded' : ''}`}
                 onClick={() => handleToggleRun(run.id)}
               >
                 <span className={`devops-run-expand-icon${isExpanded ? ' devops-run-expand-icon--open' : ''}`}>{'\u25B6'}</span>
@@ -668,9 +666,6 @@ export function DevOpsPanel() {
     selectedPipelineId,
     pipelineRuns,
     runsLoading,
-    selectedRunId,
-    runStages,
-    stagesLoading,
     loadData,
     addConnection,
     updateConnection,
@@ -679,8 +674,6 @@ export function DevOpsPanel() {
     loadPipelines,
     selectPipeline,
     loadPipelineRuns,
-    selectRun,
-    loadRunStages,
     runPipeline,
     startMonitoring,
     stopMonitoring,
@@ -694,11 +687,6 @@ export function DevOpsPanel() {
   const selectedPipeline = useMemo(
     () => pipelines.find((p) => p.id === selectedPipelineId) ?? null,
     [pipelines, selectedPipelineId],
-  )
-
-  const selectedRun = useMemo(
-    () => pipelineRuns.find((r) => r.id === selectedRunId) ?? null,
-    [pipelineRuns, selectedRunId],
   )
 
   // Resolve workspace env path
@@ -731,16 +719,6 @@ export function DevOpsPanel() {
     if (!activeConnection || !selectedPipelineId) return
     loadPipelineRuns(activeConnection, selectedPipelineId)
   }, [activeConnection, selectedPipelineId, loadPipelineRuns])
-
-  // Load stages when a run is selected
-  useEffect(() => {
-    if (!activeConnection || !selectedRunId) return
-    loadRunStages(activeConnection, selectedRunId)
-  }, [activeConnection, selectedRunId, loadRunStages])
-
-  const handleBackToRuns = useCallback(() => {
-    selectRun(null)
-  }, [selectRun])
 
   const closeModal = useCallback(() => {
     setModalStep(null)
@@ -923,7 +901,6 @@ export function DevOpsPanel() {
                 runs={pipelineRuns}
                 loading={runsLoading}
                 pipelineName={selectedPipeline.name}
-                selectedRunId={selectedRunId}
                 activeConnection={activeConnection}
               />
             ) : (
