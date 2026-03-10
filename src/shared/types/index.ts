@@ -170,6 +170,7 @@ export interface KanbanTask {
   isPrequalifying?: boolean
   splitSuggestions?: KanbanSplitSuggestion[]
   originalDescription?: string
+  aiClarification?: string
   worktreePath?: string
   worktreeBranch?: string
   splitFromId?: string

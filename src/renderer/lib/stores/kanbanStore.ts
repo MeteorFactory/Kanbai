@@ -561,8 +561,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
             updates.priority = result.suggestedPriority as KanbanTask['priority']
           }
           if (result.clarifiedDescription && result.clarifiedDescription !== description) {
-            updates.originalDescription = description
-            updates.description = result.clarifiedDescription
+            updates.aiClarification = result.clarifiedDescription
           }
           if (result.splitSuggestions && Array.isArray(result.splitSuggestions) && result.splitSuggestions.length > 0) {
             // Auto-split: create child tickets inheriting metadata from the original
@@ -855,6 +854,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
         `- **Titre**: ${task.title}`,
         task.description ? `- **Description**: ${task.description}` : null,
         task.originalDescription ? `- **Description originale** (avant pre-qualification): ${task.originalDescription}` : null,
+        task.aiClarification ? `- **Clarification IA** (contexte supplementaire de la pre-qualification): ${task.aiClarification}` : null,
         `- **Priorite**: ${task.priority}`,
         task.targetProjectId ? `- **Scope**: Projet ${task.targetProjectId}` : `- **Scope**: Workspace entier`,
         task.splitFromId ? `- **Issu du ticket**: ${task.splitFromId} (split automatique)` : null,

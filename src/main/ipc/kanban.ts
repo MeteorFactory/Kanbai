@@ -890,15 +890,15 @@ export function registerKanbanHandlers(ipcMain: IpcMain): void {
         : ''
 
       const prompt = `Analyse ce ticket Kanban et retourne UNIQUEMENT un JSON valide (pas de markdown, pas de texte autour) avec cette structure exacte :
-{"suggestedType":"bug"|"feature"|"test"|"doc"|"ia"|"refactor","suggestedPriority":"low"|"medium"|"high","clarifiedDescription":"description amelioree","isVague":true|false,"splitSuggestions":[]}
+{"suggestedType":"bug"|"feature"|"test"|"doc"|"ia"|"refactor","suggestedPriority":"low"|"medium"|"high","clarifiedDescription":"clarification supplementaire pour l'agent IA","isVague":true|false,"splitSuggestions":[]}
 
 REGLES IMPORTANTES :
-1. La "clarifiedDescription" doit IMPERATIVEMENT conserver INTEGRALEMENT l'idee originale du ticket, y compris tous les details techniques, noms de fichiers, exemples, et contexte specifique fournis par l'utilisateur. Tu ameliores la formulation pour qu'elle soit claire et actionnable par une IA, mais tu ne supprimes, ne resumes et ne remplaces JAMAIS aucun detail de l'intention originale. Si le titre dit "fix le bug X", la description amelioree doit toujours parler de corriger le bug X, pas d'autre chose. En cas de doute, preserve le texte original verbatim plutot que de le reformuler.
+1. PRESERVATION DU TEXTE ORIGINAL : La description originale de l'utilisateur ne sera JAMAIS remplacee. Elle reste toujours le champ principal du ticket. Le champ "clarifiedDescription" sert UNIQUEMENT a ajouter du contexte supplementaire pour l'agent IA : precisions techniques, etapes suggerees, ou reformulation actionnable. Il ne doit PAS repeter le texte original, mais le COMPLETER. Si la description est deja claire et complete, mets une chaine vide "".
 
 2. DETECTION MULTI-ITEMS : Analyse si le ticket contient plusieurs elements DISTINCTS et NON-LIES (ex: un bug + une feature, ou plusieurs features independantes). Si oui, remplis "splitSuggestions" avec un tableau d'objets {"title":"...","description":"...","type":"bug"|"feature"|...,"priority":"low"|"medium"|"high"} pour chaque sous-ticket propose.
    - EXCEPTION : Si une SEULE feature impacte plusieurs applications ou environnements, ne PAS decouper — c'est un seul ticket.
    - "splitSuggestions" doit etre un tableau VIDE [] si le ticket ne contient qu'un seul element ou si les elements sont lies.
-   - Chaque suggestion doit avoir un titre clair et une description actionnable qui preserve TOUS les details du ticket original pertinents a ce sous-ticket.
+   - CHAQUE suggestion DOIT inclure le texte exact de l'utilisateur pertinent a ce sous-ticket dans sa description (copier-coller verbatim), suivi d'eventuelles precisions supplementaires. Ne JAMAIS resumer ou reformuler le texte de l'utilisateur dans les splits.
 
 3. RESPECT DES METADONNEES : Si une priorite ou un type est deja defini par l'utilisateur, ne le change que si c'est clairement incorrect. Privilegie le choix explicite de l'utilisateur.
 ${metadataSection}
