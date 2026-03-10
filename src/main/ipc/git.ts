@@ -14,6 +14,40 @@ import { StorageService } from '../services/storage'
 const WORKTREE_LOCK_FILE = '.kanbai-session.lock'
 const WORKTREE_LOCK_STALE_MS = 4 * 60 * 60 * 1000 // 4 hours
 
+/**
+ * Resolve the git directory for a worktree and ensure the lock file is listed
+ * in its per-worktree `info/exclude` file. This prevents the lock file from
+ * showing up as untracked or being accidentally committed, without modifying
+ * the tracked `.gitignore`.
+ */
+function ensureLockExcludedInWorktree(worktreePath: string): void {
+  try {
+    const dotGitPath = path.join(worktreePath, '.git')
+    const dotGitContent = fs.readFileSync(dotGitPath, 'utf-8').trim()
+    // .git file in worktrees contains "gitdir: <path>"
+    const match = dotGitContent.match(/^gitdir:\s*(.+)$/)
+    if (!match?.[1]) return
+    const gitDirRaw = match[1]
+    const gitDir = path.isAbsolute(gitDirRaw)
+      ? gitDirRaw
+      : path.resolve(worktreePath, gitDirRaw)
+    const infoDir = path.join(gitDir, 'info')
+    if (!fs.existsSync(infoDir)) {
+      fs.mkdirSync(infoDir, { recursive: true })
+    }
+    const excludePath = path.join(infoDir, 'exclude')
+    let content = ''
+    if (fs.existsSync(excludePath)) {
+      content = fs.readFileSync(excludePath, 'utf-8')
+    }
+    const lines = content.split('\n')
+    if (!lines.some((l) => l.trim() === WORKTREE_LOCK_FILE)) {
+      const suffix = content.length > 0 && !content.endsWith('\n') ? '\n' : ''
+      fs.writeFileSync(excludePath, content + suffix + WORKTREE_LOCK_FILE + '\n', 'utf-8')
+    }
+  } catch { /* exclude update is best-effort */ }
+}
+
 /** Check if a worktree has an active session lock. Returns true if locked and not stale. */
 function isWorktreeLocked(worktreePath: string): boolean {
   const lockPath = path.join(worktreePath, WORKTREE_LOCK_FILE)
@@ -700,20 +734,24 @@ export function registerGitHandlers(ipcMain: IpcMain): void {
           }
         } catch { /* hook propagation is best-effort */ }
 
-        // Ensure .kanbai-worktrees/ is in .gitignore
+        // Ensure .kanbai-worktrees/ is in the main repo's .gitignore
         const gitignorePath = path.join(cwd, '.gitignore')
-        const entry = '.kanbai-worktrees/'
+        const worktreeDirEntry = '.kanbai-worktrees/'
         try {
           let content = ''
           if (fs.existsSync(gitignorePath)) {
             content = fs.readFileSync(gitignorePath, 'utf-8')
           }
           const lines = content.split('\n')
-          if (!lines.some((l) => l.trim() === entry)) {
+          if (!lines.some((l) => l.trim() === worktreeDirEntry)) {
             const suffix = content.length > 0 && !content.endsWith('\n') ? '\n' : ''
-            fs.writeFileSync(gitignorePath, content + suffix + entry + '\n', 'utf-8')
+            fs.writeFileSync(gitignorePath, content + suffix + worktreeDirEntry + '\n', 'utf-8')
           }
         } catch { /* gitignore update is best-effort */ }
+
+        // Exclude .kanbai-session.lock via the worktree's git info/exclude
+        // (not tracked, won't pollute commits when merged back)
+        ensureLockExcludedInWorktree(worktreePath)
 
         return { success: true, baseBranch: currentBranch, startPoint: defaultBranch }
       } catch (err) {
@@ -920,6 +958,8 @@ export function registerGitHandlers(ipcMain: IpcMain): void {
       { worktreePath, taskId, tabId }: { worktreePath: string; taskId: string; tabId: string },
     ) => {
       try {
+        // Ensure the lock file is excluded before creating it
+        ensureLockExcludedInWorktree(worktreePath)
         const lockPath = path.join(worktreePath, WORKTREE_LOCK_FILE)
         const lockData = { taskId, tabId, timestamp: Date.now() }
         fs.writeFileSync(lockPath, JSON.stringify(lockData, null, 2), 'utf-8')
