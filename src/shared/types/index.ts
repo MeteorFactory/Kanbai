@@ -880,7 +880,9 @@ export interface SshKeyInfo {
 
 // --- DevOps types ---
 
-export type DevOpsAuthMethod = 'pat' | 'oauth2'
+export type DevOpsProvider = 'azure-devops' | 'github'
+
+export type DevOpsAuthMethod = 'pat' | 'oauth2' | 'github-pat' | 'github-app'
 
 export interface DevOpsAuthPat {
   method: 'pat'
@@ -894,11 +896,24 @@ export interface DevOpsAuthOAuth2 {
   tenantId: string
 }
 
-export type DevOpsAuth = DevOpsAuthPat | DevOpsAuthOAuth2
+export interface GitHubAuthPat {
+  method: 'github-pat'
+  token: string
+}
+
+export interface GitHubAuthApp {
+  method: 'github-app'
+  appId: string
+  installationId: string
+  privateKey: string
+}
+
+export type DevOpsAuth = DevOpsAuthPat | DevOpsAuthOAuth2 | GitHubAuthPat | GitHubAuthApp
 
 export interface DevOpsConnection {
   id: string
   name: string
+  provider?: DevOpsProvider
   organizationUrl: string
   projectName: string
   auth: DevOpsAuth

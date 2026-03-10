@@ -1,4 +1,5 @@
 import { IpcMain } from 'electron'
+import crypto from 'crypto'
 import fs from 'fs'
 import path from 'path'
 import {
@@ -45,6 +46,10 @@ async function getAuthHeader(auth: DevOpsAuth): Promise<string> {
   if (auth.method === 'pat') {
     const encoded = Buffer.from(`:${auth.token}`).toString('base64')
     return `Basic ${encoded}`
+  }
+
+  if (auth.method !== 'oauth2') {
+    throw new Error(`Unsupported Azure auth method: ${auth.method}`)
   }
 
   // OAuth2 client credentials flow
@@ -352,6 +357,461 @@ function mapBuildRun(run: AzureBuildRun): PipelineRun {
   }
 }
 
+// =============================================
+// GitHub Actions API
+// =============================================
+
+function generateGitHubAppJwt(appId: string, privateKey: string): string {
+  const now = Math.floor(Date.now() / 1000)
+  const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64url')
+  const payload = Buffer.from(JSON.stringify({
+    iat: now - 60,
+    exp: now + 10 * 60,
+    iss: appId,
+  })).toString('base64url')
+
+  const signature = crypto.sign('SHA256', Buffer.from(`${header}.${payload}`), privateKey)
+  return `${header}.${payload}.${signature.toString('base64url')}`
+}
+
+async function getGitHubAuthHeader(auth: DevOpsAuth): Promise<string> {
+  if (auth.method === 'github-pat') {
+    return `Bearer ${auth.token}`
+  }
+
+  if (auth.method === 'github-app') {
+    const jwt = generateGitHubAppJwt(auth.appId, auth.privateKey)
+    const response = await fetch(
+      `https://api.github.com/app/installations/${auth.installationId}/access_tokens`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${jwt}`,
+          Accept: 'application/vnd.github+json',
+          'X-GitHub-Api-Version': '2022-11-28',
+        },
+      },
+    )
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(`GitHub App token request failed: ${response.status} - ${errorText}`)
+    }
+
+    const tokenData = await response.json() as { token: string }
+    return `Bearer ${tokenData.token}`
+  }
+
+  throw new Error(`Unsupported GitHub auth method: ${(auth as { method: string }).method}`)
+}
+
+async function gitHubRequest<T>(auth: DevOpsAuth, url: string): Promise<T> {
+  const authHeader = await getGitHubAuthHeader(auth)
+  const response = await fetch(url, {
+    headers: {
+      Authorization: authHeader,
+      Accept: 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+    },
+  })
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`GitHub API error: ${response.status} - ${errorText}`)
+  }
+
+  return response.json() as Promise<T>
+}
+
+async function gitHubPost<T>(auth: DevOpsAuth, url: string, body: unknown): Promise<T> {
+  const authHeader = await getGitHubAuthHeader(auth)
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      Authorization: authHeader,
+      Accept: 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  })
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`GitHub API error: ${response.status} - ${errorText}`)
+  }
+
+  return response.json() as Promise<T>
+}
+
+interface GitHubWorkflow {
+  id: number
+  name: string
+  path: string
+  state: string
+  html_url: string
+}
+
+interface GitHubWorkflowRun {
+  id: number
+  name: string
+  run_number: number
+  status: string
+  conclusion: string | null
+  created_at: string
+  updated_at: string
+  run_started_at: string | null
+  html_url: string
+  head_branch: string
+  head_sha: string
+  actor: { login: string } | null
+}
+
+interface GitHubJob {
+  id: number
+  name: string
+  status: string
+  conclusion: string | null
+  started_at: string | null
+  completed_at: string | null
+  html_url: string
+  runner_name: string | null
+  steps: GitHubStep[] | null
+}
+
+interface GitHubStep {
+  name: string
+  status: string
+  conclusion: string | null
+  number: number
+  started_at: string | null
+  completed_at: string | null
+}
+
+interface GitHubPendingDeployment {
+  environment: { id: number; name: string }
+  wait_timer: number
+  wait_timer_started_at: string | null
+  current_user_can_approve: boolean
+  reviewers: Array<{ type: string; reviewer: { login: string } }>
+}
+
+function mapGitHubStatus(status: string, conclusion: string | null): PipelineStatus {
+  if (status === 'in_progress') return 'running'
+  if (status === 'queued' || status === 'waiting' || status === 'pending' || status === 'requested') return 'notStarted'
+  if (status === 'completed') {
+    if (conclusion === 'success') return 'succeeded'
+    if (conclusion === 'failure') return 'failed'
+    if (conclusion === 'cancelled') return 'canceled'
+    if (conclusion === 'skipped') return 'canceled'
+    return 'unknown'
+  }
+  return 'unknown'
+}
+
+function mapGitHubWorkflowRun(run: GitHubWorkflowRun): PipelineRun {
+  return {
+    id: run.id,
+    name: `${run.run_number}`,
+    status: mapGitHubStatus(run.status, run.conclusion),
+    result: run.conclusion ?? run.status,
+    startTime: run.run_started_at ?? run.created_at,
+    finishTime: run.status === 'completed' ? run.updated_at : null,
+    url: run.html_url,
+    sourceBranch: run.head_branch ?? '',
+    sourceVersion: (run.head_sha ?? '').substring(0, 8),
+    requestedBy: run.actor?.login ?? '',
+  }
+}
+
+function mapGitHubJobsToStages(jobs: GitHubJob[]): PipelineStage[] {
+  return jobs.map((job, index): PipelineStage => {
+    const tasks: PipelineTask[] = (job.steps ?? []).map((step): PipelineTask => ({
+      id: `${job.id}-step-${step.number}`,
+      name: step.name,
+      status: mapGitHubStatus(step.status, step.conclusion),
+      startTime: step.started_at ?? null,
+      finishTime: step.completed_at ?? null,
+      result: step.conclusion ?? step.status,
+      order: step.number,
+      errorCount: step.conclusion === 'failure' ? 1 : 0,
+      warningCount: 0,
+      issues: step.conclusion === 'failure'
+        ? [{ type: 'error' as const, message: `Step "${step.name}" failed` }]
+        : [],
+      logId: step.conclusion ? step.number : null,
+    }))
+
+    const errorCount = tasks.reduce((sum, t) => sum + t.errorCount, 0)
+    const warningCount = tasks.reduce((sum, t) => sum + t.warningCount, 0)
+
+    return {
+      id: String(job.id),
+      name: job.name,
+      order: index,
+      status: mapGitHubStatus(job.status, job.conclusion),
+      startTime: job.started_at ?? null,
+      finishTime: job.completed_at ?? null,
+      result: job.conclusion ?? job.status,
+      errorCount,
+      warningCount,
+      jobs: [{
+        id: String(job.id),
+        name: job.name,
+        status: mapGitHubStatus(job.status, job.conclusion),
+        startTime: job.started_at ?? null,
+        finishTime: job.completed_at ?? null,
+        result: job.conclusion ?? job.status,
+        workerName: job.runner_name ?? '',
+        errorCount,
+        warningCount,
+        issues: [],
+        logId: job.id,
+        tasks,
+      }],
+    }
+  })
+}
+
+function getGitHubApiBase(connection: DevOpsConnection): string {
+  // organizationUrl stores the owner, projectName stores the repo
+  return `https://api.github.com/repos/${connection.organizationUrl}/${connection.projectName}`
+}
+
+function isGitHub(connection: DevOpsConnection): boolean {
+  return connection.provider === 'github'
+}
+
+// --- GitHub handler implementations ---
+
+async function gitHubTestConnection(connection: DevOpsConnection): Promise<{ success: boolean; error?: string }> {
+  try {
+    const base = getGitHubApiBase(connection)
+    await gitHubRequest(connection.auth, `${base}/actions/workflows?per_page=1`)
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: String(err) }
+  }
+}
+
+async function gitHubListPipelines(connection: DevOpsConnection): Promise<{ success: boolean; pipelines: PipelineDefinition[]; error?: string }> {
+  try {
+    const base = getGitHubApiBase(connection)
+    const result = await gitHubRequest<{ workflows: GitHubWorkflow[] }>(
+      connection.auth,
+      `${base}/actions/workflows?per_page=100`,
+    )
+
+    // Fetch latest run for each active workflow in parallel
+    const activeWorkflows = result.workflows.filter((w) => w.state === 'active')
+    const pipelinesWithRuns = await Promise.all(
+      activeWorkflows.map(async (workflow): Promise<PipelineDefinition> => {
+        let latestRun: PipelineRun | null = null
+        try {
+          const runsResult = await gitHubRequest<{ workflow_runs: GitHubWorkflowRun[] }>(
+            connection.auth,
+            `${base}/actions/workflows/${workflow.id}/runs?per_page=1`,
+          )
+          if (runsResult.workflow_runs.length > 0) {
+            latestRun = mapGitHubWorkflowRun(runsResult.workflow_runs[0]!)
+          }
+        } catch {
+          // Ignore errors fetching latest run — workflow still shows
+        }
+        return {
+          id: workflow.id,
+          name: workflow.name,
+          folder: workflow.path.replace(/^\.github\/workflows\//, ''),
+          revision: 0,
+          url: workflow.html_url,
+          latestRun,
+        }
+      }),
+    )
+
+    return { success: true, pipelines: pipelinesWithRuns }
+  } catch (err) {
+    return { success: false, pipelines: [], error: String(err) }
+  }
+}
+
+async function gitHubGetPipelineRuns(
+  connection: DevOpsConnection,
+  workflowId: number,
+  count: number,
+): Promise<{ success: boolean; runs: PipelineRun[]; error?: string }> {
+  try {
+    const base = getGitHubApiBase(connection)
+    const result = await gitHubRequest<{ workflow_runs: GitHubWorkflowRun[] }>(
+      connection.auth,
+      `${base}/actions/workflows/${workflowId}/runs?per_page=${count}`,
+    )
+    const runs = result.workflow_runs.map(mapGitHubWorkflowRun)
+    return { success: true, runs }
+  } catch (err) {
+    return { success: false, runs: [], error: String(err) }
+  }
+}
+
+async function gitHubRunPipeline(
+  connection: DevOpsConnection,
+  workflowId: number,
+  branch?: string,
+): Promise<{ success: boolean; run?: PipelineRun; error?: string }> {
+  try {
+    const base = getGitHubApiBase(connection)
+
+    // Get default branch if not specified
+    let ref = branch
+    if (!ref) {
+      const repo = await gitHubRequest<{ default_branch: string }>(connection.auth, `https://api.github.com/repos/${connection.organizationUrl}/${connection.projectName}`)
+      ref = repo.default_branch
+    }
+
+    const authHeader = await getGitHubAuthHeader(connection.auth)
+    const response = await fetch(`${base}/actions/workflows/${workflowId}/dispatches`, {
+      method: 'POST',
+      headers: {
+        Authorization: authHeader,
+        Accept: 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ ref }),
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(`Failed to dispatch workflow: ${response.status} - ${errorText}`)
+    }
+
+    // workflow_dispatch returns 204 No Content — no run object to return
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: String(err) }
+  }
+}
+
+async function gitHubGetBuildTimeline(
+  connection: DevOpsConnection,
+  runId: number,
+): Promise<{ success: boolean; stages: PipelineStage[]; error?: string }> {
+  try {
+    const base = getGitHubApiBase(connection)
+    const result = await gitHubRequest<{ jobs: GitHubJob[] }>(
+      connection.auth,
+      `${base}/actions/runs/${runId}/jobs?per_page=100`,
+    )
+    const stages = mapGitHubJobsToStages(result.jobs)
+    return { success: true, stages }
+  } catch (err) {
+    return { success: false, stages: [], error: String(err) }
+  }
+}
+
+async function gitHubGetApprovals(
+  connection: DevOpsConnection,
+  buildIds: number[],
+): Promise<{ success: boolean; approvals: PipelineApproval[]; error?: string }> {
+  try {
+    const base = getGitHubApiBase(connection)
+    const allApprovals: PipelineApproval[] = []
+
+    // Fetch pending deployments for each run in parallel
+    const results = await Promise.all(
+      buildIds.map(async (runId) => {
+        try {
+          const deployments = await gitHubRequest<GitHubPendingDeployment[]>(
+            connection.auth,
+            `${base}/actions/runs/${runId}/pending_deployments`,
+          )
+          return deployments.map((d): PipelineApproval => ({
+            id: `${runId}-env-${d.environment.id}`,
+            buildId: runId,
+            status: 'pending',
+            createdOn: d.wait_timer_started_at ?? new Date().toISOString(),
+            instructions: `Deploy to ${d.environment.name}`,
+            minRequiredApprovers: d.reviewers.length,
+            steps: d.reviewers.map((r) => ({
+              assignedApprover: r.reviewer.login,
+              status: 'pending' as ApprovalStatus,
+              comment: '',
+            })),
+          }))
+        } catch {
+          return []
+        }
+      }),
+    )
+
+    for (const approvals of results) {
+      allApprovals.push(...approvals)
+    }
+
+    return { success: true, approvals: allApprovals }
+  } catch (err) {
+    return { success: false, approvals: [], error: String(err) }
+  }
+}
+
+async function gitHubApprove(
+  connection: DevOpsConnection,
+  approvalId: string,
+  status: 'approved' | 'rejected',
+  comment?: string,
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const base = getGitHubApiBase(connection)
+    // approvalId format: "{runId}-env-{envId}"
+    const parts = approvalId.split('-env-')
+    const runId = parts[0]
+    const envId = parseInt(parts[1] ?? '0', 10)
+
+    await gitHubPost(
+      connection.auth,
+      `${base}/actions/runs/${runId}/pending_deployments`,
+      {
+        environment_ids: [envId],
+        state: status === 'approved' ? 'approved' : 'rejected',
+        comment: comment ?? '',
+      },
+    )
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: String(err) }
+  }
+}
+
+async function gitHubGetBuildLog(
+  connection: DevOpsConnection,
+  _buildId: number,
+  logId: number,
+): Promise<{ success: boolean; content: string; error?: string }> {
+  try {
+    const base = getGitHubApiBase(connection)
+    // logId is the job ID for GitHub
+    const authHeader = await getGitHubAuthHeader(connection.auth)
+    const response = await fetch(`${base}/actions/jobs/${logId}/logs`, {
+      headers: {
+        Authorization: authHeader,
+        Accept: 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
+      },
+      redirect: 'follow',
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(`GitHub API error: ${response.status} - ${errorText}`)
+    }
+
+    const content = await response.text()
+    return { success: true, content }
+  } catch (err) {
+    return { success: false, content: '', error: String(err) }
+  }
+}
+
 export function registerDevOpsHandlers(ipcMain: IpcMain): void {
   // Load devops config
   ipcMain.handle(
@@ -384,6 +844,9 @@ export function registerDevOpsHandlers(ipcMain: IpcMain): void {
   ipcMain.handle(
     IPC_CHANNELS.DEVOPS_TEST_CONNECTION,
     async (_event, { connection }: { connection: DevOpsConnection }) => {
+      if (isGitHub(connection)) {
+        return gitHubTestConnection(connection)
+      }
       try {
         const url = `${connection.organizationUrl}/${encodeURIComponent(connection.projectName)}/_apis/build/definitions?api-version=7.1&$top=1`
         await azureDevOpsRequest(connection.auth, url)
@@ -398,6 +861,9 @@ export function registerDevOpsHandlers(ipcMain: IpcMain): void {
   ipcMain.handle(
     IPC_CHANNELS.DEVOPS_LIST_PIPELINES,
     async (_event, { connection }: { connection: DevOpsConnection }) => {
+      if (isGitHub(connection)) {
+        return gitHubListPipelines(connection)
+      }
       try {
         const url = `${connection.organizationUrl}/${encodeURIComponent(connection.projectName)}/_apis/build/definitions?api-version=7.1&includeLatestBuilds=true`
         const result = await azureDevOpsRequest<{ value: AzureBuildDef[] }>(connection.auth, url)
@@ -425,6 +891,10 @@ export function registerDevOpsHandlers(ipcMain: IpcMain): void {
   ipcMain.handle(
     IPC_CHANNELS.DEVOPS_GET_PIPELINE_RUNS,
     async (_event, { connection, pipelineId, count }: { connection: DevOpsConnection; pipelineId: number; count?: number }) => {
+      const top = count || 10
+      if (isGitHub(connection)) {
+        return gitHubGetPipelineRuns(connection, pipelineId, top)
+      }
       try {
         const top = count || 20
         const url = `${connection.organizationUrl}/${encodeURIComponent(connection.projectName)}/_apis/build/builds?api-version=7.1&definitions=${pipelineId}&$top=${top}&queryOrder=queueTimeDescending`
@@ -442,6 +912,9 @@ export function registerDevOpsHandlers(ipcMain: IpcMain): void {
   ipcMain.handle(
     IPC_CHANNELS.DEVOPS_RUN_PIPELINE,
     async (_event, { connection, pipelineId, branch }: { connection: DevOpsConnection; pipelineId: number; branch?: string }) => {
+      if (isGitHub(connection)) {
+        return gitHubRunPipeline(connection, pipelineId, branch)
+      }
       try {
         const url = `${connection.organizationUrl}/${encodeURIComponent(connection.projectName)}/_apis/build/builds?api-version=7.1`
         const authHeader = await getAuthHeader(connection.auth)
@@ -477,6 +950,9 @@ export function registerDevOpsHandlers(ipcMain: IpcMain): void {
   ipcMain.handle(
     IPC_CHANNELS.DEVOPS_GET_BUILD_TIMELINE,
     async (_event, { connection, buildId }: { connection: DevOpsConnection; buildId: number }) => {
+      if (isGitHub(connection)) {
+        return gitHubGetBuildTimeline(connection, buildId)
+      }
       try {
         const url = `${connection.organizationUrl}/${encodeURIComponent(connection.projectName)}/_apis/build/builds/${buildId}/timeline?api-version=7.1`
         const result = await azureDevOpsRequest<{ records: AzureTimelineRecord[] }>(connection.auth, url)
@@ -493,6 +969,9 @@ export function registerDevOpsHandlers(ipcMain: IpcMain): void {
   ipcMain.handle(
     IPC_CHANNELS.DEVOPS_GET_APPROVALS,
     async (_event, { connection, buildIds }: { connection: DevOpsConnection; buildIds: number[] }) => {
+      if (isGitHub(connection)) {
+        return gitHubGetApprovals(connection, buildIds)
+      }
       try {
         const idsParam = buildIds.join(',')
         const url = `${connection.organizationUrl}/${encodeURIComponent(connection.projectName)}/_apis/pipelines/approvals?api-version=7.1-preview.1&buildIds=${idsParam}`
@@ -527,6 +1006,9 @@ export function registerDevOpsHandlers(ipcMain: IpcMain): void {
   ipcMain.handle(
     IPC_CHANNELS.DEVOPS_APPROVE,
     async (_event, { connection, approvalId, status, comment }: { connection: DevOpsConnection; approvalId: string; status: 'approved' | 'rejected'; comment?: string }) => {
+      if (isGitHub(connection)) {
+        return gitHubApprove(connection, approvalId, status, comment)
+      }
       try {
         const url = `${connection.organizationUrl}/${encodeURIComponent(connection.projectName)}/_apis/pipelines/approvals?api-version=7.1-preview.1`
         const body = [{ approvalId, status, comment: comment || '' }]
@@ -542,6 +1024,9 @@ export function registerDevOpsHandlers(ipcMain: IpcMain): void {
   ipcMain.handle(
     IPC_CHANNELS.DEVOPS_GET_BUILD_LOG,
     async (_event, { connection, buildId, logId }: { connection: DevOpsConnection; buildId: number; logId: number }) => {
+      if (isGitHub(connection)) {
+        return gitHubGetBuildLog(connection, buildId, logId)
+      }
       try {
         const url = `${connection.organizationUrl}/${encodeURIComponent(connection.projectName)}/_apis/build/builds/${buildId}/logs/${logId}?api-version=7.1`
         const authHeader = await getAuthHeader(connection.auth)

@@ -942,6 +942,19 @@
   padding: 48px 24px;
 }
 
+.devops-empty-state-icons {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.devops-field-textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-family: monospace;
+  font-size: 12px;
+}
+
 .devops-empty-state h3 {
   margin: 0;
   font-size: 16px;

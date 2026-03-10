@@ -1835,6 +1835,10 @@ export const en = {
   'devops.copyAllErrors': 'Copy all errors',
   'devops.createTicketFromErrors': 'Create ticket from errors',
   'devops.ticketCreated': 'Ticket created',
+  'devops.githubDesc': 'GitHub Actions — workflows & deployments',
+  'devops.owner': 'Owner',
+  'devops.repository': 'Repository',
+  'devops.privateKey': 'Private Key (PEM)',
 
   // Namespace
   'namespace.create': 'New namespace',
