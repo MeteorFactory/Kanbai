@@ -8,6 +8,7 @@ import type {
   DevOpsAuthMethod,
   PipelineDefinition,
   PipelineRun,
+  PipelineStage,
   PipelineStatus,
 } from '../../shared/types'
 import '../styles/devops.css'
@@ -24,6 +25,22 @@ function formatRelativeTime(isoString: string | null): string {
   if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`
   if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`
   return `${Math.floor(diffSec / 86400)}d ago`
+}
+
+function formatDuration(startTime: string | null, finishTime: string | null): string {
+  if (!startTime) return '-'
+  const start = new Date(startTime).getTime()
+  const end = finishTime ? new Date(finishTime).getTime() : Date.now()
+  const diffSec = Math.floor((end - start) / 1000)
+  if (diffSec < 60) return `${diffSec}s`
+  if (diffSec < 3600) {
+    const minutes = Math.floor(diffSec / 60)
+    const seconds = diffSec % 60
+    return seconds > 0 ? `${minutes}m ${seconds}s` : `${minutes}m`
+  }
+  const hours = Math.floor(diffSec / 3600)
+  const minutes = Math.floor((diffSec % 3600) / 60)
+  return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`
 }
 
 function statusIcon(status: PipelineStatus): string {
@@ -362,14 +379,87 @@ function PipelineCard({
 
 // --- Pipeline Runs Detail ---
 
+// --- Run Stages Detail ---
+
+function RunStagesDetail({
+  stages,
+  loading,
+  runName,
+  onBack,
+}: {
+  stages: PipelineStage[]
+  loading: boolean
+  runName: string
+  onBack: () => void
+}) {
+  const { t } = useI18n()
+  const [expandedStageId, setExpandedStageId] = useState<string | null>(null)
+
+  if (loading) {
+    return <div className="devops-runs-loading">{t('devops.loadingStages')}</div>
+  }
+
+  return (
+    <div className="devops-stages-detail">
+      <div className="devops-stages-header">
+        <button className="devops-btn devops-btn--small" onClick={onBack} title={t('devops.backToRuns')}>
+          {'\u2190'}
+        </button>
+        <h4>#{runName} - {t('devops.stages')}</h4>
+      </div>
+      {stages.length === 0 ? (
+        <div className="devops-runs-empty">{t('devops.noStages')}</div>
+      ) : (
+        <div className="devops-stages-list">
+          {stages.map((stage) => (
+            <div key={stage.id} className="devops-stage-item">
+              <div
+                className={`devops-stage-row${expandedStageId === stage.id ? ' devops-stage-row--expanded' : ''}`}
+                onClick={() => setExpandedStageId(expandedStageId === stage.id ? null : stage.id)}
+              >
+                <span className={statusClassName(stage.status)}>{statusIcon(stage.status)}</span>
+                <span className="devops-stage-name">{stage.name}</span>
+                <span className="devops-stage-duration">{formatDuration(stage.startTime, stage.finishTime)}</span>
+                <span className="devops-stage-expand">{expandedStageId === stage.id ? '\u25BC' : '\u25B6'}</span>
+              </div>
+              {expandedStageId === stage.id && stage.jobs.length > 0 && (
+                <div className="devops-jobs-list">
+                  {stage.jobs.map((job) => (
+                    <div key={job.id} className="devops-job-row">
+                      <span className={statusClassName(job.status)}>{statusIcon(job.status)}</span>
+                      <span className="devops-job-name">{job.name}</span>
+                      <span className="devops-job-duration">{formatDuration(job.startTime, job.finishTime)}</span>
+                      {job.workerName && (
+                        <span className="devops-job-worker" title={t('devops.worker')}>
+                          {job.workerName}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// --- Pipeline Runs Detail ---
+
 function PipelineRunsDetail({
   runs,
   loading,
   pipelineName,
+  selectedRunId,
+  onSelectRun,
 }: {
   runs: PipelineRun[]
   loading: boolean
   pipelineName: string
+  selectedRunId: number | null
+  onSelectRun: (runId: number) => void
 }) {
   const { t } = useI18n()
 
@@ -386,7 +476,11 @@ function PipelineRunsDetail({
       <h4>{pipelineName} - {t('devops.recentRuns')}</h4>
       <div className="devops-runs-list">
         {runs.map((run) => (
-          <div key={run.id} className="devops-run-row">
+          <div
+            key={run.id}
+            className={`devops-run-row devops-run-row--clickable${selectedRunId === run.id ? ' devops-run-row--selected' : ''}`}
+            onClick={() => onSelectRun(run.id)}
+          >
             <span className={statusClassName(run.status)}>{statusIcon(run.status)}</span>
             <span className="devops-run-name">#{run.name}</span>
             <span className="devops-run-branch">{run.sourceBranch}</span>
@@ -395,7 +489,7 @@ function PipelineRunsDetail({
             {run.url && (
               <button
                 className="devops-btn devops-btn--small"
-                onClick={() => window.kanbai.shell.openExternal(run.url)}
+                onClick={(e) => { e.stopPropagation(); window.kanbai.shell.openExternal(run.url) }}
                 title="Open in browser"
               >
                 {'\u2197'}
@@ -429,6 +523,9 @@ export function DevOpsPanel() {
     selectedPipelineId,
     pipelineRuns,
     runsLoading,
+    selectedRunId,
+    runStages,
+    stagesLoading,
     loadData,
     addConnection,
     updateConnection,
@@ -437,6 +534,8 @@ export function DevOpsPanel() {
     loadPipelines,
     selectPipeline,
     loadPipelineRuns,
+    selectRun,
+    loadRunStages,
     runPipeline,
   } = useDevOpsStore()
 
@@ -448,6 +547,11 @@ export function DevOpsPanel() {
   const selectedPipeline = useMemo(
     () => pipelines.find((p) => p.id === selectedPipelineId) ?? null,
     [pipelines, selectedPipelineId],
+  )
+
+  const selectedRun = useMemo(
+    () => pipelineRuns.find((r) => r.id === selectedRunId) ?? null,
+    [pipelineRuns, selectedRunId],
   )
 
   // Resolve workspace env path
@@ -478,6 +582,23 @@ export function DevOpsPanel() {
     if (!activeConnection || !selectedPipelineId) return
     loadPipelineRuns(activeConnection, selectedPipelineId)
   }, [activeConnection, selectedPipelineId, loadPipelineRuns])
+
+  // Load stages when a run is selected
+  useEffect(() => {
+    if (!activeConnection || !selectedRunId) return
+    loadRunStages(activeConnection, selectedRunId)
+  }, [activeConnection, selectedRunId, loadRunStages])
+
+  const handleSelectRun = useCallback(
+    (runId: number) => {
+      selectRun(runId)
+    },
+    [selectRun],
+  )
+
+  const handleBackToRuns = useCallback(() => {
+    selectRun(null)
+  }, [selectRun])
 
   const closeModal = useCallback(() => {
     setModalStep(null)
@@ -648,11 +769,22 @@ export function DevOpsPanel() {
           </div>
           <div className="devops-detail-panel">
             {selectedPipeline ? (
-              <PipelineRunsDetail
-                runs={pipelineRuns}
-                loading={runsLoading}
-                pipelineName={selectedPipeline.name}
-              />
+              selectedRun ? (
+                <RunStagesDetail
+                  stages={runStages}
+                  loading={stagesLoading}
+                  runName={selectedRun.name}
+                  onBack={handleBackToRuns}
+                />
+              ) : (
+                <PipelineRunsDetail
+                  runs={pipelineRuns}
+                  loading={runsLoading}
+                  pipelineName={selectedPipeline.name}
+                  selectedRunId={selectedRunId}
+                  onSelectRun={handleSelectRun}
+                />
+              )
             ) : (
               <div className="devops-empty">{t('devops.selectPipeline')}</div>
             )}

@@ -4,6 +4,7 @@ import type {
   DevOpsConnection,
   PipelineDefinition,
   PipelineRun,
+  PipelineStage,
 } from '../../../shared/types'
 
 interface DevOpsState {
@@ -16,6 +17,9 @@ interface DevOpsState {
   selectedPipelineId: number | null
   pipelineRuns: PipelineRun[]
   runsLoading: boolean
+  selectedRunId: number | null
+  runStages: PipelineStage[]
+  stagesLoading: boolean
 
   loadData: (projectPath: string) => Promise<void>
   saveData: (projectPath: string) => Promise<void>
@@ -27,6 +31,8 @@ interface DevOpsState {
   loadPipelines: (connection: DevOpsConnection) => Promise<void>
   selectPipeline: (pipelineId: number | null) => void
   loadPipelineRuns: (connection: DevOpsConnection, pipelineId: number) => Promise<void>
+  selectRun: (runId: number | null) => void
+  loadRunStages: (connection: DevOpsConnection, buildId: number) => Promise<void>
   runPipeline: (connection: DevOpsConnection, pipelineId: number, branch?: string) => Promise<{ success: boolean; error?: string }>
 }
 
@@ -44,6 +50,9 @@ export const useDevOpsStore = create<DevOpsState>((set, get) => ({
   selectedPipelineId: null,
   pipelineRuns: [],
   runsLoading: false,
+  selectedRunId: null,
+  runStages: [],
+  stagesLoading: false,
 
   loadData: async (projectPath) => {
     set({ loading: true })
@@ -107,7 +116,7 @@ export const useDevOpsStore = create<DevOpsState>((set, get) => ({
   },
 
   setActiveConnection: (id) => {
-    set({ activeConnectionId: id, pipelines: [], selectedPipelineId: null, pipelineRuns: [], pipelinesError: null })
+    set({ activeConnectionId: id, pipelines: [], selectedPipelineId: null, pipelineRuns: [], pipelinesError: null, selectedRunId: null, runStages: [] })
   },
 
   testConnection: async (connection) => {
@@ -125,7 +134,7 @@ export const useDevOpsStore = create<DevOpsState>((set, get) => ({
   },
 
   selectPipeline: (pipelineId) => {
-    set({ selectedPipelineId: pipelineId, pipelineRuns: [] })
+    set({ selectedPipelineId: pipelineId, pipelineRuns: [], selectedRunId: null, runStages: [] })
   },
 
   loadPipelineRuns: async (connection, pipelineId) => {
@@ -135,6 +144,20 @@ export const useDevOpsStore = create<DevOpsState>((set, get) => ({
       set({ pipelineRuns: result.runs, runsLoading: false })
     } else {
       set({ pipelineRuns: [], runsLoading: false })
+    }
+  },
+
+  selectRun: (runId) => {
+    set({ selectedRunId: runId, runStages: [] })
+  },
+
+  loadRunStages: async (connection, buildId) => {
+    set({ stagesLoading: true })
+    const result = await window.kanbai.devops.getBuildTimeline(connection, buildId)
+    if (result.success) {
+      set({ runStages: result.stages, stagesLoading: false })
+    } else {
+      set({ runStages: [], stagesLoading: false })
     }
   },
 

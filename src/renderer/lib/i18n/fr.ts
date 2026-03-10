@@ -1809,6 +1809,13 @@ export const fr = {
   'devops.loadingRuns': 'Chargement des executions...',
   'devops.noRuns': 'Aucune execution trouvee pour ce pipeline.',
   'devops.recentRuns': 'Executions recentes',
+  'devops.stages': 'Stages',
+  'devops.jobs': 'Jobs',
+  'devops.loadingStages': 'Chargement des stages...',
+  'devops.noStages': 'Aucun stage trouve pour cette execution.',
+  'devops.duration': 'Duree',
+  'devops.backToRuns': 'Retour aux executions',
+  'devops.worker': 'Agent',
 
   // Namespace
   'namespace.create': 'Nouveau namespace',

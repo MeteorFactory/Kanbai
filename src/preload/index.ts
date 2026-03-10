@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, webUtils } from 'electron'
-import { IPC_CHANNELS, AppSettings, Workspace, Namespace, KanbanTask, KanbanAttachment, FileEntry, SessionData, NpmPackageInfo, TodoEntry, ProjectStatsData, SearchResult, PromptTemplate, HttpMethod, ApiHeader, ApiTestAssertion, ApiTestFile, ApiResponse, ApiTestResult, DbConnectionConfig, DbFile, DbTable, DbTableInfo, DbQueryResult, DbBackupResult, DbBackupEntry, DbRestoreResult, DbEnvironmentTag, DbBackupLogEntry, DbNlPermissions, DbNlQueryResponse, DbNlGenerateResponse, DbNlHistoryEntry, DbNlInterpretRequest, DbNlInterpretResponse, McpServerConfig, McpHelpResult, SshKeyInfo, SshKeyType, AnalysisToolDef, AnalysisRunOptions, AnalysisReport, AnalysisProgress, AnalysisTicketRequest, RuleEntry, TemplateRuleEntry, PackageManagerType, PackageInfo, ProjectPackageManager, PkgNlMessage, HealthCheckConfig, HealthCheckFile, HealthCheckLogEntry, HealthCheckSchedulerStatus, DevOpsFile, DevOpsConnection, PipelineDefinition, PipelineRun } from '../shared/types'
+import { IPC_CHANNELS, AppSettings, Workspace, Namespace, KanbanTask, KanbanAttachment, FileEntry, SessionData, NpmPackageInfo, TodoEntry, ProjectStatsData, SearchResult, PromptTemplate, HttpMethod, ApiHeader, ApiTestAssertion, ApiTestFile, ApiResponse, ApiTestResult, DbConnectionConfig, DbFile, DbTable, DbTableInfo, DbQueryResult, DbBackupResult, DbBackupEntry, DbRestoreResult, DbEnvironmentTag, DbBackupLogEntry, DbNlPermissions, DbNlQueryResponse, DbNlGenerateResponse, DbNlHistoryEntry, DbNlInterpretRequest, DbNlInterpretResponse, McpServerConfig, McpHelpResult, SshKeyInfo, SshKeyType, AnalysisToolDef, AnalysisRunOptions, AnalysisReport, AnalysisProgress, AnalysisTicketRequest, RuleEntry, TemplateRuleEntry, PackageManagerType, PackageInfo, ProjectPackageManager, PkgNlMessage, HealthCheckConfig, HealthCheckFile, HealthCheckLogEntry, HealthCheckSchedulerStatus, DevOpsFile, DevOpsConnection, PipelineDefinition, PipelineRun, PipelineStage } from '../shared/types'
 
 // Increase max listeners to accommodate multiple terminal tabs and event streams.
 // Each terminal registers onData + onClose listeners on the shared ipcRenderer,
@@ -810,6 +810,8 @@ const api = {
       ipcRenderer.invoke(IPC_CHANNELS.DEVOPS_GET_PIPELINE_RUNS, { connection, pipelineId, count }),
     runPipeline: (connection: DevOpsConnection, pipelineId: number, branch?: string): Promise<{ success: boolean; run?: PipelineRun; error?: string }> =>
       ipcRenderer.invoke(IPC_CHANNELS.DEVOPS_RUN_PIPELINE, { connection, pipelineId, branch }),
+    getBuildTimeline: (connection: DevOpsConnection, buildId: number): Promise<{ success: boolean; stages: PipelineStage[]; error?: string }> =>
+      ipcRenderer.invoke(IPC_CHANNELS.DEVOPS_GET_BUILD_TIMELINE, { connection, buildId }),
   },
 
   // Notifications

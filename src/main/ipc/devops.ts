@@ -8,6 +8,8 @@ import {
   DevOpsConnection,
   PipelineDefinition,
   PipelineRun,
+  PipelineStage,
+  PipelineJob,
   PipelineStatus,
 } from '../../shared/types'
 
@@ -115,6 +117,62 @@ interface AzureBuildRun {
   sourceVersion: string
   requestedFor?: { displayName: string }
   _links?: { web?: { href?: string } }
+}
+
+interface AzureTimelineRecord {
+  id: string
+  parentId: string | null
+  type: string
+  name: string
+  order: number
+  state: string
+  result: string | null
+  startTime: string | null
+  finishTime: string | null
+  workerName: string | null
+}
+
+function mapTimelineStatus(state: string, result: string | null): PipelineStatus {
+  if (state === 'inProgress') return 'running'
+  if (state === 'pending') return 'notStarted'
+  if (result === 'succeeded') return 'succeeded'
+  if (result === 'failed') return 'failed'
+  if (result === 'canceled' || result === 'cancelled') return 'canceled'
+  if (result === 'skipped') return 'canceled'
+  return 'unknown'
+}
+
+function mapTimelineToStages(records: AzureTimelineRecord[]): PipelineStage[] {
+  const stages = records.filter((r) => r.type === 'Stage')
+  const jobs = records.filter((r) => r.type === 'Job')
+
+  return stages
+    .sort((a, b) => a.order - b.order)
+    .map((stage): PipelineStage => {
+      const stageJobs: PipelineJob[] = jobs
+        .filter((j) => j.parentId === stage.id)
+        .sort((a, b) => a.order - b.order)
+        .map((job): PipelineJob => ({
+          id: job.id,
+          name: job.name,
+          status: mapTimelineStatus(job.state, job.result),
+          startTime: job.startTime ?? null,
+          finishTime: job.finishTime ?? null,
+          result: job.result || '',
+          workerName: job.workerName || '',
+        }))
+
+      return {
+        id: stage.id,
+        name: stage.name,
+        order: stage.order,
+        status: mapTimelineStatus(stage.state, stage.result),
+        startTime: stage.startTime ?? null,
+        finishTime: stage.finishTime ?? null,
+        result: stage.result || '',
+        jobs: stageJobs,
+      }
+    })
 }
 
 function mapBuildRun(run: AzureBuildRun): PipelineRun {
@@ -246,6 +304,22 @@ export function registerDevOpsHandlers(ipcMain: IpcMain): void {
         return { success: true, run: mapBuildRun(run) }
       } catch (err) {
         return { success: false, error: String(err) }
+      }
+    },
+  )
+
+  // Get build timeline (stages & jobs)
+  ipcMain.handle(
+    IPC_CHANNELS.DEVOPS_GET_BUILD_TIMELINE,
+    async (_event, { connection, buildId }: { connection: DevOpsConnection; buildId: number }) => {
+      try {
+        const url = `${connection.organizationUrl}/${encodeURIComponent(connection.projectName)}/_apis/build/builds/${buildId}/timeline?api-version=7.1`
+        const result = await azureDevOpsRequest<{ records: AzureTimelineRecord[] }>(connection.auth, url)
+
+        const stages = mapTimelineToStages(result.records || [])
+        return { success: true, stages }
+      } catch (err) {
+        return { success: false, stages: [], error: String(err) }
       }
     },
   )

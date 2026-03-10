@@ -926,6 +926,27 @@ export interface PipelineDefinition {
   latestRun: PipelineRun | null
 }
 
+export interface PipelineStage {
+  id: string
+  name: string
+  order: number
+  status: PipelineStatus
+  startTime: string | null
+  finishTime: string | null
+  result: string
+  jobs: PipelineJob[]
+}
+
+export interface PipelineJob {
+  id: string
+  name: string
+  status: PipelineStatus
+  startTime: string | null
+  finishTime: string | null
+  result: string
+  workerName: string
+}
+
 export interface DevOpsFile {
   version: 1
   connections: DevOpsConnection[]
@@ -1344,4 +1365,5 @@ export const IPC_CHANNELS = {
   DEVOPS_LIST_PIPELINES: 'devops:listPipelines',
   DEVOPS_GET_PIPELINE_RUNS: 'devops:getPipelineRuns',
   DEVOPS_RUN_PIPELINE: 'devops:runPipeline',
+  DEVOPS_GET_BUILD_TIMELINE: 'devops:getBuildTimeline',
 } as const
