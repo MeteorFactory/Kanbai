@@ -14,7 +14,7 @@ alwaysApply: true
 
 - Electron 40+ with TypeScript strict mode
 - electron-vite for build tooling (main + preload + renderer)
-- Electron Forge for packaging and distribution
+- electron-builder for macOS packaging (.dmg, .app)
 - Vitest for unit tests, Playwright for E2E tests
 
 ## Architecture
@@ -55,7 +55,7 @@ Every `BrowserWindow` must enforce:
 
 ## Code Style
 
-- Files: `kebab-case.ts` — IPC handlers: `[namespace]-handler.ts`
+- Files: `kebab-case.ts` — IPC handlers: `[namespace].ts`
 - One handler file per IPC namespace
 - Shared types in `src/shared/types/`
 - Constants (channels, defaults) in `src/shared/constants/`
@@ -65,8 +65,7 @@ Every `BrowserWindow` must enforce:
 ```bash
 npm run dev         # Dev with hot-reload (electron-vite)
 npm run build       # Production build
-npm run package     # Package app (Electron Forge)
-npm run make        # Create distributables
+npm run package     # Package app (electron-builder)
 npm run test        # Unit tests (Vitest)
 npm run test:e2e    # E2E tests (Playwright)
 npm run lint        # ESLint
