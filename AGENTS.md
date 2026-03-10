@@ -32,13 +32,13 @@ Kanbai is an AI-enhanced macOS terminal built with Electron. It combines a full 
 ```
 src/
   main/              # Main process (Node.js) — app lifecycle, IPC handlers, services
-    ipc/             # IPC handlers (1 file per domain, ~29 handlers)
+    ipc/             # IPC handlers (1 file per domain, 29 handlers)
     services/        # StorageService, healthCheckScheduler, notificationService, etc.
       database/      # Database connection and query services
       packages/      # Package analysis services
   preload/           # Preload scripts — contextBridge, exposes window.kanbai
   renderer/          # Renderer process (React + Zustand)
-    components/      # All UI components (flat architecture, ~50+ components)
+    components/      # All UI components (flat architecture, ~58 components)
     lib/stores/      # Zustand stores (per domain, 13 stores)
     styles/          # CSS custom properties
   shared/            # Shared types and constants (both processes)

@@ -112,7 +112,7 @@ Methodology:
 - Work with the tester for component testing
 - Consider macOS-specific UI patterns (titlebar, sidebar, preferences window)
 
-Technologies: React/TypeScript in the renderer process. CSS Modules or Tailwind for styling.
+Technologies: React/TypeScript in the renderer process. CSS custom properties for styling (no Tailwind, no CSS modules).
 Always communicate your proposals to the team lead before implementing.
 ```
 

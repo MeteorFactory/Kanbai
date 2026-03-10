@@ -30,7 +30,7 @@ Three-process Electron model:
 
 1. **Main Process** (`src/main/`) — Node.js, full OS access
    - `index.ts` — App lifecycle, BrowserWindow creation
-   - `ipc/` — IPC handlers (1 file per domain, ~29 handlers)
+   - `ipc/` — IPC handlers (1 file per domain, 29 handlers)
    - `services/` — StorageService, healthCheckScheduler, notificationService, database/, packages/
 
 2. **Preload** (`src/preload/`) — Bridge between processes
@@ -39,7 +39,7 @@ Three-process Electron model:
 
 3. **Renderer** (`src/renderer/`) — Chromium, sandboxed
    - React app with Zustand state management
-   - Flat component architecture in `components/` (~50+ components)
+   - Flat component architecture in `components/` (~58 components)
    - Stores in `lib/stores/` (13 stores)
    - CSS custom properties in `styles/`
 
