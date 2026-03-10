@@ -238,9 +238,9 @@ auto_commit_worktree() {
   git commit -m "chore(kanban): auto-commit \${ticket_label} worktree changes" 2>/dev/null
 }
 
-# Read ticket status, isCtoTicket flag, worktree info, and autoMerge config
+# Read ticket status, isCtoTicket flag, worktree info, base branch, and autoMerge config
 # Use tab separator to handle paths with spaces correctly
-IFS=$'\\t' read -r TICKET_STATUS IS_CTO WORKTREE_PATH WORKTREE_BRANCH AUTO_MERGE <<< $(node -e "
+IFS=$'\\t' read -r TICKET_STATUS IS_CTO WORKTREE_PATH WORKTREE_BRANCH WORKTREE_BASE_BRANCH AUTO_MERGE <<< $(node -e "
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
@@ -258,6 +258,7 @@ try {
     }
     const wtPath = task.worktreePath || '';
     const wtBranch = task.worktreeBranch || '';
+    const wtBaseBranch = task.worktreeBaseBranch || '';
     let autoMerge = 'false';
     if (wsId) {
       try {
@@ -268,7 +269,7 @@ try {
         }
       } catch(e2) { /* ignore */ }
     }
-    process.stdout.write([task.status, isCto ? 'true' : 'false', wtPath, wtBranch, autoMerge].join('\\t'));
+    process.stdout.write([task.status, isCto ? 'true' : 'false', wtPath, wtBranch, wtBaseBranch, autoMerge].join('\\t'));
   }
 } catch(e) { /* ignore */ }
 ")
