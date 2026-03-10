@@ -723,7 +723,7 @@ describe('DevOps IPC Handlers', () => {
 
   // --- DEVOPS_GET_APPROVALS ---
 
-  it('devops:getApprovals retourne les approbations en attente', async () => {
+  it('devops:getApprovals retourne les approbations avec pipeline.owner.id', async () => {
     const azureResponse = {
       value: [
         {
@@ -739,8 +739,10 @@ describe('DevOps IPC Handlers', () => {
               comment: '',
             },
           ],
-          _links: {
-            build: { href: 'https://dev.azure.com/testorg/TestProject/_apis/build/builds/100' },
+          pipeline: {
+            owner: { id: 100, name: '20240115.1' },
+            id: '42',
+            name: 'Build-CI',
           },
         },
       ],
@@ -765,6 +767,120 @@ describe('DevOps IPC Handlers', () => {
     expect(approval.steps).toHaveLength(1)
     expect(approval.steps[0].assignedApprover).toBe('Team Lead')
     expect(approval.steps[0].status).toBe('pending')
+  })
+
+  it('devops:getApprovals filtre client-side par buildIds', async () => {
+    const azureResponse = {
+      value: [
+        {
+          id: 'approval-match',
+          status: 'pending',
+          createdOn: '2024-01-15T14:00:00Z',
+          instructions: '',
+          minRequiredApprovers: 1,
+          steps: [],
+          pipeline: { owner: { id: 100, name: '1' }, id: '42', name: 'CI' },
+        },
+        {
+          id: 'approval-no-match',
+          status: 'pending',
+          createdOn: '2024-01-15T14:00:00Z',
+          instructions: '',
+          minRequiredApprovers: 1,
+          steps: [],
+          pipeline: { owner: { id: 999, name: '2' }, id: '42', name: 'CI' },
+        },
+      ],
+    }
+    mockFetch.mockResolvedValueOnce(createFetchResponse(azureResponse))
+
+    const connection = createTestConnection()
+    const result = await mockIpcMain._invoke('devops:getApprovals', {
+      connection,
+      buildIds: [100],
+    })
+
+    expect(result.approvals).toHaveLength(1)
+    expect(result.approvals[0].id).toBe('approval-match')
+    expect(result.approvals[0].buildId).toBe(100)
+  })
+
+  it('devops:getApprovals mappe timedOut vers canceled', async () => {
+    const azureResponse = {
+      value: [
+        {
+          id: 'approval-timeout',
+          status: 'timedOut',
+          createdOn: '2024-01-15T14:00:00Z',
+          instructions: '',
+          minRequiredApprovers: 1,
+          steps: [],
+          pipeline: { owner: { id: 100, name: '1' }, id: '42', name: 'CI' },
+        },
+      ],
+    }
+    mockFetch.mockResolvedValueOnce(createFetchResponse(azureResponse))
+
+    const connection = createTestConnection()
+    const result = await mockIpcMain._invoke('devops:getApprovals', {
+      connection,
+      buildIds: [100],
+    })
+
+    expect(result.approvals[0].status).toBe('canceled')
+  })
+
+  it('devops:getApprovals fallback sur _links.build.href pour le buildId', async () => {
+    const azureResponse = {
+      value: [
+        {
+          id: 'approval-legacy',
+          status: 'pending',
+          createdOn: '2024-01-15T14:00:00Z',
+          instructions: '',
+          minRequiredApprovers: 1,
+          steps: [],
+          _links: {
+            build: { href: 'https://dev.azure.com/org/proj/_apis/build/builds/200' },
+          },
+        },
+      ],
+    }
+    mockFetch.mockResolvedValueOnce(createFetchResponse(azureResponse))
+
+    const connection = createTestConnection()
+    const result = await mockIpcMain._invoke('devops:getApprovals', {
+      connection,
+      buildIds: [200],
+    })
+
+    expect(result.approvals).toHaveLength(1)
+    expect(result.approvals[0].buildId).toBe(200)
+  })
+
+  it('devops:getApprovals gere les steps vides gracieusement', async () => {
+    const azureResponse = {
+      value: [
+        {
+          id: 'approval-no-steps',
+          status: 'pending',
+          createdOn: '2024-01-15T14:00:00Z',
+          instructions: '',
+          minRequiredApprovers: 1,
+          steps: [],
+          pipeline: { owner: { id: 100, name: '1' }, id: '42', name: 'CI' },
+        },
+      ],
+    }
+    mockFetch.mockResolvedValueOnce(createFetchResponse(azureResponse))
+
+    const connection = createTestConnection()
+    const result = await mockIpcMain._invoke('devops:getApprovals', {
+      connection,
+      buildIds: [100],
+    })
+
+    expect(result.approvals[0].steps).toEqual([])
   })
 
   it('devops:getApprovals passe les buildIds en parametre de requete', async () => {
@@ -1050,26 +1166,35 @@ describe('DevOps IPC Handlers', () => {
 
   // --- Approval Extraction Edge Cases ---
 
-  it('devops:getApprovals extrait le buildId depuis le lien _links.build', async () => {
+  it('devops:getApprovals prefere pipeline.owner.id et filtre par buildIds', async () => {
     const azureResponse = {
       value: [
         {
-          id: 'ap-1',
+          id: 'ap-owner',
           status: 'pending',
           createdOn: '2024-01-15T14:00:00Z',
           instructions: '',
           minRequiredApprovers: 1,
-          steps: [{ assignedApprover: { displayName: 'User' }, status: 'pending', comment: '' }],
+          steps: [],
+          pipeline: { owner: { id: 42, name: '1' }, id: '10', name: 'CI' },
+        },
+        {
+          id: 'ap-link',
+          status: 'pending',
+          createdOn: '2024-01-14T10:00:00Z',
+          instructions: '',
+          minRequiredApprovers: 1,
+          steps: [],
           _links: { build: { href: 'https://dev.azure.com/org/proj/_apis/build/builds/42' } },
         },
         {
-          id: 'ap-2',
+          id: 'ap-other',
           status: 'approved',
           createdOn: '2024-01-14T10:00:00Z',
           instructions: '',
           minRequiredApprovers: 2,
-          steps: [{ assignedApprover: { displayName: 'Admin' }, status: 'approved', comment: 'OK' }],
-          _links: {},
+          steps: [],
+          pipeline: { owner: { id: 999, name: '2' }, id: '10', name: 'CI' },
         },
       ],
     }
@@ -1081,7 +1206,9 @@ describe('DevOps IPC Handlers', () => {
       buildIds: [42],
     })
 
+    // ap-owner and ap-link match buildId 42, ap-other (999) is filtered out
+    expect(result.approvals).toHaveLength(2)
     expect(result.approvals[0].buildId).toBe(42)
-    expect(result.approvals[1].buildId).toBe(0)
+    expect(result.approvals[1].buildId).toBe(42)
   })
 })

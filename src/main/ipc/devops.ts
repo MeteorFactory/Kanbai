@@ -119,6 +119,7 @@ function mapApprovalStatus(status: string): ApprovalStatus {
     approved: 'approved',
     rejected: 'rejected',
     canceled: 'canceled',
+    timedOut: 'canceled',
     skipped: 'skipped',
     undefined: 'undefined',
   }
@@ -136,6 +137,14 @@ interface AzureApproval {
     status: string
     comment: string
   }>
+  pipeline?: {
+    owner?: {
+      id: number
+      name: string
+    }
+    id: string
+    name: string
+  }
   _links?: {
     build?: { href?: string }
   }
@@ -436,7 +445,7 @@ export function registerDevOpsHandlers(ipcMain: IpcMain): void {
     },
   )
 
-  // Get pending approvals for a build
+  // Get pending approvals for builds
   ipcMain.handle(
     IPC_CHANNELS.DEVOPS_GET_APPROVALS,
     async (_event, { connection, buildIds }: { connection: DevOpsConnection; buildIds: number[] }) => {
@@ -445,19 +454,23 @@ export function registerDevOpsHandlers(ipcMain: IpcMain): void {
         const url = `${connection.organizationUrl}/${encodeURIComponent(connection.projectName)}/_apis/pipelines/approvals?api-version=7.1-preview.1&buildIds=${idsParam}`
         const result = await azureDevOpsRequest<{ value: AzureApproval[] }>(connection.auth, url)
 
-        const approvals: PipelineApproval[] = result.value.map((a) => ({
+        const buildIdSet = new Set(buildIds)
+        const allApprovals: PipelineApproval[] = result.value.map((a) => ({
           id: a.id,
           buildId: extractBuildIdFromApproval(a),
           status: mapApprovalStatus(a.status),
           createdOn: a.createdOn,
           instructions: a.instructions || '',
           minRequiredApprovers: a.minRequiredApprovers,
-          steps: a.steps.map((s) => ({
-            assignedApprover: s.assignedApprover.displayName,
+          steps: (a.steps || []).map((s) => ({
+            assignedApprover: s.assignedApprover?.displayName ?? '',
             status: mapApprovalStatus(s.status),
             comment: s.comment || '',
           })),
         }))
+
+        // Azure API may ignore the buildIds filter — filter client-side
+        const approvals = allApprovals.filter((a) => buildIdSet.has(a.buildId))
 
         return { success: true, approvals }
       } catch (err) {
@@ -510,6 +523,11 @@ export function registerDevOpsHandlers(ipcMain: IpcMain): void {
 }
 
 function extractBuildIdFromApproval(approval: AzureApproval): number {
+  // Primary: pipeline.owner.id contains the build ID directly
+  if (approval.pipeline?.owner?.id) {
+    return approval.pipeline.owner.id
+  }
+  // Fallback: parse from _links.build.href
   const buildHref = approval._links?.build?.href ?? ''
   const match = buildHref.match(/builds\/(\d+)/)
   return match ? parseInt(match[1]!, 10) : 0

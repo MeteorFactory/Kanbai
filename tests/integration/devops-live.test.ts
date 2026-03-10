@@ -349,6 +349,59 @@ describeIf('DevOps IPC Handlers — Live API', () => {
     }
   })
 
+  it('devops:getApprovals filtre correctement par buildIds', async () => {
+    // Each approval's buildId should be in the requested buildIds set
+    const buildIds = firstPipelineRuns.slice(0, 3).map((r) => r.id)
+    const buildIdSet = new Set(buildIds)
+
+    for (const approval of approvals) {
+      expect(buildIdSet.has(approval.buildId)).toBe(true)
+    }
+
+    console.log(
+      `[LIVE] ${approvals.length} approval(s) toutes associees aux builds demandes: [${buildIds.join(',')}]`,
+    )
+  })
+
+  it('devops:getApprovals retourne les approvals de chaque pipeline separement', async () => {
+    const allApprovalsByPipeline: Record<string, number> = {}
+
+    for (const pipeline of pipelines) {
+      const runsResult = await mockIpcMain._invoke<{
+        success: boolean
+        runs: PipelineRun[]
+      }>('devops:getPipelineRuns', {
+        connection,
+        pipelineId: pipeline.id,
+        count: 3,
+      })
+
+      if (runsResult.runs.length === 0) continue
+
+      const buildIds = runsResult.runs.map((r) => r.id)
+      const result = await mockIpcMain._invoke<{
+        success: boolean
+        approvals: PipelineApproval[]
+      }>('devops:getApprovals', {
+        connection,
+        buildIds,
+      })
+
+      expect(result.success).toBe(true)
+      allApprovalsByPipeline[pipeline.name] = result.approvals.length
+
+      // Verify each approval matches a requested build
+      for (const approval of result.approvals) {
+        expect(buildIds).toContain(approval.buildId)
+      }
+    }
+
+    console.log('[LIVE] Approvals par pipeline:')
+    for (const [name, count] of Object.entries(allApprovalsByPipeline)) {
+      console.log(`  ${name}: ${count} approval(s)`)
+    }
+  })
+
   // ── Cross-pipeline coverage ─────────────────────────────────
 
   it('devops:getPipelineRuns fonctionne pour chaque pipeline du projet', async () => {
