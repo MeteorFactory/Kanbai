@@ -501,7 +501,10 @@ function TaskRow({
 
   return (
     <div className={`devops-task-item${task.status === 'failed' ? ' devops-task-item--failed' : ''}`}>
-      <div className="devops-task-row">
+      <div
+        className={`devops-task-row${task.logId ? ' devops-task-row--clickable' : ''}${showLog ? ' devops-task-row--active' : ''}`}
+        onClick={task.logId ? handleViewLogs : undefined}
+      >
         <span className={`devops-status devops-status--${task.status}`}>
           {statusIcon(task.status)}
         </span>
@@ -513,15 +516,6 @@ function TaskRow({
           <span className="devops-badge devops-badge--warning">{task.warningCount}</span>
         )}
         <span className="devops-task-duration">{formatDuration(task.startTime, task.finishTime)}</span>
-        {task.logId && (
-          <button
-            className={`devops-btn devops-btn--small devops-btn--log${showLog ? ' devops-btn--log-active' : ''}`}
-            onClick={(e) => { e.stopPropagation(); handleViewLogs() }}
-            title={t('devops.viewLogs')}
-          >
-            {'\uD83D\uDCCB'}
-          </button>
-        )}
       </div>
       {task.issues.length > 0 && (
         <div className="devops-task-issues">
@@ -598,27 +592,11 @@ function InlineStageDetail({
     })
   }, [])
 
-  // Auto-expand the first failed stage and its failed jobs
+  // Reset expanded state when stages change (new run selected)
   useEffect(() => {
-    if (stages.length === 0) return
-    const failedStage = stages.find((s) => s.status === 'failed')
-    if (failedStage) {
-      setExpandedStageId(failedStage.id)
-      // Auto-expand failed jobs and load their logs
-      const failedJobIds = new Set<string>()
-      for (const job of failedStage.jobs) {
-        if (job.status === 'failed') {
-          failedJobIds.add(job.id)
-          if (activeConnection && buildId && job.logId) {
-            loadJobLog(activeConnection, buildId, job.id, job.logId)
-          }
-        }
-      }
-      if (failedJobIds.size > 0) {
-        setExpandedJobIds(failedJobIds)
-      }
-    }
-  }, [stages, activeConnection, buildId, loadJobLog])
+    setExpandedStageId(null)
+    setExpandedJobIds(new Set())
+  }, [stages])
 
   if (loading) {
     return <div className="devops-stages-loading">{t('devops.loadingStages')}</div>
@@ -736,8 +714,7 @@ function InlineStageDetail({
                       const isJobExpanded = expandedJobIds.has(job.id)
                       const logContent = jobLogs[job.id]
                       const logLoading = jobLogsLoading[job.id]
-                      const hasAutoLoadedLog = job.status === 'failed' && job.logId && jobLogs[job.id] && !jobLogsError[job.id]
-                      const showJobLog = isJobExpanded || hasAutoLoadedLog
+                      const showJobLog = isJobExpanded
                       const hasTasks = job.tasks.length > 0
 
                       return (
@@ -876,6 +853,7 @@ function PipelineRunsDetail({
   } = useDevOpsStore()
 
   const [approvalComment, setApprovalComment] = useState('')
+  const [inlineApprovalRunId, setInlineApprovalRunId] = useState<number | null>(null)
 
   const handleToggleRun = useCallback((buildId: number) => {
     if (!activeConnection) return
@@ -932,7 +910,15 @@ function PipelineRunsDetail({
                 <span className="devops-run-time">{formatRelativeTime(run.finishTime ?? run.startTime)}</span>
                 <span className="devops-run-by">{run.requestedBy}</span>
                 {hasPendingApprovals && (
-                  <span className="devops-run-approval-badge">{t('devops.pendingApproval')}</span>
+                  <span
+                    className={`devops-run-approval-badge${inlineApprovalRunId === run.id ? ' devops-run-approval-badge--active' : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setInlineApprovalRunId(inlineApprovalRunId === run.id ? null : run.id)
+                    }}
+                  >
+                    {t('devops.pendingApproval')}
+                  </span>
                 )}
                 {run.url && (
                   <button
@@ -945,8 +931,8 @@ function PipelineRunsDetail({
                 )}
               </div>
 
-              {/* Inline approval actions — visible without expanding */}
-              {hasPendingApprovals && !isExpanded && (
+              {/* Inline approval actions — visible on badge click */}
+              {inlineApprovalRunId === run.id && !isExpanded && hasPendingApprovals && (
                 <div className="devops-run-inline-approvals">
                   {pendingApprovals.map((approval) => (
                     <div key={approval.id} className="devops-inline-approval">

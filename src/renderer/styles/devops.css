@@ -281,6 +281,16 @@
   padding: 2px 8px;
   border-radius: 10px;
   white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.devops-run-approval-badge:hover {
+  background: rgba(255, 152, 0, 0.25);
+}
+
+.devops-run-approval-badge--active {
+  background: rgba(255, 152, 0, 0.3);
 }
 
 /* Run item with pending approval highlight */
@@ -723,6 +733,20 @@
   gap: 6px;
   padding: 4px 8px;
   font-size: 11px;
+}
+
+.devops-task-row--clickable {
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.15s ease;
+}
+
+.devops-task-row--clickable:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.devops-task-row--active {
+  background: rgba(33, 150, 243, 0.08);
 }
 
 .devops-task-name {
