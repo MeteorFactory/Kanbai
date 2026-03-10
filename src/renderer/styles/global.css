@@ -6370,63 +6370,6 @@ body {
   background: white;
 }
 
-.settings-toggle--disabled {
-  cursor: default;
-  opacity: 0.6;
-  pointer-events: none;
-}
-
-/* Settings card header */
-.settings-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.settings-card-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin: 0;
-}
-
-.settings-card-description {
-  font-size: 11px;
-  color: var(--text-muted);
-  margin: -4px 0 4px 0;
-  line-height: 1.4;
-}
-
-.settings-badge {
-  font-size: 10px;
-  font-weight: 500;
-  color: var(--text-muted);
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 2px 6px;
-  flex-shrink: 0;
-}
-
-.settings-empty-state {
-  font-size: 12px;
-  color: var(--text-muted);
-  text-align: center;
-  padding: 12px 0;
-}
-
-.settings-row--readonly {
-  opacity: 0.75;
-}
-
-.settings-value-text {
-  font-size: 12px;
-  font-family: 'Menlo', monospace;
-  color: var(--text-secondary);
-  flex-shrink: 0;
-}
-
 /* Settings button */
 .settings-btn {
   height: 32px;
