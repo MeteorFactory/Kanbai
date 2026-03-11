@@ -86,8 +86,8 @@ function stageStatusIcon(status: StageStatus): string {
   }
 }
 
-function statusClassName(status: PipelineStatus): string {
-  return `devops-status devops-status--${status}`
+function StatusDot({ status, size = 8 }: { status: string; size?: number }) {
+  return <span className={`devops-dot devops-dot--${status}`} style={{ width: size, height: size }} />
 }
 
 // --- Azure DevOps SVG Icon ---
@@ -521,6 +521,7 @@ function PipelineCard({
   return (
     <div
       className={`devops-pipeline-card${isSelected ? ' devops-pipeline-card--selected' : ''}${isDragOver ? ' devops-pipeline-card--drag-over' : ''}`}
+      data-status={status}
       onClick={onSelect}
       draggable
       onDragStart={(e) => onDragStart(e, index)}
@@ -529,12 +530,21 @@ function PipelineCard({
       onDragEnd={onDragEnd}
     >
       <div className="devops-pipeline-card-header">
-        <span className="devops-pipeline-card-drag-handle">{'\u2261'}</span>
-        <span className={statusClassName(status)}>{statusIcon(status)}</span>
+        <StatusDot status={status} size={10} />
         <span className="devops-pipeline-card-name">{pipeline.name}</span>
         {pipeline.folder !== '\\' && (
           <span className="devops-pipeline-card-folder">{pipeline.folder}</span>
         )}
+        <div className="devops-pipeline-card-actions">
+          <button className="devops-btn devops-btn--small" onClick={(e) => { e.stopPropagation(); onRun() }} title="Run pipeline">
+            {'\u25B6'}
+          </button>
+          {pipeline.url && (
+            <button className="devops-btn devops-btn--small" onClick={(e) => { e.stopPropagation(); onOpenUrl() }} title="Open in browser">
+              {'\u2197'}
+            </button>
+          )}
+        </div>
       </div>
       {latestRun && (
         <div className="devops-pipeline-card-info">
@@ -543,16 +553,6 @@ function PipelineCard({
           <span className="devops-pipeline-card-by">{latestRun.requestedBy}</span>
         </div>
       )}
-      <div className="devops-pipeline-card-actions">
-        <button className="devops-btn devops-btn--small" onClick={(e) => { e.stopPropagation(); onRun() }} title="Run pipeline">
-          {'\u25B6'}
-        </button>
-        {pipeline.url && (
-          <button className="devops-btn devops-btn--small" onClick={(e) => { e.stopPropagation(); onOpenUrl() }} title="Open in browser">
-            {'\u2197'}
-          </button>
-        )}
-      </div>
     </div>
   )
 }
@@ -1052,7 +1052,7 @@ function PipelineRunsDetail({
                 onClick={() => handleToggleRun(run.id)}
               >
                 <span className={`devops-run-expand-icon${isExpanded ? ' devops-run-expand-icon--open' : ''}`}>{'\u25B6'}</span>
-                <span className={statusClassName(run.status)}>{statusIcon(run.status)}</span>
+                <StatusDot status={run.status} size={9} />
                 <span className="devops-run-name">#{run.name}</span>
                 <span className="devops-run-branch">{run.sourceBranch}</span>
                 <span className="devops-run-time">{formatRelativeTime(run.finishTime ?? run.startTime)}</span>
