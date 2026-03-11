@@ -1052,7 +1052,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
       initialCommand = `${unsetEnv}${exportEnv}cat "${relativePromptPath}" | ${providerConfig.cliCommand} ${providerConfig.nonInteractiveArgs.join(' ')} ; bash "$HOME/.kanbai/hooks/kanbai-terminal-recovery.sh"`
     } else {
       // Regular tickets: interactive mode — with fallback to kanban JSON if prompt file is missing
-      const escapedPrompt = `Lis et execute les instructions du fichier ${relativePromptPath}. Si le fichier n'existe pas, lis le ticket id \`${task.id}\` dans \`${kanbanFilePath}\` et realise la tache decrite. Mets a jour le ticket (status DONE/FAILED/PENDING + result/error/question + updatedAt) a la fin.`
+      const escapedPrompt = `Lis et execute les instructions du fichier ${relativePromptPath}. Si le fichier n'existe pas, lis le ticket id  dans  et realise la tache decrite. Mets a jour le ticket (status DONE/FAILED/PENDING + result/error/question + updatedAt) a la fin.`
       initialCommand = `${unsetEnv}${exportEnv}${providerConfig.cliCommand} ${providerConfig.interactiveArgs.join(' ')} "${escapedPrompt}" ; bash "$HOME/.kanbai/hooks/kanbai-terminal-recovery.sh"`
     }
 
