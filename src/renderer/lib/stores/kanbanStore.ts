@@ -242,12 +242,19 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
         window.kanbai.kanban.getConfig?.(workspaceId)?.then((kanbanConfig) => {
           for (const [taskId, tabId] of Object.entries(staleTabIds)) {
             const task = tasks.find((t) => t.id === taskId)
-            if (task && task.status === 'DONE') {
+            if (!task) continue
+            if (task.status === 'DONE') {
               const isCto = task.isCtoTicket || isChildOfCto(task, tasks)
               const shouldClose = isCto
                 ? kanbanConfig?.autoCloseCtoTerminals
                 : kanbanConfig?.autoCloseCompletedTerminals
               if (shouldClose) {
+                closedTabIds.push(tabId)
+              }
+            }
+            // CTO tickets reset to TODO — close stale terminals from previous sessions
+            if (task.status === 'TODO' && (task.isCtoTicket || isChildOfCto(task, tasks))) {
+              if (kanbanConfig?.autoCloseCtoTerminals) {
                 closedTabIds.push(tabId)
               }
             }
@@ -400,6 +407,28 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
           }).catch(() => { /* best-effort */ })
           newTask.status = 'TODO'
           taskFinished = true
+          // Close the terminal to free the slot for the next CTO iteration
+          if (tabId) {
+            tabsToAutoClose.push({ tabId, isCto: true })
+            const promptCwd = kanbanPromptCwds[newTask.id]
+            if (promptCwd) {
+              window.kanbai.kanban.cleanupPrompt(promptCwd, newTask.id).catch(() => { /* best-effort */ })
+            }
+          }
+          continue
+        }
+
+        // CTO cycle reset: when a CTO-mode ticket transitions from WORKING to TODO,
+        // close the terminal to free the slot for the next iteration.
+        if (newTask.status === 'TODO' && oldTask.status === 'WORKING' && isCtoMode) {
+          taskFinished = true
+          if (tabId) {
+            tabsToAutoClose.push({ tabId, isCto: true })
+            const promptCwd = kanbanPromptCwds[newTask.id]
+            if (promptCwd) {
+              window.kanbai.kanban.cleanupPrompt(promptCwd, newTask.id).catch(() => { /* best-effort */ })
+            }
+          }
           continue
         }
 
@@ -1158,6 +1187,28 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
           }).catch(() => { /* best-effort */ })
           newTask.status = 'TODO'
           taskFinished = true
+          // Close the terminal to free the slot for the next CTO iteration
+          if (tabId) {
+            tabsToAutoClose.push({ tabId, isCto: true })
+            const promptCwd = kanbanPromptCwds[newTask.id]
+            if (promptCwd) {
+              window.kanbai.kanban.cleanupPrompt(promptCwd, newTask.id).catch(() => { /* best-effort */ })
+            }
+          }
+          continue
+        }
+
+        // CTO cycle reset: when a CTO-mode ticket transitions from WORKING to TODO,
+        // close the terminal to free the slot for the next iteration.
+        if (newTask.status === 'TODO' && oldTask.status === 'WORKING' && isCtoMode) {
+          taskFinished = true
+          if (tabId) {
+            tabsToAutoClose.push({ tabId, isCto: true })
+            const promptCwd = kanbanPromptCwds[newTask.id]
+            if (promptCwd) {
+              window.kanbai.kanban.cleanupPrompt(promptCwd, newTask.id).catch(() => { /* best-effort */ })
+            }
+          }
           continue
         }
 
