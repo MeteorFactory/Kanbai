@@ -1032,6 +1032,25 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
     try {
       const termStore = useTerminalTabStore.getState()
       if (workspaceId) {
+        // Auto-close oldest completed terminals to free slots when at capacity
+        const workspaceTabs = termStore.tabs.filter((t) => t.workspaceId === workspaceId)
+        if (workspaceTabs.length >= 10) {
+          const { kanbanTabIds: currentKanbanTabIds, tasks: currentTasks } = get()
+          const completedTabEntries: Array<{ tabId: string; taskId: string }> = []
+          for (const [tId, tTabId] of Object.entries(currentKanbanTabIds)) {
+            const t = currentTasks.find((tt) => tt.id === tId)
+            if (t && (t.status === 'DONE' || t.status === 'FAILED') && workspaceTabs.some((wt) => wt.id === tTabId)) {
+              completedTabEntries.push({ tabId: tTabId, taskId: tId })
+            }
+          }
+          // Close oldest completed terminals first (by tab order in array)
+          const needed = workspaceTabs.length - 9 // free at least 1 slot
+          for (let i = 0; i < Math.min(needed, completedTabEntries.length); i++) {
+            const entry = completedTabEntries[i]
+            if (entry) termStore.closeTab(entry.tabId)
+          }
+        }
+
         const tabLabel = task.isCtoTicket ? 'CTO' : isCtoMode ? `[CTO] ${task.title}` : task.ticketNumber != null ? `[${ticketLabel}] ${task.title}` : `[${providerConfig.displayName}] ${task.title}`
         tabId = termStore.createTab(workspaceId, cwd, tabLabel, initialCommand, shouldActivate) || null
         if (tabId) {
