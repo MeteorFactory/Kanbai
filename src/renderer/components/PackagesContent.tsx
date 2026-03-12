@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, type MouseEvent } from 'react'
 import { usePackagesStore } from '../lib/stores/packagesStore'
 import { PackagesChat } from './PackagesChat'
 import { ResizeDivider } from './ResizeDivider'
@@ -38,6 +38,7 @@ export function PackagesContent() {
     message: string
     success: boolean
   } | null>(null)
+  const [copiedError, setCopiedError] = useState(false)
 
   const containerRef = useRef<HTMLDivElement | null>(null)
   const [chatHeight, setChatHeight] = useState(200)
@@ -65,9 +66,18 @@ export function PackagesContent() {
   }, [selectedProjectId, selectedManager])
 
   useEffect(() => {
-    if (!feedback) return
+    if (!feedback || !feedback.success) return
     const timer = setTimeout(() => setFeedback(null), 5000)
     return () => clearTimeout(timer)
+  }, [feedback])
+
+  const handleCopyError = useCallback((e: MouseEvent) => {
+    e.stopPropagation()
+    if (!feedback) return
+    navigator.clipboard.writeText(feedback.message).then(() => {
+      setCopiedError(true)
+      setTimeout(() => setCopiedError(false), 2000)
+    })
   }, [feedback])
 
   const filtered = pkgList.filter((pkg) => {
@@ -199,9 +209,26 @@ export function PackagesContent() {
       {feedback && (
         <div
           className={`packages-feedback ${feedback.success ? 'packages-feedback--success' : 'packages-feedback--error'}`}
-          onClick={() => setFeedback(null)}
         >
-          {feedback.success ? '\u2713' : '\u2717'} {feedback.message}
+          <span className="packages-feedback-text">
+            {feedback.success ? '\u2713' : '\u2717'} {feedback.message}
+          </span>
+          {!feedback.success && (
+            <button
+              className="packages-feedback-copy"
+              onClick={handleCopyError}
+              title={t('common.copy')}
+            >
+              {copiedError ? '\u2713' : '\u2398'}
+            </button>
+          )}
+          <button
+            className="packages-feedback-dismiss"
+            onClick={() => setFeedback(null)}
+            title={t('common.close')}
+          >
+            \u00d7
+          </button>
         </div>
       )}
 

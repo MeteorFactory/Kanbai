@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, type MouseEvent } from 'react'
 import { useWorkspaceStore } from '../lib/stores/workspaceStore'
 import { useI18n } from '../lib/i18n'
 import type { NpmPackageInfo } from '../../shared/types'
@@ -15,6 +15,7 @@ export function NpmPanel() {
   const [updatingPackages, setUpdatingPackages] = useState<Set<string>>(new Set())
   const [updateAllLoading, setUpdateAllLoading] = useState(false)
   const [feedback, setFeedback] = useState<{ message: string; success: boolean } | null>(null)
+  const [copiedError, setCopiedError] = useState(false)
 
   const activeProject = projects.find((p) => p.id === activeProjectId)
 
@@ -36,11 +37,20 @@ export function NpmPanel() {
     loadPackages()
   }, [loadPackages])
 
-  // Auto-dismiss feedback after 5 seconds
+  // Auto-dismiss success feedback after 5 seconds (errors persist for copy)
   useEffect(() => {
-    if (!feedback) return
+    if (!feedback || !feedback.success) return
     const timer = setTimeout(() => setFeedback(null), 5000)
     return () => clearTimeout(timer)
+  }, [feedback])
+
+  const handleCopyError = useCallback((e: MouseEvent) => {
+    e.stopPropagation()
+    if (!feedback) return
+    navigator.clipboard.writeText(feedback.message).then(() => {
+      setCopiedError(true)
+      setTimeout(() => setCopiedError(false), 2000)
+    })
   }, [feedback])
 
   const handleUpdatePackage = useCallback(async (packageName: string) => {
@@ -139,9 +149,26 @@ export function NpmPanel() {
       {feedback && (
         <div
           className={`npm-feedback ${feedback.success ? 'npm-feedback--success' : 'npm-feedback--error'}`}
-          onClick={() => setFeedback(null)}
         >
-          {feedback.success ? '\u2713' : '\u2717'} {feedback.message}
+          <span className="npm-feedback-text">
+            {feedback.success ? '\u2713' : '\u2717'} {feedback.message}
+          </span>
+          {!feedback.success && (
+            <button
+              className="npm-feedback-copy"
+              onClick={handleCopyError}
+              title={t('common.copy')}
+            >
+              {copiedError ? '\u2713' : '\u2398'}
+            </button>
+          )}
+          <button
+            className="npm-feedback-dismiss"
+            onClick={() => setFeedback(null)}
+            title={t('common.close')}
+          >
+            \u00d7
+          </button>
         </div>
       )}
 

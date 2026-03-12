@@ -3332,10 +3332,12 @@ body {
 
 /* NPM feedback banner */
 .npm-feedback {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   padding: 6px 14px;
   font-size: 12px;
   font-weight: 500;
-  cursor: pointer;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
@@ -3348,6 +3350,28 @@ body {
 .npm-feedback--error {
   color: var(--danger);
   background: rgba(244, 112, 103, 0.08);
+}
+
+.npm-feedback-text {
+  flex: 1;
+  user-select: text;
+}
+
+.npm-feedback-copy,
+.npm-feedback-dismiss {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 2px 4px;
+  font-size: 13px;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.npm-feedback-copy:hover,
+.npm-feedback-dismiss:hover {
+  opacity: 1;
 }
 
 /* ===== Packages Panel (multi-technology) ===== */
@@ -3610,10 +3634,12 @@ body {
 }
 
 .packages-feedback {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   padding: 6px 14px;
   font-size: 12px;
   font-weight: 500;
-  cursor: pointer;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
@@ -3626,6 +3652,28 @@ body {
 .packages-feedback--error {
   color: var(--danger);
   background: rgba(244, 112, 103, 0.08);
+}
+
+.packages-feedback-text {
+  flex: 1;
+  user-select: text;
+}
+
+.packages-feedback-copy,
+.packages-feedback-dismiss {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 2px 4px;
+  font-size: 13px;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.packages-feedback-copy:hover,
+.packages-feedback-dismiss:hover {
+  opacity: 1;
 }
 
 /* Package list */
