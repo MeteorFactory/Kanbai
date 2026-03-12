@@ -157,6 +157,13 @@ async function listNpmPackages(projectPath: string): Promise<PackageInfo[]> {
     const addPackages = (deps: Record<string, string>, type: 'dependency' | 'devDependency') => {
       for (const [name, version] of Object.entries(deps)) {
         const outdated = outdatedData[name]
+
+        // Skip packages that are not installed (npm outdated reports "MISSING" as current version)
+        if (outdated?.current === 'MISSING') continue
+
+        // If no outdated entry, verify the package is actually installed in node_modules
+        if (!outdated && !getInstalledNpmVersion(projectPath, name)) continue
+
         const info: PackageInfo = {
           name,
           currentVersion: outdated?.current || version.replace(/^[\^~]/, ''),
