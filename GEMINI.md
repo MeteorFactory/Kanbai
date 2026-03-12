@@ -32,7 +32,7 @@ Three-process Electron model:
 1. **Main Process** (`src/main/`) — Node.js, full OS access
    - `index.ts` — App lifecycle, BrowserWindow creation
    - `ipc/` — IPC handlers (1 file per domain, 29 handlers)
-   - `services/` — storage.ts (StorageService singleton), healthCheckScheduler, notificationService, activityHooks (AI provider hooks), ai-cli, pixel-agents-service, pixel-agents-assets, database/ (connection, queries, backup, crypto, NL queries, drivers/), packages/ (analysis, NL queries)
+   - `services/` — storage.ts (StorageService singleton), healthCheckScheduler, notificationService, appUpdateState, activityHooks (AI provider hooks), ai-cli, pixel-agents-service, pixel-agents-assets, database/ (connection, queries, backup, crypto, NL queries, drivers/), packages/ (analysis, NL queries)
 
 2. **Preload** (`src/preload/`) — Bridge between processes
    - Exposes `window.kanbai` API via `contextBridge`
@@ -98,6 +98,8 @@ terminalTabStore, workspaceStore, claudeStore, kanbanStore, viewStore, updateSto
 - **App Updates** — Auto-update with update center
 - **Pixel Agents** — AI pixel agent integration
 - **Multi-Agent View** — Multi-agent orchestration UI
+- **AI Configs** — Per-provider configuration (Codex, Copilot, Gemini, generic AI provider)
+- **SSH** — Remote SSH connection management
 
 ## Code Conventions
 

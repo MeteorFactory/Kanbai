@@ -37,6 +37,7 @@ src/
       storage.ts     # StorageService singleton (~/.kanbai/data.json)
       healthCheckScheduler.ts
       notificationService.ts
+      appUpdateState.ts  # App update state management
       activityHooks.ts   # AI provider activity hooks (Kanbai integration)
       ai-cli.ts          # AI CLI detection and management
       pixel-agents-service.ts   # Pixel agents integration

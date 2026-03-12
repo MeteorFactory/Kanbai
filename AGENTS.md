@@ -39,6 +39,7 @@ src/
       storage.ts     # StorageService singleton (~/.kanbai/data.json)
       healthCheckScheduler.ts
       notificationService.ts
+      appUpdateState.ts  # App update state management
       activityHooks.ts   # AI provider activity hooks (Kanbai integration)
       ai-cli.ts          # AI CLI detection and management
       pixel-agents-service.ts   # Pixel agents integration
@@ -121,6 +122,7 @@ terminalTabStore, workspaceStore, claudeStore, kanbanStore, viewStore, updateSto
 | App Updates | appUpdate.ts | appUpdateStore | AppUpdateModal, UpdateCenter |
 | Pixel Agents | pixel-agents.ts | — | PixelAgentsPane |
 | Multi-Agent | — | — | MultiAgentView |
+| AI Configs | codexConfig.ts, copilotConfig.ts, geminiConfig.ts, aiProvider.ts | — | SettingsPanel |
 
 ## Data Persistence
 

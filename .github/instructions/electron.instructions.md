@@ -11,7 +11,7 @@ applyTo: "src/main/**,src/preload/**"
 - Show window only after `ready-to-show` to avoid white flash
 - Store BrowserWindow references to prevent garbage collection
 - One IPC handler file per domain in `src/main/ipc/` (29 handlers)
-- Services in `src/main/services/`: storage, healthCheck, notifications, activityHooks (AI provider hooks), ai-cli, pixel-agents-service, pixel-agents-assets, database/ (connection, queries, backup, crypto, NL, drivers/), packages/ (analysis, NL)
+- Services in `src/main/services/`: storage, healthCheck, notifications, appUpdateState, activityHooks (AI provider hooks), ai-cli, pixel-agents-service, pixel-agents-assets, database/ (connection, queries, backup, crypto, NL, drivers/), packages/ (analysis, NL)
 
 ## Preload
 

@@ -29,7 +29,7 @@ Kanbai is an AI-enhanced desktop terminal built with Electron. It combines a ful
 
 Three-process Electron model:
 
-- **Main** (`src/main/`) — Node.js, IPC handlers in `ipc/` (29 handlers), services in `services/` (storage, healthCheck, notifications, activityHooks, ai-cli, pixel-agents-service, pixel-agents-assets, database/ [connection, queries, backup, crypto, NL, drivers/], packages/ [analysis, NL])
+- **Main** (`src/main/`) — Node.js, IPC handlers in `ipc/` (29 handlers), services in `services/` (storage, healthCheck, notifications, appUpdateState, activityHooks, ai-cli, pixel-agents-service, pixel-agents-assets, database/ [connection, queries, backup, crypto, NL, drivers/], packages/ [analysis, NL])
 - **Preload** (`src/preload/`) — contextBridge, exposes `window.kanbai` API
 - **Renderer** (`src/renderer/`) — React, flat components in `components/` (~60), Zustand stores in `lib/stores/` (13 stores)
 - **Shared** (`src/shared/`) — All types in `types/index.ts`, constants in `constants/`
@@ -74,6 +74,8 @@ Three-process Electron model:
 - App updates with update center
 - Pixel agents integration
 - Multi-agent orchestration view
+- AI provider configuration (Codex, Copilot, Gemini, generic)
+- SSH remote connection management
 
 ## Code Conventions
 
