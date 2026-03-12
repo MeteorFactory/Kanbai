@@ -535,6 +535,11 @@ export const fr = {
   'ai.defaultProvider': 'I.A. par défaut',
   'ai.defaultProviderHint': 'Le fournisseur I.A. utilisé par défaut pour les nouveaux projets',
   'ai.ticketProvider': 'I.A. du ticket',
+  'ai.notInstalled': 'Non installé',
+  'ai.install': 'Installer',
+  'ai.installing': 'Installation…',
+  'ai.installSuccess': 'Installé avec succès',
+  'ai.installFailed': 'Échec de l\'installation',
 
   // Codex settings
   'codex.generalTab': 'Général',

@@ -6214,6 +6214,59 @@ body {
   border-color: var(--accent);
 }
 
+/* AI Provider Selector */
+.ai-provider-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.ai-provider-install-btn {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  background: none;
+  border: 1px solid var(--warning, #e5a136);
+  border-radius: 4px;
+  font-size: 10px;
+  color: var(--warning, #e5a136);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.ai-provider-install-btn:hover {
+  background: var(--warning, #e5a136);
+  color: var(--bg-primary);
+}
+
+.ai-provider-status {
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.ai-provider-status--installing {
+  color: var(--text-muted);
+  animation: ai-provider-pulse 1.5s ease-in-out infinite;
+}
+
+.ai-provider-status--success {
+  color: var(--success, #4ade80);
+}
+
+.ai-provider-status--failed {
+  color: var(--error, #ef4444);
+}
+
+@keyframes ai-provider-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
 /* AI Defaults tab */
 .ai-defaults-row {
   display: flex;

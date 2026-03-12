@@ -1408,6 +1408,7 @@ export const IPC_CHANNELS = {
 
   // AI Provider
   AI_PROVIDER_SET: 'ai:providerSet',
+  AI_PROVIDER_CHECK_INSTALLED: 'ai:providerCheckInstalled',
   AI_DEFAULTS_SET: 'ai:defaultsSet',
   AI_DEFAULTS_GET: 'ai:defaultsGet',
 

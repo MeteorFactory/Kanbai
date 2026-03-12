@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
 import type { AppSettings, SshKeyInfo, SshKeyType, Namespace, KanbanConfig } from '../../shared/types'
+import type { AiProviderId } from '../../shared/types/ai-provider'
 import { useI18n } from '../lib/i18n'
 import { useAppUpdateStore } from '../lib/stores/appUpdateStore'
 import { useWorkspaceStore } from '../lib/stores/workspaceStore'
 import { useUpdateStore } from '../lib/stores/updateStore'
+import { AiProviderSelector } from './AiProviderSelector'
 
 const FONT_FAMILIES = [
   'Menlo',
@@ -465,32 +467,10 @@ export function SettingsPanel() {
                     <label className="settings-label">{t('ai.defaultProvider')}</label>
                     <span className="settings-hint">{t('ai.defaultProviderHint')}</span>
                   </div>
-                  <div className="settings-radio-group">
-                    <button
-                      className={`settings-radio-btn${settings.defaultAiProvider === 'claude' ? ' settings-radio-btn--active' : ''}`}
-                      onClick={() => updateSetting('defaultAiProvider', 'claude')}
-                    >
-                      Claude
-                    </button>
-                    <button
-                      className={`settings-radio-btn${settings.defaultAiProvider === 'codex' ? ' settings-radio-btn--active' : ''}`}
-                      onClick={() => updateSetting('defaultAiProvider', 'codex')}
-                    >
-                      Codex
-                    </button>
-                    <button
-                      className={`settings-radio-btn${settings.defaultAiProvider === 'copilot' ? ' settings-radio-btn--active' : ''}`}
-                      onClick={() => updateSetting('defaultAiProvider', 'copilot')}
-                    >
-                      Copilot
-                    </button>
-                    <button
-                      className={`settings-radio-btn${settings.defaultAiProvider === 'gemini' ? ' settings-radio-btn--active' : ''}`}
-                      onClick={() => updateSetting('defaultAiProvider', 'gemini')}
-                    >
-                      Gemini
-                    </button>
-                  </div>
+                  <AiProviderSelector
+                    value={(settings.defaultAiProvider || 'claude') as AiProviderId}
+                    onChange={(provider) => updateSetting('defaultAiProvider', provider)}
+                  />
                 </div>
               </div>
               <div className="settings-card">

@@ -535,6 +535,11 @@ export const en = {
   'ai.defaultProvider': 'Default AI',
   'ai.defaultProviderHint': 'The AI provider used by default for new projects',
   'ai.ticketProvider': 'Ticket AI',
+  'ai.notInstalled': 'Not installed',
+  'ai.install': 'Install',
+  'ai.installing': 'Installing…',
+  'ai.installSuccess': 'Installed successfully',
+  'ai.installFailed': 'Installation failed',
 
   // Codex settings
   'codex.generalTab': 'General',

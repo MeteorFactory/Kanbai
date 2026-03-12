@@ -700,6 +700,7 @@ const api = {
   // AI provider
   aiProvider: {
     set: (projectId: string, provider: string) => ipcRenderer.invoke(IPC_CHANNELS.AI_PROVIDER_SET, { projectId, provider }),
+    checkInstalled: (): Promise<Record<string, boolean>> => ipcRenderer.invoke(IPC_CHANNELS.AI_PROVIDER_CHECK_INSTALLED),
   },
 
   // AI defaults per project (kanban, packages, database)

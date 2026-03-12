@@ -3,6 +3,7 @@ import { useWorkspaceStore, useFilteredWorkspaces } from '../lib/stores/workspac
 import { useViewStore } from '../lib/stores/viewStore'
 import { useI18n } from '../lib/i18n'
 import { WorkspaceItem } from './WorkspaceItem'
+import { AiProviderSelector } from './AiProviderSelector'
 import type { Workspace, AppSettings } from '../../shared/types/index'
 import type { AiProviderId } from '../../shared/types/ai-provider'
 
@@ -449,32 +450,7 @@ export function Sidebar() {
                 <label className="settings-label" style={{ display: 'block', marginBottom: 6, fontSize: 12 }}>
                   {t('ai.selectProvider')}
                 </label>
-                <div className="settings-radio-group">
-                  <button
-                    className={`settings-radio-btn${newProjectAiProvider === 'claude' ? ' settings-radio-btn--active' : ''}`}
-                    onClick={() => setNewProjectAiProvider('claude')}
-                  >
-                    Claude
-                  </button>
-                  <button
-                    className={`settings-radio-btn${newProjectAiProvider === 'codex' ? ' settings-radio-btn--active' : ''}`}
-                    onClick={() => setNewProjectAiProvider('codex')}
-                  >
-                    Codex
-                  </button>
-                  <button
-                    className={`settings-radio-btn${newProjectAiProvider === 'copilot' ? ' settings-radio-btn--active' : ''}`}
-                    onClick={() => setNewProjectAiProvider('copilot')}
-                  >
-                    Copilot
-                  </button>
-                  <button
-                    className={`settings-radio-btn${newProjectAiProvider === 'gemini' ? ' settings-radio-btn--active' : ''}`}
-                    onClick={() => setNewProjectAiProvider('gemini')}
-                  >
-                    Gemini
-                  </button>
-                </div>
+                <AiProviderSelector value={newProjectAiProvider} onChange={setNewProjectAiProvider} />
               </div>
             </div>
             <div className="modal-footer">
@@ -501,32 +477,7 @@ export function Sidebar() {
               <p style={{ marginBottom: 10, color: 'var(--text-muted)', fontSize: 12 }}>
                 {t('ai.selectProvider')}
               </p>
-              <div className="settings-radio-group">
-                <button
-                  className={`settings-radio-btn${newProjectAiProvider === 'claude' ? ' settings-radio-btn--active' : ''}`}
-                  onClick={() => setNewProjectAiProvider('claude')}
-                >
-                  Claude
-                </button>
-                <button
-                  className={`settings-radio-btn${newProjectAiProvider === 'codex' ? ' settings-radio-btn--active' : ''}`}
-                  onClick={() => setNewProjectAiProvider('codex')}
-                >
-                  Codex
-                </button>
-                <button
-                  className={`settings-radio-btn${newProjectAiProvider === 'copilot' ? ' settings-radio-btn--active' : ''}`}
-                  onClick={() => setNewProjectAiProvider('copilot')}
-                >
-                  Copilot
-                </button>
-                <button
-                  className={`settings-radio-btn${newProjectAiProvider === 'gemini' ? ' settings-radio-btn--active' : ''}`}
-                  onClick={() => setNewProjectAiProvider('gemini')}
-                >
-                  Gemini
-                </button>
-              </div>
+              <AiProviderSelector value={newProjectAiProvider} onChange={setNewProjectAiProvider} />
             </div>
             <div className="modal-footer">
               <button className="modal-btn modal-btn--secondary" onClick={() => setShowFolderAiModal(false)}>
