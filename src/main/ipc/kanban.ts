@@ -116,7 +116,7 @@ function ensureKanbanHook(projectPath: string): void {
   if (IS_WIN) {
     const hookScript = `# Kanbai - Kanban task completion hook (auto-generated, PowerShell)
 # Checks the kanban ticket status and writes the appropriate activity status.
-# DONE/FAILED -> auto-commit uncommitted worktree changes, then merge if enabled
+# DONE/FAILED -> auto-commit uncommitted worktree changes, merge branch if enabled (worktree cleanup deferred to terminal close)
 # PENDING + CTO -> auto-approve: revert to TODO (unblock CTO cycle)
 # PENDING + regular -> activity "waiting" (double bell in Electron)
 # WORKING -> block Claude from stopping and remind ticket update
@@ -135,15 +135,11 @@ function Auto-CommitWorktree {
   git commit -m "chore(kanban): auto-commit $ticketLabel worktree changes" 2>$null
 }
 
-function Merge-AndCleanupWorktree($wtPath, $wtBranch, $repoPath) {
+function Merge-WorktreeBranch($wtPath, $wtBranch, $repoPath) {
   if (-not $wtPath -or -not $wtBranch -or -not $repoPath) { return }
   try { git -C $repoPath merge $wtBranch -m "Merge branch '$wtBranch'" 2>$null } catch { return }
-  if ($LASTEXITCODE -ne 0) { return }
-  try { git -C $repoPath worktree remove --force $wtPath 2>$null } catch {
-    Remove-Item -Recurse -Force $wtPath -ErrorAction SilentlyContinue
-    git -C $repoPath worktree prune 2>$null
-  }
-  git -C $repoPath branch -d $wtBranch 2>$null
+  # Worktree directory and branch are kept alive until the terminal is closed.
+  # Cleanup is handled by the Electron app on terminal tab close (handleTabClosed).
 }
 
 $nodeOutput = node -e "
@@ -190,7 +186,7 @@ switch ($TicketStatus) {
   "DONE" {
     Auto-CommitWorktree
     if ($AutoMerge -eq "true" -and $WorktreePath -and $WorktreeBranch) {
-      Merge-AndCleanupWorktree $WorktreePath $WorktreeBranch $RepoPath
+      Merge-WorktreeBranch $WorktreePath $WorktreeBranch $RepoPath
     }
   }
   "FAILED" {
@@ -237,7 +233,7 @@ process.stdout.write(JSON.stringify({ decision: 'block', reason: reason }));
     const hookScript = `#!/bin/bash
 # Kanbai - Kanban task completion hook (auto-generated)
 # Checks the kanban ticket status and writes the appropriate activity status.
-# DONE/FAILED → auto-commit uncommitted worktree changes, then merge if enabled
+# DONE/FAILED → auto-commit uncommitted worktree changes, merge branch if enabled (worktree cleanup deferred to terminal close)
 # PENDING + CTO → auto-approve: revert to TODO (unblock CTO cycle)
 # PENDING + regular → activity "waiting" (double bell in Electron)
 # WORKING → block Claude from stopping and remind ticket update
@@ -260,25 +256,17 @@ auto_commit_worktree() {
   git commit -m "chore(kanban): auto-commit \${ticket_label} worktree changes" 2>/dev/null
 }
 
-# Merge worktree branch into main and clean up
+# Merge worktree branch into the target branch (worktree cleanup deferred to terminal close)
 # Arguments: $1=worktreePath $2=worktreeBranch $3=repoPath
-merge_and_cleanup_worktree() {
+merge_worktree_branch() {
   local wt_path="$1" wt_branch="$2" repo_path="$3"
   [ -z "$wt_path" ] || [ -z "$wt_branch" ] || [ -z "$repo_path" ] && return 0
 
-  # Merge the worktree branch into the main branch
-  local main_branch
-  main_branch=$(git -C "$repo_path" rev-parse --abbrev-ref HEAD 2>/dev/null) || return 0
+  # Merge the worktree branch into the target branch
   git -C "$repo_path" merge "$wt_branch" -m "Merge branch '$wt_branch'" 2>/dev/null || return 0
 
-  # Remove the worktree
-  git -C "$repo_path" worktree remove --force "$wt_path" 2>/dev/null || {
-    rm -rf "$wt_path" 2>/dev/null
-    git -C "$repo_path" worktree prune 2>/dev/null
-  }
-
-  # Delete the branch (best-effort)
-  git -C "$repo_path" branch -d "$wt_branch" 2>/dev/null
+  # Worktree directory and branch are kept alive until the terminal is closed.
+  # Cleanup is handled by the Electron app on terminal tab close (handleTabClosed).
 }
 
 # Read ticket status, isCtoTicket flag, worktree info, and autoMerge config
@@ -321,7 +309,7 @@ case "$TICKET_STATUS" in
   DONE)
     auto_commit_worktree
     if [ "$AUTO_MERGE" = "true" ] && [ -n "$WORKTREE_PATH" ] && [ -n "$WORKTREE_BRANCH" ]; then
-      merge_and_cleanup_worktree "$WORKTREE_PATH" "$WORKTREE_BRANCH" "$REPO_PATH"
+      merge_worktree_branch "$WORKTREE_PATH" "$WORKTREE_BRANCH" "$REPO_PATH"
     fi
     ;;
   FAILED)
