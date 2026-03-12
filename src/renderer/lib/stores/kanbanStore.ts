@@ -1042,18 +1042,40 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
 
     // Launch AI CLI — CTO uses direct non-interactive mode, regular uses interactive
     const relativePromptPath = `.kanbai/.kanban-prompt-${task.id}.md`
-    const unsetEnv = providerConfig.envVarsToUnset.length > 0
-      ? `unset ${providerConfig.envVarsToUnset.join(' ')} && `
-      : ''
-    const exportEnv = `export KANBAI_KANBAN_TASK_ID="${task.id}" KANBAI_KANBAN_FILE="${kanbanFilePath}" KANBAI_KANBAN_TICKET="${ticketLabel}" KANBAI_WORKSPACE_ID="${workspaceId}" && `
+    const isWin = navigator.platform.startsWith('Win')
+
+    // Build platform-specific shell fragments
+    let unsetEnv: string
+    let exportEnv: string
+    let catCmd: string
+    let recoverySuffix: string
+
+    if (isWin) {
+      // PowerShell syntax
+      unsetEnv = providerConfig.envVarsToUnset.length > 0
+        ? providerConfig.envVarsToUnset.map((v) => `Remove-Item Env:${v} -ErrorAction SilentlyContinue`).join('; ') + '; '
+        : ''
+      exportEnv = `$env:KANBAI_KANBAN_TASK_ID="${task.id}"; $env:KANBAI_KANBAN_FILE="${kanbanFilePath}"; $env:KANBAI_KANBAN_TICKET="${ticketLabel}"; $env:KANBAI_WORKSPACE_ID="${workspaceId}"; `
+      catCmd = `Get-Content "${relativePromptPath}" | `
+      recoverySuffix = '; $recoveryScript = "$env:USERPROFILE\\.kanbai\\hooks\\kanbai-terminal-recovery.ps1"; if (Test-Path $recoveryScript) { & $recoveryScript }'
+    } else {
+      // Bash / POSIX syntax
+      unsetEnv = providerConfig.envVarsToUnset.length > 0
+        ? `unset ${providerConfig.envVarsToUnset.join(' ')} && `
+        : ''
+      exportEnv = `export KANBAI_KANBAN_TASK_ID="${task.id}" KANBAI_KANBAN_FILE="${kanbanFilePath}" KANBAI_KANBAN_TICKET="${ticketLabel}" KANBAI_WORKSPACE_ID="${workspaceId}" && `
+      catCmd = `cat "${relativePromptPath}" | `
+      recoverySuffix = ' ; bash "$HOME/.kanbai/hooks/kanbai-terminal-recovery.sh"'
+    }
+
     let initialCommand: string
     if (isCtoMode) {
       // CTO mode: direct invocation, no back-and-forth — prompt piped from file
-      initialCommand = `${unsetEnv}${exportEnv}cat "${relativePromptPath}" | ${providerConfig.cliCommand} ${providerConfig.nonInteractiveArgs.join(' ')} ; bash "$HOME/.kanbai/hooks/kanbai-terminal-recovery.sh"`
+      initialCommand = `${unsetEnv}${exportEnv}${catCmd}${providerConfig.cliCommand} ${providerConfig.nonInteractiveArgs.join(' ')}${recoverySuffix}`
     } else {
       // Regular tickets: interactive mode — with fallback to kanban JSON if prompt file is missing
       const escapedPrompt = `Lis et execute les instructions du fichier ${relativePromptPath}. Si le fichier n'existe pas, lis le ticket id  dans  et realise la tache decrite. Mets a jour le ticket (status DONE/FAILED/PENDING + result/error/question + updatedAt) a la fin.`
-      initialCommand = `${unsetEnv}${exportEnv}${providerConfig.cliCommand} ${providerConfig.interactiveArgs.join(' ')} "${escapedPrompt}" ; bash "$HOME/.kanbai/hooks/kanbai-terminal-recovery.sh"`
+      initialCommand = `${unsetEnv}${exportEnv}${providerConfig.cliCommand} ${providerConfig.interactiveArgs.join(' ')} "${escapedPrompt}"${recoverySuffix}`
     }
 
     // Create an interactive terminal tab for this task

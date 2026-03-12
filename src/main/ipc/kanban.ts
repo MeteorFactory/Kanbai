@@ -12,6 +12,7 @@ import {
   maybeCreateMemoryRefactorTicket,
 } from '../../mcp-server/lib/kanban-store'
 import { callAiCli } from '../services/ai-cli'
+import { IS_WIN } from '../../shared/platform'
 
 const DEFAULT_KANBAN_CONFIG: KanbanConfig = {
   autoCloseCompletedTerminals: false,
@@ -109,8 +110,131 @@ function ensureKanbanHook(projectPath: string): void {
     fs.mkdirSync(hooksDir, { recursive: true })
   }
 
-  const hookScriptPath = path.join(hooksDir, 'kanban-done.sh')
-  const hookScript = `#!/bin/bash
+  const hookScriptName = IS_WIN ? 'kanban-done.ps1' : 'kanban-done.sh'
+  const hookScriptPath = path.join(hooksDir, hookScriptName)
+
+  if (IS_WIN) {
+    const hookScript = `# Kanbai - Kanban task completion hook (auto-generated, PowerShell)
+# Checks the kanban ticket status and writes the appropriate activity status.
+# DONE/FAILED -> auto-commit uncommitted worktree changes, then merge if enabled
+# PENDING + CTO -> auto-approve: revert to TODO (unblock CTO cycle)
+# PENDING + regular -> activity "waiting" (double bell in Electron)
+# WORKING -> block Claude from stopping and remind ticket update
+$ActivityScript = "$env:USERPROFILE\\.kanbai\\hooks\\kanbai-activity.ps1"
+
+if (-not $env:KANBAI_KANBAN_TASK_ID) { exit 0 }
+if (-not $env:KANBAI_KANBAN_FILE) { exit 0 }
+
+function Auto-CommitWorktree {
+  try { git rev-parse --is-inside-work-tree 2>$null | Out-Null } catch { return }
+  if ($LASTEXITCODE -ne 0) { return }
+  $status = git status --porcelain 2>$null
+  if (-not $status) { return }
+  $ticketLabel = if ($env:KANBAI_KANBAN_TICKET) { $env:KANBAI_KANBAN_TICKET } else { "unknown" }
+  git add -A 2>$null
+  git commit -m "chore(kanban): auto-commit $ticketLabel worktree changes" 2>$null
+}
+
+function Merge-AndCleanupWorktree($wtPath, $wtBranch, $repoPath) {
+  if (-not $wtPath -or -not $wtBranch -or -not $repoPath) { return }
+  try { git -C $repoPath merge $wtBranch -m "Merge branch '$wtBranch'" 2>$null } catch { return }
+  if ($LASTEXITCODE -ne 0) { return }
+  try { git -C $repoPath worktree remove --force $wtPath 2>$null } catch {
+    Remove-Item -Recurse -Force $wtPath -ErrorAction SilentlyContinue
+    git -C $repoPath worktree prune 2>$null
+  }
+  git -C $repoPath branch -d $wtBranch 2>$null
+}
+
+$nodeOutput = node -e "
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
+const file = process.env.KANBAI_KANBAN_FILE;
+const taskId = process.env.KANBAI_KANBAN_TASK_ID;
+const wsId = process.env.KANBAI_WORKSPACE_ID || '';
+try {
+  const tasks = JSON.parse(fs.readFileSync(file, 'utf-8'));
+  const task = tasks.find(t => t.id === taskId);
+  if (task) {
+    const isCto = task.isCtoTicket ? 'true' : 'false';
+    const wtPath = task.worktreePath || '';
+    const wtBranch = task.worktreeBranch || '';
+    let autoMerge = 'false';
+    if (wsId) {
+      try {
+        const cfgPath = path.join(os.homedir(), '.kanbai', 'kanban', wsId + '-config.json');
+        if (fs.existsSync(cfgPath)) {
+          const cfg = JSON.parse(fs.readFileSync(cfgPath, 'utf-8'));
+          if (cfg.autoMergeWorktrees) autoMerge = 'true';
+        }
+      } catch(e2) { /* ignore */ }
+    }
+    process.stdout.write(task.status + ' ' + isCto + ' ' + wtPath + ' ' + wtBranch + ' ' + autoMerge);
+  }
+} catch(e) { /* ignore */ }
+"
+$parts = ($nodeOutput -split ' ')
+$TicketStatus = $parts[0]
+$IsCto = $parts[1]
+$WorktreePath = $parts[2]
+$WorktreeBranch = $parts[3]
+$AutoMerge = $parts[4]
+
+$RepoPath = ""
+if ($WorktreePath) {
+  $RepoPath = $WorktreePath -replace '[\\\\/]\\.kanbai-worktrees[\\\\/][^\\\\/]*$', ''
+}
+
+switch ($TicketStatus) {
+  "DONE" {
+    Auto-CommitWorktree
+    if ($AutoMerge -eq "true" -and $WorktreePath -and $WorktreeBranch) {
+      Merge-AndCleanupWorktree $WorktreePath $WorktreeBranch $RepoPath
+    }
+  }
+  "FAILED" {
+    Auto-CommitWorktree
+    if (Test-Path $ActivityScript) { & $ActivityScript failed }
+  }
+  "PENDING" {
+    if ($IsCto -eq "true") {
+      node -e "
+const fs = require('fs');
+const file = process.env.KANBAI_KANBAN_FILE;
+const taskId = process.env.KANBAI_KANBAN_TASK_ID;
+try {
+  const tasks = JSON.parse(fs.readFileSync(file, 'utf-8'));
+  const task = tasks.find(t => t.id === taskId);
+  if (task && task.status === 'PENDING') {
+    task.status = 'TODO';
+    task.updatedAt = Date.now();
+    fs.writeFileSync(file, JSON.stringify(tasks, null, 2), 'utf-8');
+  }
+} catch(e) { /* ignore */ }
+"
+    } else {
+      if (Test-Path $ActivityScript) { & $ActivityScript waiting }
+    }
+  }
+  "WORKING" {
+    node -e "
+const reason = 'RAPPEL: Tu n as pas mis a jour le ticket kanban !\\n'
+  + 'Fichier: ' + process.env.KANBAI_KANBAN_FILE + '\\n'
+  + 'Ticket ID: ' + process.env.KANBAI_KANBAN_TASK_ID + '\\n\\n'
+  + 'Tu DOIS editer le fichier kanban pour mettre a jour ce ticket:\\n'
+  + '- Change status a DONE (succes), FAILED (echec), ou PENDING (question)\\n'
+  + '- Ajoute result, error, ou question selon le cas\\n'
+  + '- Mets a jour updatedAt avec Date.now()\\n\\n'
+  + 'Fais-le MAINTENANT avant de terminer.';
+process.stdout.write(JSON.stringify({ decision: 'block', reason: reason }));
+"
+  }
+}
+`
+    fs.writeFileSync(hookScriptPath, hookScript)
+  } else {
+    const hookScript = `#!/bin/bash
 # Kanbai - Kanban task completion hook (auto-generated)
 # Checks the kanban ticket status and writes the appropriate activity status.
 # DONE/FAILED → auto-commit uncommitted worktree changes, then merge if enabled
@@ -241,7 +365,8 @@ process.stdout.write(JSON.stringify({ decision: 'block', reason: reason }));
     ;;
 esac
 `
-  fs.writeFileSync(hookScriptPath, hookScript, { mode: 0o755 })
+    fs.writeFileSync(hookScriptPath, hookScript, { mode: 0o755 })
+  }
 
   const claudeDir = path.join(projectPath, '.claude')
   if (!fs.existsSync(claudeDir)) {
@@ -265,22 +390,38 @@ esac
   }
 
   const stopHooks = hooks.Stop as Array<{ matcher: string; hooks: Array<{ type: string; command: string }> }>
-  const expectedCommand = `bash "${hookScriptPath}"`
+  const hookFileName = IS_WIN ? 'kanban-done.ps1' : 'kanban-done.sh'
+  const expectedCommand = IS_WIN
+    ? `powershell -ExecutionPolicy Bypass -File "${hookScriptPath}"`
+    : `bash "${hookScriptPath}"`
   const existingIdx = stopHooks.findIndex((h) =>
-    h.hooks?.some((hk) => hk.command?.includes('kanban-done.sh')),
+    h.hooks?.some((hk) => hk.command?.includes(hookFileName)),
   )
 
   if (existingIdx === -1) {
-    // No kanban hook at all — add it
-    stopHooks.push({
-      matcher: '',
-      hooks: [{ type: 'command', command: expectedCommand }],
-    })
-    fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2), 'utf-8')
+    // Check for stale cross-platform hook (e.g. .sh on Windows or .ps1 on macOS)
+    const staleFileName = IS_WIN ? 'kanban-done.sh' : 'kanban-done.ps1'
+    const staleIdx = stopHooks.findIndex((h) =>
+      h.hooks?.some((hk) => hk.command?.includes(staleFileName)),
+    )
+    if (staleIdx !== -1) {
+      // Replace stale hook with correct platform variant
+      const staleEntry = stopHooks[staleIdx]!
+      const staleCmd = staleEntry.hooks?.find((hk) => hk.command?.includes(staleFileName))
+      if (staleCmd) staleCmd.command = expectedCommand
+      fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2), 'utf-8')
+    } else {
+      // No kanban hook at all — add it
+      stopHooks.push({
+        matcher: '',
+        hooks: [{ type: 'command', command: expectedCommand }],
+      })
+      fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2), 'utf-8')
+    }
   } else {
     // Kanban hook exists — check if path is correct, update if stale
     const entry = stopHooks[existingIdx]!
-    const hookCmd = entry.hooks?.find((hk) => hk.command?.includes('kanban-done.sh'))
+    const hookCmd = entry.hooks?.find((hk) => hk.command?.includes(hookFileName))
     if (hookCmd && hookCmd.command !== expectedCommand) {
       hookCmd.command = expectedCommand
       fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2), 'utf-8')
