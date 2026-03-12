@@ -200,12 +200,42 @@ export function Terminal({ cwd, shell, initialCommand, externalSessionId, worksp
       // Claude Code and modern CLI tools recognise \x1b[13;2u (CSI u encoding:
       // keycode 13 = Enter, modifier 2 = Shift) as a distinct "soft newline".
       xterm.attachCustomKeyEventHandler((e: KeyboardEvent) => {
-        if (e.type === 'keydown' && e.key === 'Enter' && e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        if (e.type !== 'keydown') return true
+
+        // Shift+Enter → kitty keyboard protocol soft newline
+        if (e.key === 'Enter' && e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey) {
           if (sessionIdRef.current) {
             window.kanbai.terminal.write(sessionIdRef.current, '\x1b[13;2u')
           }
-          return false // prevent xterm from also sending \r
+          return false
         }
+
+        const isMac = navigator.platform.startsWith('Mac')
+        const modKey = isMac ? e.metaKey : e.ctrlKey
+
+        // Copy: Cmd+C (macOS) or Ctrl+Shift+C (Windows/Linux)
+        // On Windows, plain Ctrl+C sends SIGINT — only copy with Ctrl+Shift+C
+        if (e.key === 'c' && ((isMac && modKey) || (!isMac && e.ctrlKey && e.shiftKey))) {
+          const selection = xterm.getSelection()
+          if (selection) {
+            window.kanbai.clipboard.writeText(selection)
+            return false
+          }
+          // No selection on macOS Cmd+C: let xterm handle (no-op)
+          // No selection on Windows Ctrl+Shift+C: let xterm handle (no-op)
+          return isMac ? false : true
+        }
+
+        // Paste: Cmd+V (macOS) or Ctrl+Shift+V (Windows/Linux)
+        if (e.key === 'v' && ((isMac && modKey) || (!isMac && e.ctrlKey && e.shiftKey))) {
+          const text = window.kanbai.clipboard.readText()
+          if (text && sessionIdRef.current) {
+            // Use bracketed paste mode for safe pasting
+            window.kanbai.terminal.write(sessionIdRef.current, text)
+          }
+          return false
+        }
+
         return true
       })
 
