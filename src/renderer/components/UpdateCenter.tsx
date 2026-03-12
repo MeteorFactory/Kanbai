@@ -30,7 +30,8 @@ export function UpdateCenter() {
   const isAppUpdateVisible = ['available', 'downloading', 'downloaded'].includes(appUpdateStatus)
   const isAnyChecking = isChecking || appUpdateStatus === 'checking'
   const availableUpdates = updates.filter((u) => u.installed && u.updateAvailable)
-  const badgeCount = availableUpdates.length + (isAppUpdateVisible ? 1 : 0)
+  const missingTools = updates.filter((u) => !u.installed && u.canInstall)
+  const badgeCount = availableUpdates.length + missingTools.length + (isAppUpdateVisible ? 1 : 0)
 
   useEffect(() => {
     void checkUpdates()
@@ -196,7 +197,7 @@ export function UpdateCenter() {
             {isAnyChecking && (
               <div className="notification-checking">{t('updates.checkingNow')}</div>
             )}
-            {availableUpdates.length === 0 && !isAppUpdateVisible && !isAnyChecking ? (
+            {availableUpdates.length === 0 && missingTools.length === 0 && !isAppUpdateVisible && !isAnyChecking ? (
               <div className="notification-empty">
                 <p>{t('updates.allUpToDate')}</p>
                 <button className="notification-item-btn notification-item-btn--install" onClick={openToolsSettings}>
@@ -233,6 +234,36 @@ export function UpdateCenter() {
                       )}
                     </div>
                   </div>
+                )}
+                {missingTools.length > 0 && (
+                  <div className="notification-section-label">{t('updates.missingToolsLabel')}</div>
+                )}
+                {missingTools.map((tool) => (
+                  <div
+                    key={`${tool.tool}-${tool.scope}`}
+                    className="notification-item notification-item--missing"
+                  >
+                    <div className="notification-item-info">
+                      <span className="notification-item-name">{tool.tool}</span>
+                      <span className="notification-item-version notification-item-version--missing">
+                        {t('updates.notInstalled')}
+                      </span>
+                    </div>
+                    <div className="notification-item-actions">
+                      <button
+                        className="notification-item-btn notification-item-btn--install"
+                        onClick={() => handleInstall(tool.tool, tool.scope)}
+                        disabled={installingTool === tool.tool}
+                      >
+                        {installingTool === tool.tool ? (
+                          <span className="notification-spinner">{'\u21BB'}</span>
+                        ) : t('updates.install')}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {availableUpdates.length > 0 && (
+                  <div className="notification-section-label">{t('updates.availableUpdatesLabel')}</div>
                 )}
                 {availableUpdates.map((update) => (
                   <div

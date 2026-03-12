@@ -541,6 +541,15 @@ body {
   opacity: 0.7;
 }
 
+.notification-section-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  padding: 6px 12px 2px;
+}
+
 .notification-item-info {
   display: flex;
   flex-direction: column;

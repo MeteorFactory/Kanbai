@@ -1376,6 +1376,8 @@ export const en = {
   'updates.checkingNow': 'Checking for updates...',
   'updates.allUpToDate': 'Everything is up to date.',
   'updates.openToolsSettings': 'View applications',
+  'updates.missingToolsLabel': 'Missing tools',
+  'updates.availableUpdatesLabel': 'Available updates',
 
   // About
   'about.version': 'Version',
