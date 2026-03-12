@@ -1161,10 +1161,22 @@
   gap: 4px;
 }
 
+.git-sidebar-tag--clickable {
+  cursor: pointer;
+}
+
 .git-sidebar-tag-icon {
   font-size: 9px;
   font-weight: 700;
   color: var(--accent);
+}
+
+.git-sidebar-tag-date {
+  font-size: 11px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  margin-left: auto;
+  padding-left: 6px;
 }
 
 .git-sidebar-tag-delete {

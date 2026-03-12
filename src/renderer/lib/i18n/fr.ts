@@ -1096,6 +1096,7 @@ export const fr = {
   'git.newTag': '+ Nouveau tag',
   'git.noTags': 'Aucun tag',
   'git.deleteTag': 'Supprimer le tag',
+  'git.scrollToCommit': 'Voir le commit associé',
   'git.remotes': 'Remotes ({count})',
   'git.remoteNamePlaceholder': 'Nom (ex: origin)...',
   'git.remoteUrlPlaceholder': 'URL...',

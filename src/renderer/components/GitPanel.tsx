@@ -518,6 +518,7 @@ export function GitPanel() {
   const [showNewTag, setShowNewTag] = useState(false)
   const [newTagName, setNewTagName] = useState('')
   const [newTagMessage, setNewTagMessage] = useState('')
+  const graphScrollRef = useRef<HTMLDivElement>(null)
 
   // Remote state
   const [showNewRemote, setShowNewRemote] = useState(false)
@@ -891,6 +892,14 @@ export function GitPanel() {
     await window.kanbai.git.deleteTag(selectedProject.path, name)
     refreshProject(selectedProject)
   }, [selectedProject, refreshProject])
+
+  const scrollToTagCommit = useCallback((tag: GitTag) => {
+    const idx = graphData.findIndex((info) => info.entry.shortHash === tag.hash || info.entry.hash.startsWith(tag.hash))
+    if (idx === -1 || !graphScrollRef.current) return
+    const scrollTop = idx * ROW_HEIGHT - graphScrollRef.current.clientHeight / 2 + ROW_HEIGHT / 2
+    graphScrollRef.current.scrollTo({ top: Math.max(0, scrollTop), behavior: 'smooth' })
+    handleSelectCommit(graphData[idx]!.entry)
+  }, [graphData, handleSelectCommit])
 
   // --- Cherry-pick ---
 
@@ -1396,13 +1405,13 @@ export function GitPanel() {
                   <div className="git-sidebar-empty">{t('git.noTags')}</div>
                 ) : (
                   currentTags.map((tag) => (
-                    <div key={tag.name} className="git-sidebar-tag">
+                    <div key={tag.name} className="git-sidebar-tag git-sidebar-tag--clickable" onClick={() => scrollToTagCommit(tag)} title={t('git.scrollToCommit')}>
                       <div className="git-sidebar-tag-info">
                         <span className="git-sidebar-tag-name">
                           {tag.isAnnotated && <span className="git-sidebar-tag-icon">@</span>}
                           {tag.name}
                         </span>
-                        <span className="git-sidebar-branch-hash">{tag.hash}</span>
+                        <span className="git-sidebar-tag-date">{relativeDate(tag.date)}</span>
                       </div>
                       <button
                         className="git-sidebar-tag-delete"
@@ -1702,7 +1711,7 @@ export function GitPanel() {
               ) : (
                 /* Commit Graph (default view) — continuous SVG */
                 <div className="git-graph-area">
-                  <div className="git-graph-scroll">
+                  <div className="git-graph-scroll" ref={graphScrollRef}>
                     {graphData.length === 0 ? (
                       <div className="git-graph-empty">{t('git.noCommits')}</div>
                     ) : (
