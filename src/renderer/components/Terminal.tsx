@@ -215,7 +215,8 @@ export function Terminal({ cwd, shell, initialCommand, externalSessionId, worksp
 
         // Copy: Cmd+C (macOS) or Ctrl+Shift+C (Windows/Linux)
         // On Windows, plain Ctrl+C sends SIGINT — only copy with Ctrl+Shift+C
-        if (e.key === 'c' && ((isMac && modKey) || (!isMac && e.ctrlKey && e.shiftKey))) {
+        // Use toLowerCase() because Shift makes e.key uppercase on Windows
+        if (e.key.toLowerCase() === 'c' && ((isMac && modKey) || (!isMac && e.ctrlKey && e.shiftKey))) {
           const selection = xterm.getSelection()
           if (selection) {
             window.kanbai.clipboard.writeText(selection)
@@ -227,7 +228,8 @@ export function Terminal({ cwd, shell, initialCommand, externalSessionId, worksp
         }
 
         // Paste: Cmd+V (macOS) or Ctrl+Shift+V (Windows/Linux)
-        if (e.key === 'v' && ((isMac && modKey) || (!isMac && e.ctrlKey && e.shiftKey))) {
+        // Use toLowerCase() because Shift makes e.key uppercase on Windows
+        if (e.key.toLowerCase() === 'v' && ((isMac && modKey) || (!isMac && e.ctrlKey && e.shiftKey))) {
           const text = window.kanbai.clipboard.readText()
           if (text && sessionIdRef.current) {
             // Use bracketed paste mode for safe pasting
