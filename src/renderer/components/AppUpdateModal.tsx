@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useState, useRef } from 'react'
 import { useAppUpdateStore } from '../lib/stores/appUpdateStore'
 import { useI18n } from '../lib/i18n'
 
@@ -6,6 +6,8 @@ export function AppUpdateModal() {
   const { status, version, downloadPercent, showModal, errorMessage, dismissModal, downloadUpdate, installUpdate, checkForUpdate } =
     useAppUpdateStore()
   const { t } = useI18n()
+  const [copied, setCopied] = useState(false)
+  const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -75,9 +77,21 @@ export function AppUpdateModal() {
           <>
             <p className="app-update-modal-version">{t('appUpdate.error')}</p>
             {errorMessage && (
-              <p className="app-update-modal-error-detail">
-                {t('appUpdate.errorDetail', { message: errorMessage })}
-              </p>
+              <div className="app-update-modal-error-detail">
+                <span>{t('appUpdate.errorDetail', { message: errorMessage })}</span>
+                <button
+                  className="notification-status-copy"
+                  title={t('updates.copyError')}
+                  onClick={() => {
+                    navigator.clipboard.writeText(errorMessage)
+                    setCopied(true)
+                    if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current)
+                    copiedTimerRef.current = setTimeout(() => setCopied(false), 2000)
+                  }}
+                >
+                  {copied ? '\u2713' : '\u2398'}
+                </button>
+              </div>
             )}
             <div className="app-update-modal-actions">
               <button className="app-update-btn app-update-btn--secondary" onClick={dismissModal}>

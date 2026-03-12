@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import type { AppSettings, SshKeyInfo, SshKeyType, Namespace, KanbanConfig } from '../../shared/types'
 import type { AiProviderId } from '../../shared/types/ai-provider'
 import { useI18n } from '../lib/i18n'
@@ -81,6 +81,7 @@ export function SettingsPanel() {
     status: appUpdateStatus,
     version: appUpdateVersion,
     downloadPercent,
+    errorMessage: appUpdateError,
     checkForUpdate,
     downloadUpdate,
     installUpdate: installAppUpdate,
@@ -134,6 +135,10 @@ export function SettingsPanel() {
   const [importPublicKey, setImportPublicKey] = useState('')
   const [copiedKeyId, setCopiedKeyId] = useState<string | null>(null)
   const [sshError, setSshError] = useState<string | null>(null)
+
+  // Copy error state for tool update errors
+  const [toolErrorCopied, setToolErrorCopied] = useState(false)
+  const toolErrorCopiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const loadGitConfig = useCallback(async (nsId: string) => {
     if (!nsId) return
@@ -1226,11 +1231,30 @@ export function SettingsPanel() {
               {installStatus && (
                 <div
                   className={`notification-status ${installStatus.success ? 'notification-status--success' : 'notification-status--error'}`}
-                  onClick={clearToolInstallStatus}
                 >
-                  {installStatus.success
-                    ? `${'\u2713'} ${t('updates.updated', { tool: installStatus.tool })}`
-                    : `${'\u2717'} ${t('updates.failedUpdate', { tool: installStatus.tool, error: installStatus.error || '' })}`}
+                  {installStatus.success ? (
+                    <span onClick={clearToolInstallStatus} className="notification-status-text">
+                      {'\u2713'} {t('updates.updated', { tool: installStatus.tool })}
+                    </span>
+                  ) : (
+                    <div className="notification-status-error">
+                      <span className="notification-status-text" onClick={clearToolInstallStatus}>
+                        {'\u2717'} {t('updates.failedUpdate', { tool: installStatus.tool, error: installStatus.error || '' })}
+                      </span>
+                      <button
+                        className="notification-status-copy"
+                        title={t('updates.copyError')}
+                        onClick={() => {
+                          navigator.clipboard.writeText(installStatus.error || '')
+                          setToolErrorCopied(true)
+                          if (toolErrorCopiedTimerRef.current) clearTimeout(toolErrorCopiedTimerRef.current)
+                          toolErrorCopiedTimerRef.current = setTimeout(() => setToolErrorCopied(false), 2000)
+                        }}
+                      >
+                        {toolErrorCopied ? '\u2713' : '\u2398'}
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -1468,6 +1492,27 @@ export function SettingsPanel() {
                     </button>
                   )}
                 </div>
+                {appUpdateStatus === 'error' && appUpdateError && (
+                  <div className="notification-status notification-status--error" style={{ marginTop: 8 }}>
+                    <div className="notification-status-error">
+                      <span className="notification-status-text">
+                        {t('appUpdate.errorDetail', { message: appUpdateError })}
+                      </span>
+                      <button
+                        className="notification-status-copy"
+                        title={t('updates.copyError')}
+                        onClick={() => {
+                          navigator.clipboard.writeText(appUpdateError)
+                          setToolErrorCopied(true)
+                          if (toolErrorCopiedTimerRef.current) clearTimeout(toolErrorCopiedTimerRef.current)
+                          toolErrorCopiedTimerRef.current = setTimeout(() => setToolErrorCopied(false), 2000)
+                        }}
+                      >
+                        {toolErrorCopied ? '\u2713' : '\u2398'}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
