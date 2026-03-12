@@ -12,7 +12,8 @@ export const PATH_SEP = IS_WIN ? ';' : ':'
 /** Default shell for the current platform */
 export function getDefaultShell(): string {
   if (IS_WIN) {
-    return process.env.COMSPEC || 'powershell.exe'
+    // Default to PowerShell, not COMSPEC (which is cmd.exe on most systems)
+    return 'powershell.exe'
   }
   return process.env.SHELL || '/bin/zsh'
 }
@@ -20,7 +21,15 @@ export function getDefaultShell(): string {
 /** Shell arguments for the default shell */
 export function getDefaultShellArgs(shell: string): string[] {
   if (IS_WIN) {
-    // PowerShell and cmd.exe don't use -l
+    const lower = shell.toLowerCase()
+    // PowerShell: -NoLogo for a cleaner startup
+    if (lower.includes('powershell') || lower.includes('pwsh')) {
+      return ['-NoLogo']
+    }
+    // Git Bash: --login for PATH setup
+    if (lower.includes('bash')) {
+      return ['--login']
+    }
     return []
   }
   // Keep -l for bash where it's needed for PATH setup
@@ -232,6 +241,26 @@ export function getUpdateCommands(): Record<string, { command: string; args: str
     npm: { command: 'npm', args: ['install', '-g', 'npm@latest'] },
     claude: { command: 'npm', args: ['install', '-g', '@anthropic-ai/claude-code@latest'] },
   }
+}
+
+/**
+ * Check whether a shell path is valid on the current platform.
+ *
+ * On Windows, bare names like `powershell.exe` or `cmd.exe` are resolved
+ * through PATH by the OS but `fs.existsSync` fails on them. We handle
+ * this by recognising known Windows shell bare names as always valid,
+ * and falling back to `fs.existsSync` for absolute paths.
+ */
+export function isShellValid(shell: string): boolean {
+  if (!shell) return false
+  if (IS_WIN) {
+    const lower = shell.toLowerCase()
+    const knownBareShells = ['powershell.exe', 'cmd.exe', 'pwsh.exe']
+    if (knownBareShells.includes(lower)) return true
+  }
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- lazy require to keep shared module safe for bundlers
+  const fs = require('fs') as typeof import('fs')
+  return fs.existsSync(shell)
 }
 
 /** Available shell options for the current platform */

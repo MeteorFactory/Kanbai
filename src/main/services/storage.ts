@@ -4,7 +4,7 @@ import os from 'os'
 import { v4 as uuid } from 'uuid'
 import { Workspace, Project, AppSettings, KanbanTask, AutoClauderTemplate, SessionData, Namespace, GitProfile } from '../../shared/types'
 import { createDefaultSettings } from '../../shared/constants/defaults'
-import { getDefaultShell } from '../../shared/platform'
+import { getDefaultShell, isShellValid } from '../../shared/platform'
 
 const DATA_DIR = path.join(os.homedir(), '.kanbai')
 
@@ -93,7 +93,7 @@ export class StorageService {
       // (handles cross-platform scenarios, e.g. /bin/zsh saved on macOS used on Windows)
       // Call getDefaultShell() directly — DEFAULT_SETTINGS.defaultShell may be
       // incorrectly inlined by rollup (picking the wrong platform branch).
-      if (data.settings?.defaultShell && !fs.existsSync(data.settings.defaultShell)) {
+      if (data.settings?.defaultShell && !isShellValid(data.settings.defaultShell)) {
         data.settings.defaultShell = getDefaultShell()
         needsSave = true
       }
