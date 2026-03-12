@@ -851,8 +851,11 @@ export function registerUpdateHandlers(ipcMain: IpcMain): void {
                 args = ['install', 'node']
               }
             } else if (IS_WIN) {
-              command = 'npm'
-              args = ['install', '-g', 'npm@latest']
+              command = 'winget'
+              args = [
+                'upgrade', '--id', 'OpenJS.NodeJS.LTS', '--silent',
+                '--accept-source-agreements', '--accept-package-agreements',
+              ]
             } else if (installResolution.source.startsWith('brew')) {
               command = 'brew'
               args = ['upgrade', installResolution.brew?.name || 'node']

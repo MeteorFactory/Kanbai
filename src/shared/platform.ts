@@ -219,7 +219,7 @@ export function getUpdateCommands(): Record<string, { command: string; args: str
   if (IS_WIN) {
     return {
       node: { command: 'winget', args: ['upgrade', '--id', 'OpenJS.NodeJS.LTS', '--silent', '--accept-source-agreements', '--accept-package-agreements'] },
-      npm: { command: 'npm', args: ['install', '-g', 'npm@latest'] },
+      npm: { command: 'winget', args: ['upgrade', '--id', 'OpenJS.NodeJS.LTS', '--silent', '--accept-source-agreements', '--accept-package-agreements'] },
       claude: { command: 'npm', args: ['install', '-g', '@anthropic-ai/claude-code@latest'] },
       git: { command: 'winget', args: ['upgrade', '--id', 'Git.Git', '--silent', '--accept-source-agreements', '--accept-package-agreements'] },
       cargo: { command: 'winget', args: ['install', '--id', 'Rustlang.Rustup', '--silent', '--accept-source-agreements', '--accept-package-agreements'] },
