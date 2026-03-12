@@ -131,6 +131,51 @@ export function getWhichCommand(): string {
   return IS_WIN ? 'where' : 'which'
 }
 
+/**
+ * Refresh process.env.PATH from the Windows registry.
+ *
+ * After winget (or any installer) modifies the system/user PATH, the running
+ * Electron process still holds the snapshot from startup. This function reads
+ * the current System and User PATH values from the registry and merges them
+ * into process.env.PATH so that subsequent tool checks find newly installed
+ * executables without requiring an app restart.
+ *
+ * No-op on non-Windows platforms.
+ */
+export async function refreshWindowsPath(): Promise<void> {
+  if (!IS_WIN) return
+
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- lazy require for test compatibility
+  const { execFile } = require('child_process') as typeof import('child_process')
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { promisify } = require('util') as typeof import('util')
+  const execFileAsync = promisify(execFile)
+
+  const readRegistryPath = async (key: string, valueName: string): Promise<string> => {
+    try {
+      const { stdout } = await execFileAsync(
+        'reg', ['query', key, '/v', valueName],
+        { timeout: 5000 },
+      ) as { stdout: string; stderr: string }
+      // reg query output format: "    Path    REG_EXPAND_SZ    C:\...\bin;C:\..."
+      const match = stdout.match(/REG_(?:EXPAND_)?SZ\s+(.+)/i)
+      return match?.[1]?.trim() ?? ''
+    } catch {
+      return ''
+    }
+  }
+
+  const [systemPath, userPath] = await Promise.all([
+    readRegistryPath('HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment', 'Path'),
+    readRegistryPath('HKCU\\Environment', 'Path'),
+  ])
+
+  if (systemPath || userPath) {
+    const merged = [systemPath, userPath].filter(Boolean).join(';')
+    process.env.PATH = merged
+  }
+}
+
 /** Install commands per analysis tool, platform-specific */
 export function getInstallCommands(): Record<string, string> {
   const home = process.env.HOME || process.env.USERPROFILE || ''

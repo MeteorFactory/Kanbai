@@ -3,7 +3,7 @@ import fs from 'fs/promises'
 import fsSync from 'fs'
 import path from 'path'
 import { IPC_CHANNELS, UpdateInfo } from '../../shared/types'
-import { IS_WIN, getWhichCommand, getExtendedToolPaths, PATH_SEP, crossExecFile } from '../../shared/platform'
+import { IS_WIN, getWhichCommand, getExtendedToolPaths, PATH_SEP, crossExecFile, refreshWindowsPath } from '../../shared/platform'
 
 const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 
@@ -459,6 +459,9 @@ async function ensureNpmForInstall(
       120000,
     )
     sendStatus('prerequisite_installed', 30)
+
+    // Refresh PATH from registry so the just-installed Node.js/npm is found
+    await refreshWindowsPath()
 
     // Verify npm is now available after Node.js installation
     const npmAvailable = await isNpmAvailable()
@@ -1210,6 +1213,8 @@ export function registerUpdateHandlers(ipcMain: IpcMain): void {
         sendStatus('installing', 50)
         if (command === 'winget') {
           await wingetExec(args, 120000)
+          // Refresh PATH from registry so the just-installed tool is detected
+          await refreshWindowsPath()
         } else {
           await enrichedExecFile(command, args, 120000)
         }
