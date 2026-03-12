@@ -39,13 +39,14 @@ src/
       notificationService.ts
       activityHooks.ts   # AI provider activity hooks (Kanbai integration)
       ai-cli.ts          # AI CLI detection and management
-      pixel-agents-service.ts  # Pixel agents integration
-      database/      # Database connection and query services
-      packages/      # Package analysis services
+      pixel-agents-service.ts   # Pixel agents integration
+      pixel-agents-assets.ts    # Pixel agents static assets
+      database/      # DB connection, queries, backup, crypto, NL queries, drivers/
+      packages/      # Package analysis, NL package queries
     assets/          # Static assets (rule-templates)
   preload/           # Preload scripts — contextBridge, exposes window.kanbai
   renderer/          # Renderer process (React + Zustand)
-    components/      # All UI components (flat architecture, ~58 components)
+    components/      # All UI components (flat architecture, ~60 components)
     lib/stores/      # Zustand stores (per domain, 13 stores)
     styles/          # CSS custom properties
   shared/            # Shared types and constants (both processes)

@@ -331,11 +331,20 @@ Criteria for approval:
 src/
   main/           # Electron main process
     ipc/          # IPC handlers (1 file per domain, 29 handlers)
-    services/     # Business logic services (storage, healthCheck, notifications, activityHooks, ai-cli, pixel-agents, database/, packages/)
+    services/     # Business logic services
+      storage.ts          # StorageService singleton (~/.kanbai/data.json)
+      healthCheckScheduler.ts
+      notificationService.ts
+      activityHooks.ts    # AI provider activity hooks (Kanbai integration)
+      ai-cli.ts           # AI CLI detection and management
+      pixel-agents-service.ts   # Pixel agents integration
+      pixel-agents-assets.ts    # Pixel agents static assets
+      database/           # DB connection, queries, backup, crypto, NL queries, drivers/
+      packages/           # Package analysis, NL package queries
     assets/       # Static assets (rule-templates)
   preload/        # Preload scripts (contextBridge, exposes window.kanbai)
   renderer/       # Renderer process (React)
-    components/   # All UI components (flat architecture, ~58 components)
+    components/   # All UI components (flat architecture, ~60 components)
     lib/stores/   # Zustand stores (per domain, 13 stores)
     styles/       # CSS custom properties
   shared/         # Types and constants shared between processes

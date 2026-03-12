@@ -6,7 +6,7 @@ applyTo: "src/renderer/**"
 
 ## Architecture
 
-- Flat component architecture in `src/renderer/components/` (~58 components)
+- Flat component architecture in `src/renderer/components/` (~60 components)
 - Zustand stores in `src/renderer/lib/stores/` (one per domain)
 - Access main process ONLY through `window.kanbai` preload API
 - Never import Node.js modules in renderer code

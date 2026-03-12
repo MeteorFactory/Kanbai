@@ -32,7 +32,7 @@ Three-process Electron model:
 1. **Main Process** (`src/main/`) — Node.js, full OS access
    - `index.ts` — App lifecycle, BrowserWindow creation
    - `ipc/` — IPC handlers (1 file per domain, 29 handlers)
-   - `services/` — storage.ts (StorageService singleton), healthCheckScheduler, notificationService, activityHooks, ai-cli, pixel-agents-service, database/, packages/
+   - `services/` — storage.ts (StorageService singleton), healthCheckScheduler, notificationService, activityHooks (AI provider hooks), ai-cli, pixel-agents-service, pixel-agents-assets, database/ (connection, queries, backup, crypto, NL queries, drivers/), packages/ (analysis, NL queries)
 
 2. **Preload** (`src/preload/`) — Bridge between processes
    - Exposes `window.kanbai` API via `contextBridge`
@@ -40,7 +40,7 @@ Three-process Electron model:
 
 3. **Renderer** (`src/renderer/`) — Chromium, sandboxed
    - React app with Zustand state management
-   - Flat component architecture in `components/` (~58 components)
+   - Flat component architecture in `components/` (~60 components)
    - Stores in `lib/stores/` (13 stores)
    - CSS custom properties in `styles/`
 
