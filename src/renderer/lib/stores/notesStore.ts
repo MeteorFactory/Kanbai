@@ -4,19 +4,16 @@ import type { Note } from '../../../shared/types'
 interface NotesState {
   notes: Note[]
   selectedNoteId: string | null
-  isEditing: boolean
   loadNotes: (workspaceId: string) => Promise<void>
   createNote: (workspaceId: string) => Promise<Note | null>
   updateNote: (workspaceId: string, id: string, title?: string, content?: string) => Promise<void>
   deleteNote: (workspaceId: string, id: string) => Promise<void>
   selectNote: (noteId: string | null) => void
-  setEditing: (editing: boolean) => void
 }
 
 export const useNotesStore = create<NotesState>((set, get) => ({
   notes: [],
   selectedNoteId: null,
-  isEditing: false,
 
   loadNotes: async (workspaceId: string) => {
     const notes = await window.kanbai.notes.list(workspaceId)
@@ -32,7 +29,7 @@ export const useNotesStore = create<NotesState>((set, get) => ({
   createNote: async (workspaceId: string) => {
     const note = await window.kanbai.notes.create(workspaceId, '', '')
     const notes = await window.kanbai.notes.list(workspaceId)
-    set({ notes, selectedNoteId: note.id, isEditing: true })
+    set({ notes, selectedNoteId: note.id })
     return note
   },
 
@@ -52,6 +49,5 @@ export const useNotesStore = create<NotesState>((set, get) => ({
     })
   },
 
-  selectNote: (noteId) => set({ selectedNoteId: noteId, isEditing: false }),
-  setEditing: (editing) => set({ isEditing: editing }),
+  selectNote: (noteId) => set({ selectedNoteId: noteId }),
 }))
