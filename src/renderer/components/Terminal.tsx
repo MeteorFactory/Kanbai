@@ -292,36 +292,54 @@ export function Terminal({ cwd, shell, initialCommand, externalSessionId, worksp
         })
       }
 
+      // Register IPC listeners BEFORE creating the PTY to avoid losing
+      // early output. On Windows, PowerShell with -NoLogo emits its prompt
+      // almost instantly — if the listener is set up inside the .then(),
+      // the prompt data arrives before the listener exists and is lost.
+      // We buffer early data and replay it once the session ID is known.
+      const earlyBuffer: Array<{ id: string; data: string }> = []
+
+      const unsubData = window.kanbai.terminal.onData(
+        (payload: { id: string; data: string }) => {
+          if (sessionIdRef.current) {
+            if (payload.id === sessionIdRef.current) {
+              xterm.write(payload.data)
+              if (!isVisibleRef.current) {
+                onActivityRef.current?.()
+              }
+            }
+          } else {
+            // PTY created but invoke response not yet received — buffer
+            earlyBuffer.push(payload)
+          }
+        },
+      )
+      cleanupDataRef.current = unsubData
+
+      const unsubClose = window.kanbai.terminal.onClose(
+        (payload: { id: string; exitCode: number; signal: number }) => {
+          if (payload.id === sessionIdRef.current) {
+            xterm.write('\r\n\x1b[90m[Process exited]\x1b[0m\r\n')
+            sessionIdRef.current = null
+            onCloseRef.current?.()
+          }
+        },
+      )
+      cleanupCloseRef.current = unsubClose
+
       // Create PTY session
       window.kanbai.terminal.create({ cwd, shell, workspaceId, tabId, provider }).then(
         (result: { id: string; pid: number }) => {
           sessionIdRef.current = result.id
           onSessionCreatedRef.current?.(result.id)
 
-          // Listen for data from PTY
-          const unsubData = window.kanbai.terminal.onData(
-            (payload: { id: string; data: string }) => {
-              if (payload.id === sessionIdRef.current) {
-                xterm.write(payload.data)
-                if (!isVisibleRef.current) {
-                  onActivityRef.current?.()
-                }
-              }
-            },
-          )
-          cleanupDataRef.current = unsubData
-
-          // Listen for PTY close
-          const unsubClose = window.kanbai.terminal.onClose(
-            (payload: { id: string; exitCode: number; signal: number }) => {
-              if (payload.id === sessionIdRef.current) {
-                xterm.write('\r\n\x1b[90m[Process exited]\x1b[0m\r\n')
-                sessionIdRef.current = null
-                onCloseRef.current?.()
-              }
-            },
-          )
-          cleanupCloseRef.current = unsubClose
+          // Replay any data that arrived before the session ID was set
+          for (const payload of earlyBuffer) {
+            if (payload.id === result.id) {
+              xterm.write(payload.data)
+            }
+          }
+          earlyBuffer.length = 0
 
           // Send initial resize
           fitTerminal()
@@ -355,7 +373,9 @@ export function Terminal({ cwd, shell, initialCommand, externalSessionId, worksp
             setTimeout(sendCmd, 3000)
           }
         },
-      )
+      ).catch((err: Error) => {
+        xterm.write(`\r\n\x1b[31m[Failed to start terminal: ${err.message}]\x1b[0m\r\n`)
+      })
     }
 
     // Resize observer
