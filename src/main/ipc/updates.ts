@@ -345,6 +345,26 @@ async function getLatestNpmVersion(pkg: string): Promise<string | null> {
   }
 }
 
+/**
+ * Get the latest version of a package available via winget.
+ * Used on Windows to ensure version checks match the actual install source.
+ * Falls back to null if winget is unavailable or the package is not found.
+ */
+async function getLatestWingetVersion(packageId: string): Promise<string | null> {
+  try {
+    const { stdout } = await enrichedExecFile(
+      'winget',
+      ['show', '--id', packageId, '--exact', '--disable-interactivity', '--accept-source-agreements'],
+      15000,
+    )
+    // The "Version" label is similar across locales (Version, Versión, Versione…)
+    const match = stdout.match(/[Vv]ersion\s*[:\s]\s*(\d+\.\d+[\d.]*)/m)
+    return match ? match[1] ?? null : null
+  } catch {
+    return null
+  }
+}
+
 interface BrewPackageInfo {
   kind: 'formula' | 'cask'
   latestVersion: string | null
@@ -568,7 +588,10 @@ async function getLatestVersionForTool(
   }
 
   if (tool === 'node') {
-    if (IS_WIN) return getLatestNpmVersion('node')
+    // On Windows, Node is installed/upgraded via winget LTS — check winget for
+    // the actual available version instead of npm registry (which may advertise
+    // a non-LTS or not-yet-published-to-winget version).
+    if (IS_WIN) return await getLatestWingetVersion('OpenJS.NodeJS.LTS') ?? await getLatestNpmVersion('node')
     if (resolution.brew?.name) return getLatestBrewVersion(resolution.brew.name)
     return null
   }
@@ -578,6 +601,8 @@ async function getLatestVersionForTool(
       // npm is bundled with brew node; updating node updates npm.
       return currentVersion
     }
+    // On Windows, npm is updated independently via `npm install -g npm@latest`,
+    // so checking the npm registry is the correct source.
     return getLatestNpmVersion('npm')
   }
 
@@ -1027,11 +1052,9 @@ export function registerUpdateHandlers(ipcMain: IpcMain): void {
                 args = ['install', 'node']
               }
             } else if (IS_WIN) {
-              command = 'winget'
-              args = [
-                'upgrade', '--id', 'OpenJS.NodeJS.LTS', '--silent',
-                '--accept-source-agreements', '--accept-package-agreements',
-              ]
+              // Update npm independently — winget upgrades Node, not npm directly
+              command = 'npm'
+              args = ['install', '-g', 'npm@latest']
             } else if (installResolution.source.startsWith('brew')) {
               command = 'brew'
               args = ['upgrade', installResolution.brew?.name || 'node']
