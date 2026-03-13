@@ -31,7 +31,7 @@ Three-process Electron model:
 
 1. **Main Process** (`src/main/`) — Node.js, full OS access
    - `index.ts` — App lifecycle, BrowserWindow creation
-   - `ipc/` — IPC handlers (1 file per domain, 29 handlers)
+   - `ipc/` — IPC handlers (1 file per domain, 30 handlers)
    - `services/` — storage.ts (StorageService singleton), healthCheckScheduler, notificationService, appUpdateState, activityHooks (AI provider hooks), ai-cli, pixel-agents-service, pixel-agents-assets, database/ (connection, queries, backup, crypto, NL queries, drivers/), packages/ (analysis, NL queries)
 
 2. **Preload** (`src/preload/`) — Bridge between processes
@@ -67,7 +67,7 @@ Three-process Electron model:
 
 ### IPC Domains
 
-terminal, workspace, project, claude, kanban, git, filesystem, session, app, database, packages, analysis, ssh, healthcheck, devops, mcp, api, updates, appUpdate, workspaceEnv, claudeMemory, claudeDefaults, codexConfig, copilotConfig, geminiConfig, gitConfig, namespace, aiProvider, pixel-agents
+terminal, workspace, project, claude, kanban, git, filesystem, session, app, database, packages, analysis, ssh, healthcheck, devops, mcp, api, updates, appUpdate, workspaceEnv, claudeMemory, claudeDefaults, codexConfig, copilotConfig, geminiConfig, gitConfig, namespace, aiProvider, pixel-agents, skillsStore
 
 ## State Management
 
@@ -99,6 +99,7 @@ terminalTabStore, workspaceStore, claudeStore, kanbanStore, viewStore, updateSto
 - **Pixel Agents** — AI pixel agent integration
 - **Multi-Agent View** — Multi-agent orchestration UI
 - **AI Configs** — Per-provider configuration (Codex, Copilot, Gemini, generic AI provider)
+- **Skills Store** — Claude Code skills marketplace with multi-repo fetching and one-click install
 - **SSH** — Remote SSH connection management
 
 ## Code Conventions
@@ -123,6 +124,7 @@ All in `src/shared/types/index.ts`:
 - `GitStatus`, `GitLogEntry`, `FileEntry` — git and filesystem
 - `DatabaseConnection`, `DatabaseQuery` — database explorer
 - `HealthCheckConfig` — health monitoring
+- `SkillStoreRepo`, `SkillStoreEntry` — skills store marketplace
 
 ## Commands
 

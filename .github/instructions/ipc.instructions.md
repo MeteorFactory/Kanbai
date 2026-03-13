@@ -29,9 +29,9 @@ applyTo: "src/main/ipc/**,src/preload/**,src/shared/types/**"
 - Wrap handler logic in try/catch for expected failures
 - Log unexpected errors in main process before re-throwing
 
-## IPC Domains (29)
+## IPC Domains (30)
 
-terminal, workspace, project, claude, kanban, git, filesystem, session, app, database, packages, analysis, ssh, healthcheck, devops, mcp, api, updates, appUpdate, workspaceEnv, claudeMemory, claudeDefaults, codexConfig, copilotConfig, geminiConfig, gitConfig, namespace, aiProvider, pixel-agents
+terminal, workspace, project, claude, kanban, git, filesystem, session, app, database, packages, analysis, ssh, healthcheck, devops, mcp, api, updates, appUpdate, workspaceEnv, claudeMemory, claudeDefaults, codexConfig, copilotConfig, geminiConfig, gitConfig, namespace, aiProvider, pixel-agents, skillsStore
 
 ## Anti-patterns
 

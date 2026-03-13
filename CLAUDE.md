@@ -330,7 +330,7 @@ Criteria for approval:
 ```
 src/
   main/           # Electron main process
-    ipc/          # IPC handlers (1 file per domain, 29 handlers)
+    ipc/          # IPC handlers (1 file per domain, 30 handlers)
     services/     # Business logic services
       storage.ts          # StorageService singleton (~/.kanbai/data.json)
       healthCheckScheduler.ts

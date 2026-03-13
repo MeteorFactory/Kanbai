@@ -29,7 +29,7 @@ Kanbai is an AI-enhanced desktop terminal built with Electron. It combines a ful
 
 Three-process Electron model:
 
-- **Main** (`src/main/`) — Node.js, IPC handlers in `ipc/` (29 handlers), services in `services/` (storage, healthCheck, notifications, appUpdateState, activityHooks, ai-cli, pixel-agents-service, pixel-agents-assets, database/ [connection, queries, backup, crypto, NL, drivers/], packages/ [analysis, NL])
+- **Main** (`src/main/`) — Node.js, IPC handlers in `ipc/` (30 handlers), services in `services/` (storage, healthCheck, notifications, appUpdateState, activityHooks, ai-cli, pixel-agents-service, pixel-agents-assets, database/ [connection, queries, backup, crypto, NL, drivers/], packages/ [analysis, NL])
 - **Preload** (`src/preload/`) — contextBridge, exposes `window.kanbai` API
 - **Renderer** (`src/renderer/`) — React, flat components in `components/` (~60), Zustand stores in `lib/stores/` (13 stores)
 - **Shared** (`src/shared/`) — All types in `types/index.ts`, constants in `constants/`
@@ -48,7 +48,7 @@ Three-process Electron model:
 - Request-response: `ipcRenderer.invoke` / `ipcMain.handle`
 - Events only: `ipcRenderer.send` / `ipcMain.on`
 - Preload API: `window.kanbai.{domain}.{method}()`
-- Domains: terminal, workspace, project, claude, kanban, git, filesystem, session, app, database, packages, analysis, ssh, healthcheck, devops, mcp, api, updates, appUpdate, workspaceEnv, claudeMemory, claudeDefaults, codexConfig, copilotConfig, geminiConfig, gitConfig, namespace, aiProvider, pixel-agents
+- Domains: terminal, workspace, project, claude, kanban, git, filesystem, session, app, database, packages, analysis, ssh, healthcheck, devops, mcp, api, updates, appUpdate, workspaceEnv, claudeMemory, claudeDefaults, codexConfig, copilotConfig, geminiConfig, gitConfig, namespace, aiProvider, pixel-agents, skillsStore
 
 ## State Management
 
@@ -75,6 +75,7 @@ Three-process Electron model:
 - Pixel agents integration
 - Multi-agent orchestration view
 - AI provider configuration (Codex, Copilot, Gemini, generic)
+- Skills Store (Claude Code skills marketplace)
 - SSH remote connection management
 
 ## Code Conventions
@@ -96,6 +97,7 @@ Three-process Electron model:
 - `AppSettings`, `GitStatus`, `FileEntry`
 - `DatabaseConnection`, `DatabaseQuery` — database explorer
 - `HealthCheckConfig` — health monitoring
+- `SkillStoreRepo`, `SkillStoreEntry` — skills store marketplace
 
 ## Testing
 

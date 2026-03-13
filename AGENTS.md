@@ -34,7 +34,7 @@ Kanbai is an AI-enhanced desktop terminal built with Electron. It combines a ful
 src/
   main/              # Main process (Node.js) — app lifecycle, IPC handlers, services
     index.ts         # App entry point, BrowserWindow creation
-    ipc/             # IPC handlers (1 file per domain, 29 handlers)
+    ipc/             # IPC handlers (1 file per domain, 30 handlers)
     services/        # Business logic services
       storage.ts     # StorageService singleton (~/.kanbai/data.json)
       healthCheckScheduler.ts
@@ -88,7 +88,7 @@ tests/
 
 ### IPC Domains
 
-terminal, workspace, project, claude, kanban, git, filesystem, session, app, database, packages, analysis, ssh, healthcheck, devops, mcp, api, updates, appUpdate, workspaceEnv, claudeMemory, claudeDefaults, codexConfig, copilotConfig, geminiConfig, gitConfig, namespace, aiProvider, pixel-agents
+terminal, workspace, project, claude, kanban, git, filesystem, session, app, database, packages, analysis, ssh, healthcheck, devops, mcp, api, updates, appUpdate, workspaceEnv, claudeMemory, claudeDefaults, codexConfig, copilotConfig, geminiConfig, gitConfig, namespace, aiProvider, pixel-agents, skillsStore
 
 ## State Management
 
@@ -123,6 +123,7 @@ terminalTabStore, workspaceStore, claudeStore, kanbanStore, viewStore, updateSto
 | Pixel Agents | pixel-agents.ts | — | PixelAgentsPane |
 | Multi-Agent | — | — | MultiAgentView |
 | AI Configs | codexConfig.ts, copilotConfig.ts, geminiConfig.ts, aiProvider.ts | — | SettingsPanel |
+| Skills Store | skillsStore.ts | — | SkillsStoreSection, AgentsSkillsTab |
 
 ## Data Persistence
 
@@ -151,6 +152,7 @@ All TypeScript interfaces in `src/shared/types/index.ts`:
 - `GitStatus`, `GitLogEntry`, `FileEntry` — git/filesystem
 - `DatabaseConnection`, `DatabaseQuery` — database explorer
 - `HealthCheckConfig` — health monitoring
+- `SkillStoreRepo`, `SkillStoreEntry` — skills store marketplace
 
 ## Commands
 
