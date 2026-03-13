@@ -25,6 +25,7 @@ export function AgentSkillEditor({ type, initial, onSave, onCancel }: Props) {
   const [userInvocable, setUserInvocable] = useState(initial?.userInvocable ?? true)
   const [disableModelInvocation, setDisableModelInvocation] = useState(initial?.disableModelInvocation ?? false)
   const [context, setContext] = useState(initial?.context ?? '')
+  const storeOrigin = initial?.storeOrigin
 
   useEffect(() => {
     if (initial) {
@@ -56,6 +57,7 @@ export function AgentSkillEditor({ type, initial, onSave, onCancel }: Props) {
         userInvocable,
         disableModelInvocation: disableModelInvocation || undefined,
         context: context || undefined,
+        storeOrigin,
       } : {}),
     })
     await onSave(filename, content)
@@ -84,13 +86,29 @@ export function AgentSkillEditor({ type, initial, onSave, onCancel }: Props) {
           </div>
         </div>
 
+        {storeOrigin && (
+          <div className="cs-agent-editor-field">
+            <label className="claude-rules-label">{t('claude.skillOrigin')}</label>
+            <div className="cs-store-origin-row">
+              <button
+                className="cs-store-card-author-link"
+                onClick={() => window.kanbai.shell.openExternal(storeOrigin)}
+                title={storeOrigin}
+              >
+                {storeOrigin}
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="cs-agent-editor-field">
           <label className="claude-rules-label">{t('claude.agentDescription')}</label>
-          <input
-            className="claude-profile-editor-input"
+          <textarea
+            className="claude-profile-editor-input cs-agent-editor-description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder={t('claude.agentDescPlaceholder')}
+            rows={3}
           />
         </div>
 

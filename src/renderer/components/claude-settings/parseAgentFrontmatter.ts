@@ -9,6 +9,7 @@ export interface EnrichedAgent {
   userInvocable?: boolean
   disableModelInvocation?: boolean
   context?: string
+  storeOrigin?: string
 }
 
 export function parseAgentFrontmatter(filename: string, raw: string): EnrichedAgent {
@@ -21,6 +22,7 @@ export function parseAgentFrontmatter(filename: string, raw: string): EnrichedAg
   let userInvocable: boolean | undefined
   let disableModelInvocation: boolean | undefined
   let context: string | undefined
+  let storeOrigin: string | undefined
 
   // Parse YAML frontmatter between --- delimiters
   const fmMatch = raw.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/)
@@ -60,20 +62,24 @@ export function parseAgentFrontmatter(filename: string, raw: string): EnrichedAg
     // Extract context
     const ctxMatch = frontmatter.match(/^context:\s*(.+)$/m)
     if (ctxMatch) context = ctxMatch[1]!.trim()
+
+    // Extract store-origin
+    const originMatch = frontmatter.match(/^store-origin:\s*(.+)$/m)
+    if (originMatch) storeOrigin = originMatch[1]!.trim()
   }
 
   return {
     filename, name, description, tools, model,
     content: content.trim(),
     disabled: isDisabled || undefined,
-    userInvocable, disableModelInvocation, context,
+    userInvocable, disableModelInvocation, context, storeOrigin,
   }
 }
 
 export function buildAgentContent(agent: Partial<EnrichedAgent> & { content: string }): string {
   const parts: string[] = []
   const hasFrontmatter = agent.description || (agent.tools && agent.tools.length > 0) || agent.model
-    || agent.userInvocable !== undefined || agent.disableModelInvocation !== undefined || agent.context
+    || agent.userInvocable !== undefined || agent.disableModelInvocation !== undefined || agent.context || agent.storeOrigin
   if (hasFrontmatter) {
     parts.push('---')
     if (agent.description) parts.push(`description: ${agent.description}`)
@@ -82,6 +88,7 @@ export function buildAgentContent(agent: Partial<EnrichedAgent> & { content: str
     if (agent.userInvocable !== undefined) parts.push(`user-invocable: ${agent.userInvocable}`)
     if (agent.disableModelInvocation !== undefined) parts.push(`disable-model-invocation: ${agent.disableModelInvocation}`)
     if (agent.context) parts.push(`context: ${agent.context}`)
+    if (agent.storeOrigin) parts.push(`store-origin: ${agent.storeOrigin}`)
     parts.push('---')
     parts.push('')
   }

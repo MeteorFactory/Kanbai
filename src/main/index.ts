@@ -32,7 +32,7 @@ import { registerGeminiConfigHandlers } from './ipc/geminiConfig'
 import { registerAiProviderHandlers } from './ipc/aiProvider'
 import { registerPixelAgentsHandlers, shutdownPixelAgentsService } from './ipc/pixel-agents'
 import { registerDevOpsHandlers } from './ipc/devops'
-import { registerSkillsStoreHandlers } from './ipc/skillsStore'
+import { registerSkillsStoreHandlers, prefetchSkillsStore } from './ipc/skillsStore'
 import { cleanupTerminals } from './ipc/terminal'
 import { ensureActivityHookScript, ensureAutoApproveScript, ensureKanbanDoneScript, ensurePixelAgentsHookScript, syncAllWorkspaceEnvHooks, startActivityWatcher } from './services/activityHooks'
 import { clearDockBadge } from './services/notificationService'
@@ -369,6 +369,7 @@ app.whenReady().then(() => {
   registerCopilotConfigHandlers(ipcMain)
   registerGeminiConfigHandlers(ipcMain)
   registerSkillsStoreHandlers(ipcMain)
+  prefetchSkillsStore()
   registerAiProviderHandlers(ipcMain)
   registerPixelAgentsHandlers(ipcMain, () => mainWindow)
   registerDevOpsHandlers(ipcMain)

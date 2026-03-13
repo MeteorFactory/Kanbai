@@ -57,6 +57,7 @@ export interface SkillStoreEntry {
   path: string
   repoUrl: string
   author: string
+  authorUrl: string
 }
 
 // --- End skills store types ---

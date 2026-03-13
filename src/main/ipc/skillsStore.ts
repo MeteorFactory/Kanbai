@@ -123,15 +123,36 @@ interface GitHubTree {
   truncated: boolean
 }
 
+/** Generic filenames that should be replaced by directory name or frontmatter name. */
+const GENERIC_FILENAMES = new Set(['skill', 'index', 'main', 'readme'])
+
 /** Parse skill frontmatter to extract name and description. */
-function parseSkillMeta(filename: string, content: string): { name: string; description: string } {
-  const name = filename.replace(/\.md(\.disabled)?$/, '')
+function parseSkillMeta(filename: string, filePath: string, content: string): { name: string; description: string } {
+  let name = filename.replace(/\.md(\.disabled)?$/, '')
   let description = ''
 
   const fmMatch = content.match(/^---\n([\s\S]*?)\n---/)
   if (fmMatch?.[1]) {
+    // Check frontmatter for explicit name
+    const nameMatch = fmMatch[1].match(/^name:\s*["']?(.+?)["']?\s*$/m)
+    if (nameMatch?.[1]) name = nameMatch[1]
+
     const descMatch = fmMatch[1].match(/^description:\s*["']?(.+?)["']?\s*$/m)
     if (descMatch?.[1]) description = descMatch[1]
+  }
+
+  // If filename is generic (e.g. "SKILL.md"), use the parent directory name
+  if (GENERIC_FILENAMES.has(name.toLowerCase())) {
+    const parts = filePath.split('/')
+    if (parts.length >= 2) {
+      name = parts[parts.length - 2]!
+    }
+  }
+
+  // Try first heading as name if still generic
+  if (GENERIC_FILENAMES.has(name.toLowerCase())) {
+    const headingMatch = content.match(/^#\s+(.+)$/m)
+    if (headingMatch?.[1]) name = headingMatch[1].trim()
   }
 
   if (!description) {
@@ -176,7 +197,7 @@ async function fetchRepoSkills(repo: SkillStoreRepo): Promise<SkillStoreEntry[]>
       try {
         const rawUrl = `https://raw.githubusercontent.com/${repo.owner}/${repo.repo}/HEAD/${file.path}`
         const content = await fetchRaw(rawUrl)
-        const meta = parseSkillMeta(path.basename(file.path), content)
+        const meta = parseSkillMeta(path.basename(file.path), file.path, content)
 
         skills.push({
           id: `${repo.id}/${file.path}`,
@@ -187,7 +208,8 @@ async function fetchRepoSkills(repo: SkillStoreRepo): Promise<SkillStoreEntry[]>
           content,
           path: file.path,
           repoUrl: `${repo.url}/blob/HEAD/${file.path}`,
-          author: repo.displayName,
+          author: repo.owner,
+          authorUrl: `https://github.com/${repo.owner}`,
         })
       } catch {
         // Skip files that fail to fetch
@@ -200,6 +222,13 @@ async function fetchRepoSkills(repo: SkillStoreRepo): Promise<SkillStoreEntry[]>
   }
 
   return skills
+}
+
+/** Prefetch skills from all repos on app startup (non-blocking). */
+export function prefetchSkillsStore(): void {
+  Promise.allSettled(SKILL_REPOS.map((repo) => fetchRepoSkills(repo))).catch(() => {
+    // Non-critical: skills will be fetched on demand later
+  })
 }
 
 export function registerSkillsStoreHandlers(ipcMain: IpcMain): void {
@@ -243,7 +272,19 @@ export function registerSkillsStoreHandlers(ipcMain: IpcMain): void {
         return { success: false, error: 'Skill already exists' }
       }
 
-      fs.writeFileSync(targetPath, skill.content, 'utf-8')
+      // Inject store-origin metadata into frontmatter
+      let contentToWrite = skill.content
+      const fmMatch = contentToWrite.match(/^---\n([\s\S]*?)\n---/)
+      if (fmMatch) {
+        // Add store-origin to existing frontmatter
+        const insertPos = contentToWrite.indexOf('\n---', 3)
+        contentToWrite = contentToWrite.slice(0, insertPos) + `\nstore-origin: ${skill.repoUrl}` + contentToWrite.slice(insertPos)
+      } else {
+        // Wrap content with frontmatter containing store-origin
+        contentToWrite = `---\nstore-origin: ${skill.repoUrl}\n---\n\n${contentToWrite}`
+      }
+
+      fs.writeFileSync(targetPath, contentToWrite, 'utf-8')
       return { success: true }
     },
   )

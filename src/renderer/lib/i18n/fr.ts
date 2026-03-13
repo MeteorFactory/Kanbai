@@ -460,6 +460,8 @@ export const fr = {
   'claude.skillsStoreViewRepo': 'Voir sur GitHub',
   'claude.skillsStoreFrom': 'depuis',
   'claude.skillsStoreFilterAll': 'Toutes les sources',
+  'claude.skillsStoreBy': 'par',
+  'claude.skillOrigin': 'Origine',
   'claude.customize': 'Personnaliser',
   'claude.restoreOriginal': 'Restaurer l\'original',
   'claude.modelDefault': 'Selection automatique du modèle',

@@ -5984,6 +5984,34 @@ body {
   padding: 0;
 }
 .cs-store-card-link:hover { text-decoration: underline; }
+.cs-store-card-author {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-right: 8px;
+}
+.cs-store-card-author-link {
+  font-size: 10px;
+  color: var(--accent);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: none;
+}
+.cs-store-card-author-link:hover { text-decoration: underline; }
+.cs-store-origin-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cs-agent-editor-description {
+  resize: vertical;
+  min-height: 60px;
+  font-family: inherit;
+}
 
 /* Modal for agent creation */
 .cs-modal-overlay {

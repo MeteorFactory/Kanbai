@@ -155,6 +155,16 @@ export function SkillsStoreSection({ projectPath, installedSkillNames, onInstall
                 <p className="cs-store-card-desc">{skill.description}</p>
               )}
               <div className="cs-store-card-meta">
+                <span className="cs-store-card-author">
+                  {t('claude.skillsStoreBy')}{' '}
+                  <button
+                    className="cs-store-card-author-link"
+                    onClick={() => handleOpenRepo(skill.authorUrl)}
+                    title={skill.author}
+                  >
+                    {skill.author}
+                  </button>
+                </span>
                 {repo && (
                   <span className="cs-store-card-repo">
                     {t('claude.skillsStoreFrom')} {repo.displayName}
