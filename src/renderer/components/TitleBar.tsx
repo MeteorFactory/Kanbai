@@ -210,6 +210,15 @@ export function TitleBar(_props: TitleBarProps) {
         {(() => { const dd = filterDropdown(DEVOPS_DROPDOWN); return dd ? <TabDropdown config={dd} viewMode={viewMode} setViewMode={setViewMode} t={t} /> : null })()}
         {(() => { const pd = filterDropdown(PROJECTS_DROPDOWN); return pd ? <TabDropdown config={pd} viewMode={viewMode} setViewMode={setViewMode} t={t} /> : null })()}
 
+        {isTabVisible('notes') && (
+          <button
+            className={`view-btn${viewMode === 'notes' ? ' view-btn--active' : ''}`}
+            onClick={() => setViewMode('notes')}
+          >
+            {t('view.notes')}
+          </button>
+        )}
+
         {isTabVisible('ai') && (
           <button
             className={`view-btn${viewMode === 'claude' || viewMode === 'ai' ? ' view-btn--active' : ''}`}

@@ -21,6 +21,7 @@ export const CONFIGURABLE_TABS: TabConfig[] = [
   { id: 'analysis', group: 'projects', labelKey: 'view.analysis' },
   { id: 'stats', group: 'projects', labelKey: 'view.stats' },
   { id: 'git', group: 'projects', labelKey: 'view.git' },
+  { id: 'notes', group: 'standalone', labelKey: 'view.notes' },
   { id: 'ai', group: 'standalone', labelKey: 'view.ai' },
 ]
 
