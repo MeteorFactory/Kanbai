@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { NotificationCenter } from './NotificationCenter'
+import { CompanionIndicator } from './CompanionIndicator'
 import { UpdateCenter } from './UpdateCenter'
 import { useWorkspaceStore } from '../lib/stores/workspaceStore'
 import { useViewStore, type ViewMode } from '../lib/stores/viewStore'
@@ -274,6 +275,8 @@ export function TitleBar(_props: TitleBarProps) {
             <path d="M13.5 8c0-.3-.2-.6-.4-.8l1-1.7-.9-.9-1.7 1c-.2-.2-.5-.4-.8-.4l-.5-1.8h-1.4l-.5 1.8c-.3 0-.6.2-.8.4l-1.7-1-.9.9 1 1.7c-.2.2-.4.5-.4.8l-1.8.5v1.4l1.8.5c0 .3.2.6.4.8l-1 1.7.9.9 1.7-1c.2.2.5.4.8.4l.5 1.8h1.4l.5-1.8c.3 0 .6-.2.8-.4l1.7 1 .9-.9-1-1.7c.2-.2.4-.5.4-.8l1.8-.5v-1.4l-1.8-.5z" stroke="currentColor" strokeWidth="1.2" />
           </svg>
         </button>
+
+        <CompanionIndicator />
       </div>
     </div>
   )

@@ -1491,4 +1491,9 @@ export const IPC_CHANNELS = {
   DEVOPS_GET_APPROVALS: 'devops:getApprovals',
   DEVOPS_APPROVE: 'devops:approve',
   DEVOPS_GET_BUILD_LOG: 'devops:getBuildLog',
+
+  // Companion
+  COMPANION_REGISTER: 'companion:register',
+  COMPANION_CANCEL: 'companion:cancel',
+  COMPANION_STATUS_CHANGED: 'companion:statusChanged',
 } as const

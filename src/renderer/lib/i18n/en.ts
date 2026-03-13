@@ -1898,6 +1898,20 @@ export const en = {
   'notifications.noMoreTickets': 'Ticket {ticket}: done. No more pending tickets',
   'notifications.taskFailed': 'Ticket {ticket} failed',
 
+  // Companion
+  'companion.tooltip': 'Companion app',
+  'companion.title': 'Companion',
+  'companion.status.disconnected': 'Disconnected',
+  'companion.status.waiting': 'Waiting',
+  'companion.status.connected': 'Connected',
+  'companion.status.lost': 'Connection lost',
+  'companion.activate': 'Activate pairing',
+  'companion.cancel': 'Cancel',
+  'companion.codeLabel': 'Pairing code',
+  'companion.connectedInfo': 'Companion app connected.',
+  'companion.lostInfo': 'Connection to companion was lost.',
+  'companion.reconnect': 'Reconnect',
+
   // Title bar
   'titlebar.title': 'Kanbai',
 

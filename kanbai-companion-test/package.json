@@ -1,0 +1,19 @@
+{
+  "name": "kanbai-companion-test",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "ws": "8.18.2"
+  },
+  "devDependencies": {
+    "@types/node": "22.15.29",
+    "@types/ws": "8.18.1",
+    "tsx": "4.19.4",
+    "typescript": "5.8.3"
+  }
+}

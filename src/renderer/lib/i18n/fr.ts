@@ -1898,6 +1898,20 @@ export const fr = {
   'notifications.noMoreTickets': 'Fin du ticket {ticket}. Plus de tickets en attente',
   'notifications.taskFailed': 'Échec du ticket {ticket}',
 
+  // Companion
+  'companion.tooltip': 'Application compagnon',
+  'companion.title': 'Compagnon',
+  'companion.status.disconnected': 'Déconnecté',
+  'companion.status.waiting': 'En attente',
+  'companion.status.connected': 'Connecté',
+  'companion.status.lost': 'Connexion perdue',
+  'companion.activate': 'Activer le pairage',
+  'companion.cancel': 'Annuler',
+  'companion.codeLabel': 'Code de pairage',
+  'companion.connectedInfo': 'Application compagnon connectée.',
+  'companion.lostInfo': 'La connexion avec le compagnon a été perdue.',
+  'companion.reconnect': 'Reconnecter',
+
   // Title bar
   'titlebar.title': 'Kanbai',
 

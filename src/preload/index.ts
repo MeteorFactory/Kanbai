@@ -866,6 +866,18 @@ const api = {
       ipcRenderer.invoke(IPC_CHANNELS.NOTES_DELETE, { workspaceId, id }),
   },
 
+  companion: {
+    register: (workspaceId: string): Promise<{ code: string }> =>
+      ipcRenderer.invoke(IPC_CHANNELS.COMPANION_REGISTER, workspaceId),
+    cancel: (): Promise<void> =>
+      ipcRenderer.invoke(IPC_CHANNELS.COMPANION_CANCEL),
+    onStatusChanged: (callback: (status: string) => void) => {
+      const listener = (_event: Electron.IpcRendererEvent, status: string) => callback(status)
+      ipcRenderer.on(IPC_CHANNELS.COMPANION_STATUS_CHANGED, listener)
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.COMPANION_STATUS_CHANGED, listener)
+    },
+  },
+
   // Utility — resolve file path from drag & drop (required for sandbox mode)
   getFilePathFromDrop: (file: File): string => webUtils.getPathForFile(file),
 }
