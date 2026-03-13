@@ -1809,10 +1809,10 @@ export const en = {
   'analysis.projects': 'Projects',
   'analysis.runAllProjects': 'Run all projects',
   'view.analysis': 'Analysis',
-  'view.devops': 'DevOps',
+  'view.devops': 'Pipelines',
 
   // DevOps
-  'devops.title': 'DevOps',
+  'devops.title': 'Pipelines',
   'devops.pipelines': 'Pipelines',
   'devops.connections': 'Connections',
   'devops.addConnection': 'Add Connection',
@@ -1830,7 +1830,7 @@ export const en = {
   'devops.save': 'Save',
   'devops.cancel': 'Cancel',
   'devops.refresh': 'Refresh',
-  'devops.noWorkspace': 'Select a workspace to use DevOps.',
+  'devops.noWorkspace': 'Select a workspace to use Pipelines.',
   'devops.loading': 'Loading...',
   'devops.noConnections': 'Connect your CI/CD provider to monitor and manage your pipelines.',
   'devops.noConnectionsTitle': 'No connections yet',

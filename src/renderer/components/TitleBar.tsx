@@ -25,7 +25,7 @@ const SERVICES_DROPDOWN: DropdownConfig = {
 }
 
 const DEVOPS_DROPDOWN: DropdownConfig = {
-  label: 'DevOps',
+  label: 'Pipelines',
   items: [
     { mode: 'devops', labelKey: 'devops.pipelines' },
   ],

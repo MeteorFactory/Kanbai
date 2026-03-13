@@ -31,7 +31,7 @@ interface TutorialModalProps {
 const TAB_GROUP_LABELS: Record<string, { fr: string; en: string }> = {
   standalone: { fr: 'Principaux', en: 'Main' },
   services: { fr: 'Services', en: 'Services' },
-  devops: { fr: 'DevOps', en: 'DevOps' },
+  devops: { fr: 'Pipelines', en: 'Pipelines' },
   projects: { fr: 'Projets', en: 'Projects' },
 }
 
