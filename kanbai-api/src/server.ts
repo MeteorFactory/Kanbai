@@ -1,7 +1,7 @@
 import http from 'http'
 import type { IncomingMessage, ServerResponse } from 'http'
 import { WebSocketServer, WebSocket } from 'ws'
-import { handleRegister, handleClaim, handleConnect, handleUnregister, handleStatus } from './routes/pairing.js'
+import { handleRegister, handleConnect, handleUnregister, handleStatus } from './routes/pairing.js'
 import {
   handleListTickets,
   handleGetTicket,
@@ -81,10 +81,6 @@ export function createServer(port: number, host: string): http.Server {
       // Pairing routes (unauthenticated)
       if (urlPath === `${API_PREFIX}/pair/register` && method === 'POST') {
         await handleRegister(req, res)
-        return
-      }
-      if (urlPath === `${API_PREFIX}/pair/claim` && method === 'POST') {
-        await handleClaim(req, res)
         return
       }
       if (urlPath === `${API_PREFIX}/pair/connect` && method === 'POST') {

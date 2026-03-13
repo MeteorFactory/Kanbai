@@ -37,14 +37,6 @@ export function connectCompanion(req: PairConnectRequest): PairConnectResponse {
   }
 }
 
-export function claimDesktop(code: string): PairRegisterResponse {
-  const session = getSessionByCode(code)
-  if (!session) {
-    throw new Error('Invalid or expired code')
-  }
-  return { sessionId: session.id, token: session.desktopToken }
-}
-
 export function unregisterSession(token: string): boolean {
   return deleteSessionByToken(token)
 }

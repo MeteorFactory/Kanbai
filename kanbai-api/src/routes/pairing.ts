@@ -1,7 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'http'
 import {
   registerDesktop,
-  claimDesktop,
   connectCompanion,
   unregisterSession,
   getPairingStatus,
@@ -49,20 +48,6 @@ export async function handleUnregister(req: IncomingMessage, res: ServerResponse
     sendJson(res, 200, { ok: true })
   } else {
     sendError(res, 404, 'Session not found')
-  }
-}
-
-export async function handleClaim(req: IncomingMessage, res: ServerResponse): Promise<void> {
-  const body = await readBody<{ code: string }>(req)
-  if (!body.code) {
-    sendError(res, 400, 'Missing required field: code')
-    return
-  }
-  try {
-    const result = claimDesktop(body.code)
-    sendJson(res, 200, result)
-  } catch (err) {
-    sendError(res, 404, (err as Error).message)
   }
 }
 

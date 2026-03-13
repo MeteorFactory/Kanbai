@@ -111,11 +111,13 @@ export async function initDevCompanion(getWindow: () => BrowserWindow | null): P
   const devCode = process.env['KANBAI_DEV_CODE']
   if (!devCode) return
 
+  const devWorkspace = process.env['KANBAI_DEV_WORKSPACE'] ?? 'default'
+
   try {
     const result = await apiRequest<{ sessionId: string; token: string }>(
       'POST',
-      '/api/v1/pair/claim',
-      { code: devCode },
+      '/api/v1/pair/register',
+      { code: devCode, appId: 'kanbai-desktop', workspaceId: devWorkspace },
     )
     currentToken = result.token
     startPolling(devCode, getWindow)
@@ -126,9 +128,9 @@ export async function initDevCompanion(getWindow: () => BrowserWindow | null): P
         win.webContents.send(IPC_CHANNELS.COMPANION_STATUS_CHANGED, 'waiting')
       }
     }, 2000)
-    console.log(`[DEV] Companion auto-connected with code: ${devCode}`)
+    console.log(`[DEV] Registered pairing code: ${devCode} — waiting for companion`)
   } catch (err) {
-    console.log(`[DEV] Companion auto-connect failed (API not running?): ${(err as Error).message}`)
+    console.log(`[DEV] Companion registration failed (API not running?): ${(err as Error).message}`)
   }
 }
 
