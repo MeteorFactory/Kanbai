@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Kanbai is an AI-enhanced desktop terminal built with Electron. It combines a full terminal emulator (xterm.js + node-pty), workspace/project management, native Claude Code integration, a Kanban board with AI agent assignment, database exploration, health monitoring, DevOps tools, code analysis, and package management. Targets macOS (primary) and Windows.
+Kanbai is an AI-enhanced desktop terminal built with Electron. It combines a full terminal emulator (xterm.js + node-pty), workspace/project management, native Claude Code integration, a Kanban board with AI agent assignment, database exploration, health monitoring, DevOps tools, code analysis, package management, a companion API system, and workspace notes. Targets macOS (primary) and Windows.
 
 ## Language
 
@@ -34,7 +34,7 @@ Kanbai is an AI-enhanced desktop terminal built with Electron. It combines a ful
 src/
   main/              # Main process (Node.js) — app lifecycle, IPC handlers, services
     index.ts         # App entry point, BrowserWindow creation
-    ipc/             # IPC handlers (1 file per domain, 30 handlers)
+    ipc/             # IPC handlers (1 file per domain, 32 handlers)
     services/        # Business logic services
       storage.ts     # StorageService singleton (~/.kanbai/data.json)
       healthCheckScheduler.ts
@@ -49,8 +49,8 @@ src/
     assets/          # Static assets (rule-templates)
   preload/           # Preload scripts — contextBridge, exposes window.kanbai
   renderer/          # Renderer process (React + Zustand)
-    components/      # All UI components (flat architecture, ~60 components)
-    lib/stores/      # Zustand stores (per domain, 13 stores)
+    components/      # All UI components (flat + claude-settings subdirectory, ~130 components)
+    lib/stores/      # Zustand stores (per domain, 15 stores)
     styles/          # CSS custom properties
   shared/            # Shared types and constants (both processes)
     types/index.ts   # ALL interfaces + IPC_CHANNELS
@@ -88,17 +88,17 @@ tests/
 
 ### IPC Domains
 
-terminal, workspace, project, claude, kanban, git, filesystem, session, app, database, packages, analysis, ssh, healthcheck, devops, mcp, api, updates, appUpdate, workspaceEnv, claudeMemory, claudeDefaults, codexConfig, copilotConfig, geminiConfig, gitConfig, namespace, aiProvider, pixel-agents, skillsStore
+terminal, workspace, project, claude, kanban, git, filesystem, session, app, database, packages, analysis, ssh, healthcheck, devops, mcp, api, updates, appUpdate, workspaceEnv, claudeMemory, claudeDefaults, codexConfig, copilotConfig, geminiConfig, gitConfig, namespace, aiProvider, pixel-agents, skillsStore, companion, notes
 
 ## State Management
 
 - Main process = source of truth (StorageService, `~/.kanbai/data.json`)
 - Renderer = Zustand stores as cache + UI state
-- Flow: User action → React → Zustand action → IPC invoke → Main service → JSON
+- Flow: User action -> React -> Zustand action -> IPC invoke -> Main service -> JSON
 
 ### Zustand Stores
 
-terminalTabStore, workspaceStore, claudeStore, kanbanStore, viewStore, updateStore, appUpdateStore, notificationStore, devopsStore, packagesStore, databaseStore, databaseTabStore, healthCheckStore
+terminalTabStore, workspaceStore, claudeStore, kanbanStore, viewStore, updateStore, appUpdateStore, notificationStore, devopsStore, packagesStore, databaseStore, databaseTabStore, healthCheckStore, companionStore, notesStore
 
 ## Key Features
 
@@ -115,7 +115,6 @@ terminalTabStore, workspaceStore, claudeStore, kanbanStore, viewStore, updateSto
 | Code Analysis | analysis.ts | — | CodeAnalysisPanel |
 | Package Management | packages.ts | packagesStore | PackagesPanel, PackagesContent |
 | API Tester | api.ts | — | ApiTesterPanel |
-| SSH | ssh.ts | — | — |
 | MCP | mcp.ts | — | McpPanel |
 | Settings | app.ts | viewStore | SettingsPanel |
 | File Explorer | filesystem.ts | — | FileExplorer, FileViewer |
@@ -124,11 +123,15 @@ terminalTabStore, workspaceStore, claudeStore, kanbanStore, viewStore, updateSto
 | Multi-Agent | — | — | MultiAgentView |
 | AI Configs | codexConfig.ts, copilotConfig.ts, geminiConfig.ts, aiProvider.ts | — | SettingsPanel |
 | Skills Store | skillsStore.ts | — | SkillsStoreSection, AgentsSkillsTab |
+| Companion | companion.ts | companionStore | CompanionIndicator |
+| Notes | notes.ts | notesStore | NotesPanel |
+| SSH | ssh.ts | — | — |
 
 ## Data Persistence
 
 - `~/.kanbai/data.json` — workspaces, projects, settings, templates (via StorageService singleton)
 - `.workspaces/kanban.json` — per-project Kanban tasks
+- `~/.kanbai/notes-workspace/{workspaceId}.json` — per-workspace notes
 - Session state saved/restored via StorageService
 
 ## Code Conventions
@@ -141,7 +144,7 @@ terminalTabStore, workspaceStore, claudeStore, kanbanStore, viewStore, updateSto
 - Small functions (< 30 lines), max 3 levels nesting
 - CSS custom properties (no Tailwind)
 
-## Key Interfaces
+## Key Types
 
 All TypeScript interfaces in `src/shared/types/index.ts`:
 - `Workspace`, `Project` — workspace/project management
@@ -153,22 +156,26 @@ All TypeScript interfaces in `src/shared/types/index.ts`:
 - `DatabaseConnection`, `DatabaseQuery` — database explorer
 - `HealthCheckConfig` — health monitoring
 - `SkillStoreRepo`, `SkillStoreEntry` — skills store marketplace
+- `Note` — workspace notes
 
 ## Commands
 
 ```bash
-npm run dev          # Dev with hot-reload (vite + vite-plugin-electron)
-npm run build        # Production build
-npm run build:app    # Build + package for macOS
-npm run build:local  # Build + package locally (no publish)
-npm run test         # Unit tests (Vitest)
-npm run test:watch   # Tests in watch mode
-npm run test:coverage # Tests with coverage
-npm run lint         # ESLint (flat config)
-npm run lint:fix     # ESLint auto-fix
-npm run typecheck    # TypeScript check
-npm run format       # Prettier
-npm run build:mcp    # Build MCP server
+npm run dev              # Dev with hot-reload (vite + vite-plugin-electron)
+npm run dev:companion    # Dev with Companion API enabled
+npm run build            # Production build
+npm run build:app        # Build + package for macOS (.dmg/.app)
+npm run build:app:win    # Build + package for Windows (.nsis/.zip)
+npm run build:local      # Build + package locally (no publish)
+npm run build:local:win  # Build + package locally for Windows
+npm run test             # Unit tests (Vitest)
+npm run test:watch       # Tests in watch mode
+npm run test:coverage    # Tests with coverage
+npm run lint             # ESLint (flat config)
+npm run lint:fix         # ESLint auto-fix
+npm run typecheck        # TypeScript check
+npm run format           # Prettier
+npm run build:mcp        # Build MCP server
 ```
 
 ## Testing

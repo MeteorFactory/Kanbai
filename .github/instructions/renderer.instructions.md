@@ -6,14 +6,14 @@ applyTo: "src/renderer/**"
 
 ## Architecture
 
-- Flat component architecture in `src/renderer/components/` (~60 components)
-- Zustand stores in `src/renderer/lib/stores/` (one per domain)
+- Flat component architecture + claude-settings subdirectory in `src/renderer/components/` (~130 components)
+- Zustand stores in `src/renderer/lib/stores/` (15 stores, one per domain)
 - Access main process ONLY through `window.kanbai` preload API
 - Never import Node.js modules in renderer code
 
 ## State Management (Zustand)
 
-- Each domain has its own store (terminalTab, workspace, claude, kanban, view, update, appUpdate, notification, devops, packages, database, databaseTab, healthCheck)
+- Each domain has its own store (terminalTab, workspace, claude, kanban, view, update, appUpdate, notification, devops, packages, database, databaseTab, healthCheck, companion, notes)
 - Stores cache data from main process via IPC
 - Main process is source of truth — stores are read caches + UI state
 - Use `zustand` actions for state mutations, not direct state assignment

@@ -32,7 +32,7 @@ Kanbai is an AI-enhanced desktop terminal built with Electron. It combines a ful
 src/
   main/              # Main process (Node.js) — app lifecycle, IPC handlers, services
     index.ts         # App entry point, BrowserWindow creation
-    ipc/             # IPC handlers (1 file per domain, 30 handlers)
+    ipc/             # IPC handlers (1 file per domain, 32 handlers)
     services/        # Business logic services
       storage.ts     # StorageService singleton (~/.kanbai/data.json)
       healthCheckScheduler.ts
@@ -47,8 +47,8 @@ src/
     assets/          # Static assets (rule-templates)
   preload/           # Preload scripts — contextBridge, exposes window.kanbai
   renderer/          # Renderer process (React + Zustand)
-    components/      # All UI components (flat architecture, ~60 components)
-    lib/stores/      # Zustand stores (per domain, 13 stores)
+    components/      # All UI components (flat + claude-settings subdirectory, ~130 components)
+    lib/stores/      # Zustand stores (per domain, 15 stores)
     styles/          # CSS custom properties
   shared/            # Shared types and constants (both processes)
     types/index.ts   # ALL interfaces + IPC_CHANNELS
@@ -78,7 +78,7 @@ tests/
 
 ### IPC Domains
 
-terminal, workspace, project, claude, kanban, git, filesystem, session, app, database, packages, analysis, ssh, healthcheck, devops, mcp, api, updates, appUpdate, workspaceEnv, claudeMemory, claudeDefaults, codexConfig, copilotConfig, geminiConfig, gitConfig, namespace, aiProvider, pixel-agents, skillsStore
+terminal, workspace, project, claude, kanban, git, filesystem, session, app, database, packages, analysis, ssh, healthcheck, devops, mcp, api, updates, appUpdate, workspaceEnv, claudeMemory, claudeDefaults, codexConfig, copilotConfig, geminiConfig, gitConfig, namespace, aiProvider, pixel-agents, skillsStore, companion, notes
 
 ## Security Defaults
 
@@ -96,7 +96,7 @@ Every `BrowserWindow` must enforce:
 
 ### Zustand Stores
 
-terminalTabStore, workspaceStore, claudeStore, kanbanStore, viewStore, updateStore, appUpdateStore, notificationStore, devopsStore, packagesStore, databaseStore, databaseTabStore, healthCheckStore
+terminalTabStore, workspaceStore, claudeStore, kanbanStore, viewStore, updateStore, appUpdateStore, notificationStore, devopsStore, packagesStore, databaseStore, databaseTabStore, healthCheckStore, companionStore, notesStore
 
 ## Key Features
 
@@ -121,12 +121,15 @@ terminalTabStore, workspaceStore, claudeStore, kanbanStore, viewStore, updateSto
 | Multi-Agent | — | — | MultiAgentView |
 | AI Configs | codexConfig.ts, copilotConfig.ts, geminiConfig.ts, aiProvider.ts | — | SettingsPanel |
 | Skills Store | skillsStore.ts | — | SkillsStoreSection, AgentsSkillsTab |
+| Companion | companion.ts | companionStore | CompanionIndicator |
+| Notes | notes.ts | notesStore | NotesPanel |
 | SSH | ssh.ts | — | — |
 
 ## Data Persistence
 
 - `~/.kanbai/data.json` — workspaces, projects, settings, templates (via StorageService singleton)
 - `.workspaces/kanban.json` — per-project Kanban tasks
+- `~/.kanbai/notes-workspace/{workspaceId}.json` — per-workspace notes
 - Session state saved/restored via StorageService
 
 ## Key Types
@@ -141,6 +144,7 @@ All in `src/shared/types/index.ts`:
 - `DatabaseConnection`, `DatabaseQuery` — database explorer
 - `HealthCheckConfig` — health monitoring
 - `SkillStoreRepo`, `SkillStoreEntry` — skills store marketplace
+- `Note` — workspace notes
 
 ## Code Style
 
@@ -153,18 +157,21 @@ All in `src/shared/types/index.ts`:
 ## Commands
 
 ```bash
-npm run dev          # Dev with hot-reload (vite + vite-plugin-electron)
-npm run build        # Production build
-npm run build:app    # Build + package for macOS
-npm run build:local  # Build + package locally (no publish)
-npm run test         # Unit tests (Vitest)
-npm run test:watch   # Tests in watch mode
-npm run test:coverage # Tests with coverage
-npm run lint         # ESLint (flat config)
-npm run lint:fix     # ESLint auto-fix
-npm run typecheck    # TypeScript check
-npm run format       # Prettier
-npm run build:mcp    # Build MCP server
+npm run dev              # Dev with hot-reload (vite + vite-plugin-electron)
+npm run dev:companion    # Dev with Companion API enabled
+npm run build            # Production build
+npm run build:app        # Build + package for macOS (.dmg/.app)
+npm run build:app:win    # Build + package for Windows (.nsis/.zip)
+npm run build:local      # Build + package locally (no publish)
+npm run build:local:win  # Build + package locally for Windows
+npm run test             # Unit tests (Vitest)
+npm run test:watch       # Tests in watch mode
+npm run test:coverage    # Tests with coverage
+npm run lint             # ESLint (flat config)
+npm run lint:fix         # ESLint auto-fix
+npm run typecheck        # TypeScript check
+npm run format           # Prettier
+npm run build:mcp        # Build MCP server
 ```
 
 ## Testing

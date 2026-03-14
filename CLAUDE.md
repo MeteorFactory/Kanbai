@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Desktop application built with Electron for macOS (primary) and Windows. TypeScript throughout (main process + renderer).
+AI-enhanced desktop terminal built with Electron. Combines terminal emulator, workspace management, Claude Code integration, Kanban board, database explorer, companion API, workspace notes, and more. macOS (primary) and Windows. TypeScript throughout.
 
 ## Language
 

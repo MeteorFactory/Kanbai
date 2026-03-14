@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Kanbai is an AI-enhanced desktop terminal built with Electron. It combines a full terminal emulator (xterm.js + node-pty), workspace/project management, native Claude Code integration, a Kanban board with AI agent assignment, database exploration, health monitoring, DevOps tools, code analysis, and package management. Targets macOS (primary) and Windows.
+Kanbai is an AI-enhanced desktop terminal built with Electron. It combines a full terminal emulator (xterm.js + node-pty), workspace/project management, native Claude Code integration, a Kanban board with AI agent assignment, database exploration, health monitoring, DevOps tools, code analysis, package management, a companion API system, and workspace notes. Targets macOS (primary) and Windows.
 
 ## Language
 
@@ -31,7 +31,7 @@ Three-process Electron model:
 
 1. **Main Process** (`src/main/`) — Node.js, full OS access
    - `index.ts` — App lifecycle, BrowserWindow creation
-   - `ipc/` — IPC handlers (1 file per domain, 30 handlers)
+   - `ipc/` — IPC handlers (1 file per domain, 32 handlers)
    - `services/` — storage.ts (StorageService singleton), healthCheckScheduler, notificationService, appUpdateState, activityHooks (AI provider hooks), ai-cli, pixel-agents-service, pixel-agents-assets, database/ (connection, queries, backup, crypto, NL queries, drivers/), packages/ (analysis, NL queries)
 
 2. **Preload** (`src/preload/`) — Bridge between processes
@@ -40,8 +40,8 @@ Three-process Electron model:
 
 3. **Renderer** (`src/renderer/`) — Chromium, sandboxed
    - React app with Zustand state management
-   - Flat component architecture in `components/` (~60 components)
-   - Stores in `lib/stores/` (13 stores)
+   - Flat component architecture + claude-settings subdirectory in `components/` (~130 components)
+   - Stores in `lib/stores/` (15 stores)
    - CSS custom properties in `styles/`
 
 4. **Shared** (`src/shared/`) — Types and constants used by all processes
@@ -67,18 +67,18 @@ Three-process Electron model:
 
 ### IPC Domains
 
-terminal, workspace, project, claude, kanban, git, filesystem, session, app, database, packages, analysis, ssh, healthcheck, devops, mcp, api, updates, appUpdate, workspaceEnv, claudeMemory, claudeDefaults, codexConfig, copilotConfig, geminiConfig, gitConfig, namespace, aiProvider, pixel-agents, skillsStore
+terminal, workspace, project, claude, kanban, git, filesystem, session, app, database, packages, analysis, ssh, healthcheck, devops, mcp, api, updates, appUpdate, workspaceEnv, claudeMemory, claudeDefaults, codexConfig, copilotConfig, geminiConfig, gitConfig, namespace, aiProvider, pixel-agents, skillsStore, companion, notes
 
 ## State Management
 
 - Main process = source of truth for persisted data
 - Renderer uses Zustand stores as cache + UI state
-- Data flow: User action → React → Zustand → IPC invoke → Main service → JSON file
+- Data flow: User action -> React -> Zustand -> IPC invoke -> Main service -> JSON file
 - Each domain has its own store (no monolithic global store)
 
 ### Zustand Stores
 
-terminalTabStore, workspaceStore, claudeStore, kanbanStore, viewStore, updateStore, appUpdateStore, notificationStore, devopsStore, packagesStore, databaseStore, databaseTabStore, healthCheckStore
+terminalTabStore, workspaceStore, claudeStore, kanbanStore, viewStore, updateStore, appUpdateStore, notificationStore, devopsStore, packagesStore, databaseStore, databaseTabStore, healthCheckStore, companionStore, notesStore
 
 ## Key Features
 
@@ -100,6 +100,8 @@ terminalTabStore, workspaceStore, claudeStore, kanbanStore, viewStore, updateSto
 - **Multi-Agent View** — Multi-agent orchestration UI
 - **AI Configs** — Per-provider configuration (Codex, Copilot, Gemini, generic AI provider)
 - **Skills Store** — Claude Code skills marketplace with multi-repo fetching and one-click install
+- **Companion** — External companion API pairing and registration system
+- **Notes** — Per-workspace note management
 - **SSH** — Remote SSH connection management
 
 ## Code Conventions
@@ -125,22 +127,26 @@ All in `src/shared/types/index.ts`:
 - `DatabaseConnection`, `DatabaseQuery` — database explorer
 - `HealthCheckConfig` — health monitoring
 - `SkillStoreRepo`, `SkillStoreEntry` — skills store marketplace
+- `Note` — workspace notes
 
 ## Commands
 
 ```bash
-npm run dev          # Dev with hot-reload (vite + vite-plugin-electron)
-npm run build        # Production build
-npm run build:app    # Build + package for macOS
-npm run build:local  # Build + package locally (no publish)
-npm run test         # Unit tests (Vitest)
-npm run test:watch   # Tests in watch mode
-npm run test:coverage # Tests with coverage
-npm run lint         # ESLint (flat config)
-npm run lint:fix     # ESLint auto-fix
-npm run typecheck    # TypeScript check
-npm run format       # Prettier
-npm run build:mcp    # Build MCP server
+npm run dev              # Dev with hot-reload (vite + vite-plugin-electron)
+npm run dev:companion    # Dev with Companion API enabled
+npm run build            # Production build
+npm run build:app        # Build + package for macOS (.dmg/.app)
+npm run build:app:win    # Build + package for Windows (.nsis/.zip)
+npm run build:local      # Build + package locally (no publish)
+npm run build:local:win  # Build + package locally for Windows
+npm run test             # Unit tests (Vitest)
+npm run test:watch       # Tests in watch mode
+npm run test:coverage    # Tests with coverage
+npm run lint             # ESLint (flat config)
+npm run lint:fix         # ESLint auto-fix
+npm run typecheck        # TypeScript check
+npm run format           # Prettier
+npm run build:mcp        # Build MCP server
 ```
 
 ## Testing
@@ -155,6 +161,7 @@ npm run build:mcp    # Build MCP server
 
 - `~/.kanbai/data.json` — main data store (workspaces, projects, settings)
 - `.workspaces/kanban.json` — per-project Kanban tasks
+- `~/.kanbai/notes-workspace/{workspaceId}.json` — per-workspace notes
 - StorageService singleton loads JSON at startup, writes on every change
 
 ## Workflow
