@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
-import { useCompanionStore, initCompanionListener } from '../lib/stores/companionStore'
+import { useCompanionStore, initCompanionListener, initCompanionTicketListener } from '../lib/stores/companionStore'
 import { useWorkspaceStore } from '../lib/stores/workspaceStore'
+import { useKanbanStore } from '../lib/stores/kanbanStore'
 import { useI18n } from '../lib/i18n'
 
 const STATUS_COLORS: Record<string, string> = {
@@ -15,13 +16,22 @@ export function CompanionIndicator() {
   const { t } = useI18n()
   const [isOpen, setIsOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
-  const { status, pairingCode, register, cancel } = useCompanionStore()
+  const { status, pairingCode, syncing, register, cancel, syncTickets } = useCompanionStore()
   const activeWorkspaceId = useWorkspaceStore((s) => s.activeWorkspaceId)
+  const applyCompanionUpdate = useKanbanStore((s) => s.applyCompanionUpdate)
 
   useEffect(() => {
     const cleanup = initCompanionListener()
     return cleanup
   }, [])
+
+  // Listen for ticket updates from the companion app
+  useEffect(() => {
+    const cleanup = initCompanionTicketListener((task) => {
+      applyCompanionUpdate(task)
+    })
+    return cleanup
+  }, [applyCompanionUpdate])
 
   // Close on click outside
   useEffect(() => {
@@ -55,6 +65,15 @@ export function CompanionIndicator() {
       console.error('Failed to cancel companion:', err)
     }
   }, [cancel])
+
+  const handleSync = useCallback(async () => {
+    if (!activeWorkspaceId) return
+    try {
+      await syncTickets(activeWorkspaceId)
+    } catch (err) {
+      console.error('Failed to sync tickets:', err)
+    }
+  }, [activeWorkspaceId, syncTickets])
 
   const dotColor = STATUS_COLORS[status] ?? STATUS_COLORS.disconnected
 
@@ -96,7 +115,16 @@ export function CompanionIndicator() {
               </>
             )}
             {status === 'connected' && (
-              <p className="companion-info">{t('companion.connectedInfo')}</p>
+              <>
+                <p className="companion-info">{t('companion.connectedInfo')}</p>
+                <button
+                  className="companion-action-btn"
+                  onClick={handleSync}
+                  disabled={syncing || !activeWorkspaceId}
+                >
+                  {syncing ? t('companion.syncing') : t('companion.syncTickets')}
+                </button>
+              </>
             )}
             {status === 'lost' && (
               <>

@@ -200,6 +200,7 @@ interface KanbanActions {
   reactivateIfDone: (tabId: string, message?: string) => void
   acceptSplit: (taskId: string) => Promise<void>
   dismissSplit: (taskId: string) => void
+  applyCompanionUpdate: (task: KanbanTask) => void
 }
 
 type KanbanStore = KanbanState & KanbanActions
@@ -1683,6 +1684,12 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
       tasks: state.tasks.map((t) =>
         t.id === taskId ? { ...t, splitSuggestions: undefined } : t,
       ),
+    }))
+  },
+
+  applyCompanionUpdate: (task: KanbanTask) => {
+    set((state) => ({
+      tasks: state.tasks.map((t) => (t.id === task.id ? { ...t, ...task } : t)),
     }))
   },
 }))

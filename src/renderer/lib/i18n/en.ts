@@ -1985,6 +1985,8 @@ export const en = {
   'companion.cancel': 'Cancel',
   'companion.codeLabel': 'Pairing code',
   'companion.connectedInfo': 'Companion app connected.',
+  'companion.syncTickets': 'Sync tickets',
+  'companion.syncing': 'Syncing...',
   'companion.lostInfo': 'Connection to companion was lost.',
   'companion.reconnect': 'Reconnect',
   'companion.status.maintenance': 'Server unavailable',

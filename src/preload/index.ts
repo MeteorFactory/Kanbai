@@ -871,10 +871,18 @@ const api = {
       ipcRenderer.invoke(IPC_CHANNELS.COMPANION_REGISTER, workspaceId),
     cancel: (): Promise<void> =>
       ipcRenderer.invoke(IPC_CHANNELS.COMPANION_CANCEL),
+    syncTickets: (workspaceId: string): Promise<void> =>
+      ipcRenderer.invoke(IPC_CHANNELS.COMPANION_SYNC_TICKETS, workspaceId),
     onStatusChanged: (callback: (status: string) => void) => {
       const listener = (_event: Electron.IpcRendererEvent, status: string) => callback(status)
       ipcRenderer.on(IPC_CHANNELS.COMPANION_STATUS_CHANGED, listener)
       return () => ipcRenderer.removeListener(IPC_CHANNELS.COMPANION_STATUS_CHANGED, listener)
+    },
+    onTicketUpdated: (callback: (task: import('../shared/types').KanbanTask) => void) => {
+      const listener = (_event: Electron.IpcRendererEvent, task: import('../shared/types').KanbanTask) =>
+        callback(task)
+      ipcRenderer.on(IPC_CHANNELS.COMPANION_TICKET_UPDATED, listener)
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.COMPANION_TICKET_UPDATED, listener)
     },
   },
 
