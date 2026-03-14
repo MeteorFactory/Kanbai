@@ -51,6 +51,7 @@ interface TerminalTabActions {
   createPixelAgentsTab: (workspaceId: string, cwd: string) => string
   createPixelAgentsSplitTab: (workspaceId: string, cwd: string) => string
   closeTab: (id: string) => void
+  killTabProcesses: (id: string) => void
   setActiveTab: (id: string) => void
   renameTab: (id: string, label: string) => void
   setTabColor: (id: string, color: string | null) => void
@@ -104,6 +105,12 @@ function countLeaves(node: PaneNode): number {
 function collectLeafIds(node: PaneNode): string[] {
   if (node.type === 'leaf') return [node.id]
   return [...collectLeafIds(node.children[0]), ...collectLeafIds(node.children[1])]
+}
+
+// Collect all active session ids from a pane tree
+function collectSessionIds(node: PaneNode): string[] {
+  if (node.type === 'leaf') return node.sessionId ? [node.sessionId] : []
+  return [...collectSessionIds(node.children[0]), ...collectSessionIds(node.children[1])]
 }
 
 // Find a pane by id in the tree and return it
@@ -430,6 +437,14 @@ export const useTerminalTabStore = create<TerminalTabStore>((set, get) => ({
     }
 
     set({ tabs: newTabs, activeTabId: newActiveId })
+  },
+
+  killTabProcesses: (id: string) => {
+    const tab = get().tabs.find((t) => t.id === id)
+    if (!tab) return
+    for (const sessionId of collectSessionIds(tab.paneTree)) {
+      window.kanbai.terminal.close(sessionId).catch(() => { /* best-effort */ })
+    }
   },
 
   setActiveTab: (id: string) => {

@@ -490,6 +490,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
         }
         if (newTask.status === 'FAILED') {
           termStore.setTabColor(tabId, '#F47067')
+          termStore.killTabProcesses(tabId)
           taskFinished = true
           relaunchedTaskIds.delete(newTask.id) // allow future re-launch
 
@@ -510,7 +511,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
         if (newTask.status === 'PENDING') {
           termStore.setTabColor(tabId, '#fbbf24')
           termStore.setTabActivity(tabId, true)
-          // PENDING does NOT trigger next task — the task is still "in progress"
+          termStore.killTabProcesses(tabId)
         }
       }
 
@@ -742,8 +743,15 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
   },
 
   updateTaskStatus: async (taskId, status) => {
-    const { currentWorkspaceId } = get()
+    const { currentWorkspaceId, kanbanTabIds } = get()
     if (!currentWorkspaceId) return
+    // Kill terminal process when ticket moves to PENDING or FAILED (not DONE — hooks handle that)
+    if (status === 'PENDING' || status === 'FAILED') {
+      const tabId = kanbanTabIds[taskId]
+      if (tabId) {
+        useTerminalTabStore.getState().killTabProcesses(tabId)
+      }
+    }
     await window.kanbai.kanban.update({ id: taskId, status, workspaceId: currentWorkspaceId })
     set((state) => ({
       tasks: state.tasks.map((t) => (t.id === taskId ? { ...t, status, updatedAt: Date.now() } : t)),
@@ -1334,6 +1342,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
         }
         if (newTask.status === 'FAILED') {
           termStore.setTabColor(tabId, '#F47067')
+          termStore.killTabProcesses(tabId)
           taskFinished = true
           relaunchedTaskIds.delete(newTask.id)
 
@@ -1359,6 +1368,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
         if (newTask.status === 'PENDING') {
           termStore.setTabColor(tabId, '#fbbf24')
           termStore.setTabActivity(tabId, true)
+          termStore.killTabProcesses(tabId)
         }
       }
 
