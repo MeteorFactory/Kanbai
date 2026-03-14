@@ -5,6 +5,7 @@ import fs from 'fs'
 import path from 'path'
 import os from 'os'
 import { IPC_CHANNELS, KanbanTask, KanbanTaskType, KanbanStatus, KanbanAttachment, KanbanConfig } from '../../shared/types'
+import type { AiProviderId } from '../../shared/types/ai-provider'
 import {
   getKanbanPath,
   readKanbanTasks,
@@ -513,6 +514,159 @@ function findNewestClaudeConversation(cwd: string): string | null {
 }
 
 /**
+ * Finds the newest Codex conversation JSONL file for a given working directory.
+ * Codex stores sessions at ~/.codex/sessions/YYYY/MM/DD/rollout-{timestamp}-{sessionId}.jsonl
+ * Each JSONL starts with a session_meta event containing the cwd.
+ */
+function findNewestCodexConversation(cwd: string): string | null {
+  const sessionsDir = path.join(os.homedir(), '.codex', 'sessions')
+  if (!fs.existsSync(sessionsDir)) return null
+
+  let resolvedCwd = cwd
+  try { resolvedCwd = fs.realpathSync(cwd) } catch { /* use original */ }
+
+  // Collect all JSONL files, sorted newest first by mtime
+  const allFiles: Array<{ path: string; mtime: number }> = []
+  try {
+    // Walk YYYY/MM/DD structure
+    const years = fs.readdirSync(sessionsDir)
+    for (const year of years) {
+      const yearDir = path.join(sessionsDir, year)
+      try {
+        const months = fs.readdirSync(yearDir)
+        for (const month of months) {
+          const monthDir = path.join(yearDir, month)
+          try {
+            const days = fs.readdirSync(monthDir)
+            for (const day of days) {
+              const dayDir = path.join(monthDir, day)
+              try {
+                const files = fs.readdirSync(dayDir).filter((f) => f.endsWith('.jsonl'))
+                for (const file of files) {
+                  const fullPath = path.join(dayDir, file)
+                  try {
+                    allFiles.push({ path: fullPath, mtime: fs.statSync(fullPath).mtimeMs })
+                  } catch { /* skip */ }
+                }
+              } catch { /* skip */ }
+            }
+          } catch { /* skip */ }
+        }
+      } catch { /* skip */ }
+    }
+  } catch {
+    return null
+  }
+
+  // Sort newest first and check cwd match
+  allFiles.sort((a, b) => b.mtime - a.mtime)
+
+  for (const file of allFiles.slice(0, 50)) {
+    try {
+      const content = fs.readFileSync(file.path, 'utf-8')
+      const firstLine = content.split('\n')[0]
+      if (!firstLine) continue
+      const meta = JSON.parse(firstLine)
+      if (meta.type === 'session_meta' && meta.payload?.cwd) {
+        let sessionCwd = meta.payload.cwd
+        try { sessionCwd = fs.realpathSync(sessionCwd) } catch { /* use as-is */ }
+        if (sessionCwd === resolvedCwd || sessionCwd === cwd) {
+          return file.path
+        }
+      }
+    } catch { /* skip malformed files */ }
+  }
+
+  return null
+}
+
+/**
+ * Finds the newest Copilot conversation JSONL file for a given working directory.
+ * Copilot stores sessions at ~/.copilot/session-state/{sessionId}/events.jsonl
+ * Each session directory contains a workspace.yaml with the cwd.
+ */
+function findNewestCopilotConversation(cwd: string): string | null {
+  const sessionStateDir = path.join(os.homedir(), '.copilot', 'session-state')
+  if (!fs.existsSync(sessionStateDir)) return null
+
+  let resolvedCwd = cwd
+  try { resolvedCwd = fs.realpathSync(cwd) } catch { /* use original */ }
+
+  // Collect all session dirs with their events.jsonl mtime
+  const sessionDirs: Array<{ eventsPath: string; mtime: number; dir: string }> = []
+  try {
+    const entries = fs.readdirSync(sessionStateDir)
+    for (const entry of entries) {
+      const sessionDir = path.join(sessionStateDir, entry)
+      const eventsPath = path.join(sessionDir, 'events.jsonl')
+      try {
+        const stat = fs.statSync(eventsPath)
+        if (stat.isFile()) {
+          sessionDirs.push({ eventsPath, mtime: stat.mtimeMs, dir: sessionDir })
+        }
+      } catch { /* skip sessions without events.jsonl */ }
+    }
+  } catch {
+    return null
+  }
+
+  // Sort newest first and check cwd match
+  sessionDirs.sort((a, b) => b.mtime - a.mtime)
+
+  for (const session of sessionDirs.slice(0, 50)) {
+    try {
+      // First try workspace.yaml (faster than parsing the whole JSONL)
+      const yamlPath = path.join(session.dir, 'workspace.yaml')
+      if (fs.existsSync(yamlPath)) {
+        const yamlContent = fs.readFileSync(yamlPath, 'utf-8')
+        const cwdMatch = yamlContent.match(/^cwd:\s*(.+)$/m)
+        if (cwdMatch) {
+          let sessionCwd = cwdMatch[1]!.trim()
+          try { sessionCwd = fs.realpathSync(sessionCwd) } catch { /* use as-is */ }
+          if (sessionCwd === resolvedCwd || sessionCwd === cwd) {
+            return session.eventsPath
+          }
+          continue
+        }
+      }
+      // Fallback: parse first line of events.jsonl for session.start with cwd
+      const content = fs.readFileSync(session.eventsPath, 'utf-8')
+      const firstLine = content.split('\n')[0]
+      if (!firstLine) continue
+      const event = JSON.parse(firstLine)
+      if (event.type === 'session.start' && event.data?.context?.cwd) {
+        let sessionCwd = event.data.context.cwd
+        try { sessionCwd = fs.realpathSync(sessionCwd) } catch { /* use as-is */ }
+        if (sessionCwd === resolvedCwd || sessionCwd === cwd) {
+          return session.eventsPath
+        }
+      }
+    } catch { /* skip malformed sessions */ }
+  }
+
+  return null
+}
+
+/**
+ * Finds the newest conversation file for the given AI provider and working directory.
+ */
+function findNewestConversation(cwd: string, provider: AiProviderId = 'claude'): string | null {
+  switch (provider) {
+    case 'claude':
+      return findNewestClaudeConversation(cwd)
+    case 'codex':
+      return findNewestCodexConversation(cwd)
+    case 'copilot':
+      return findNewestCopilotConversation(cwd)
+    case 'gemini':
+      // Gemini CLI does not persist conversation files
+      return null
+    default:
+      return findNewestClaudeConversation(cwd)
+  }
+}
+
+/**
  * Migrates a legacy task: infers type from labels, removes labels,
  * downgrades critical priority to high.
  */
@@ -983,9 +1137,9 @@ export function registerKanbanHandlers(ipcMain: IpcMain): void {
     IPC_CHANNELS.KANBAN_LINK_CONVERSATION,
     async (
       _event,
-      { cwd, taskId, workspaceId }: { cwd: string; taskId: string; workspaceId: string },
+      { cwd, taskId, workspaceId, aiProvider }: { cwd: string; taskId: string; workspaceId: string; aiProvider?: AiProviderId },
     ) => {
-      const conversationPath = findNewestClaudeConversation(cwd)
+      const conversationPath = findNewestConversation(cwd, aiProvider)
       if (!conversationPath) return null
 
       // Store the conversation path in the ticket

@@ -1239,9 +1239,10 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
       }))
 
       // Link the conversation JSONL file to the ticket for context recovery
+      const capturedProvider = provider
       setTimeout(async () => {
         try {
-          await window.kanbai.kanban.linkConversation(capturedCwd!, task.id, capturedWorkspaceId!)
+          await window.kanbai.kanban.linkConversation(capturedCwd!, task.id, capturedWorkspaceId!, capturedProvider)
         } catch { /* best-effort */ }
       }, 10000)
 

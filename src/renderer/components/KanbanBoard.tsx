@@ -1627,6 +1627,7 @@ function TaskDetailPanel({
       for (const line of lines) {
         try {
           const parsed = JSON.parse(line)
+          // Claude format: type = 'human' | 'assistant'
           if (parsed.type === 'human' || parsed.type === 'assistant') {
             const message = typeof parsed.message === 'string'
               ? parsed.message
@@ -1641,6 +1642,40 @@ function TaskDetailPanel({
             if (message.trim()) {
               entries.push({
                 role: parsed.type,
+                message,
+                timestamp: parsed.timestamp,
+              })
+            }
+          }
+          // Codex format: type = 'item.completed' with item.type = 'agent_message' | 'user_message'
+          else if (parsed.type === 'item.completed' && parsed.item) {
+            const itemType = parsed.item.type
+            if (itemType === 'user_message' || itemType === 'agent_message') {
+              const message = parsed.item.text || ''
+              if (message.trim()) {
+                entries.push({
+                  role: itemType === 'user_message' ? 'human' : 'assistant',
+                  message,
+                  timestamp: parsed.timestamp,
+                })
+              }
+            }
+          }
+          // Copilot format: type = 'user.message' | 'assistant.message'
+          else if (parsed.type === 'user.message' && parsed.data?.content) {
+            const message = typeof parsed.data.content === 'string' ? parsed.data.content : ''
+            if (message.trim()) {
+              entries.push({
+                role: 'human',
+                message,
+                timestamp: parsed.timestamp,
+              })
+            }
+          } else if (parsed.type === 'assistant.message' && parsed.data?.content) {
+            const message = typeof parsed.data.content === 'string' ? parsed.data.content : ''
+            if (message.trim()) {
+              entries.push({
+                role: 'assistant',
                 message,
                 timestamp: parsed.timestamp,
               })
