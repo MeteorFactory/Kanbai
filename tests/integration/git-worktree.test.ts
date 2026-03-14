@@ -477,6 +477,146 @@ describe('Git Worktree IPC Handlers', () => {
     })
   })
 
+  describe('merge conflict detection', () => {
+    it('detects merge conflicts and aborts cleanly', async () => {
+      const worktreePath = path.join(repoDir, '.kanbai-worktrees', 'conflict-task')
+
+      // Create a file on default branch
+      fs.writeFileSync(path.join(repoDir, 'shared.ts'), 'export const value = "original"')
+      git(['add', 'shared.ts'], repoDir)
+      git(['commit', '-m', 'add shared file'], repoDir)
+
+      // Create worktree
+      await mockIpcMain._invoke('git:worktreeAdd', {
+        cwd: repoDir,
+        worktreePath,
+        branch: 'kanban/conflict-1',
+      })
+
+      // Modify the same file differently in the worktree
+      fs.writeFileSync(path.join(worktreePath, 'shared.ts'), 'export const value = "from-worktree"')
+      git(['add', 'shared.ts'], worktreePath)
+      git(['commit', '-m', 'change shared in worktree'], worktreePath)
+
+      // Modify the same file on the default branch (creating a conflict)
+      fs.writeFileSync(path.join(repoDir, 'shared.ts'), 'export const value = "from-main"')
+      git(['add', 'shared.ts'], repoDir)
+      git(['commit', '-m', 'change shared on main'], repoDir)
+
+      // Attempt merge — should detect conflict
+      const result = await mockIpcMain._invoke('git:worktreeMergeAndCleanup', {
+        repoPath: repoDir,
+        worktreePath,
+        worktreeBranch: 'kanban/conflict-1',
+        ticketLabel: 'C-01',
+        targetBranch: defaultBranch,
+      })
+
+      expect(result).toMatchObject({
+        success: false,
+        merged: false,
+        conflict: true,
+      })
+      expect(result.conflictFiles).toContain('shared.ts')
+      expect(result.error).toContain('Merge conflict')
+
+      // Verify: merge was aborted — no unmerged entries remain
+      const status = git(['diff', '--name-only', '--diff-filter=U'], repoDir)
+      expect(status).toBe('')
+
+      // Verify: worktree and branch still exist (preserved for manual resolution)
+      expect(fs.existsSync(worktreePath)).toBe(true)
+      const branches = git(['branch', '--list'], repoDir)
+      expect(branches).toContain('kanban/conflict-1')
+    })
+
+    it('merges cleanly when no conflicts exist (fast-forward)', async () => {
+      const worktreePath = path.join(repoDir, '.kanbai-worktrees', 'no-conflict-task')
+
+      // Create worktree
+      await mockIpcMain._invoke('git:worktreeAdd', {
+        cwd: repoDir,
+        worktreePath,
+        branch: 'kanban/no-conflict-1',
+      })
+
+      // Add a new file in worktree (no conflict possible)
+      fs.writeFileSync(path.join(worktreePath, 'new-feature.ts'), 'export const feature = true')
+      git(['add', 'new-feature.ts'], worktreePath)
+      git(['commit', '-m', 'add feature'], worktreePath)
+
+      // Merge — should succeed
+      const result = await mockIpcMain._invoke('git:worktreeMergeAndCleanup', {
+        repoPath: repoDir,
+        worktreePath,
+        worktreeBranch: 'kanban/no-conflict-1',
+        ticketLabel: 'NC-01',
+        targetBranch: defaultBranch,
+      })
+
+      expect(result).toMatchObject({
+        success: true,
+        merged: true,
+      })
+
+      // Verify: file is on default branch
+      expect(fs.existsSync(path.join(repoDir, 'new-feature.ts'))).toBe(true)
+
+      // Verify: worktree and branch cleaned up
+      expect(fs.existsSync(worktreePath)).toBe(false)
+      const branches = git(['branch', '--list'], repoDir)
+      expect(branches).not.toContain('kanban/no-conflict-1')
+    })
+
+    it('reports multiple conflicting files', async () => {
+      const worktreePath = path.join(repoDir, '.kanbai-worktrees', 'multi-conflict')
+
+      // Create files on default branch
+      fs.writeFileSync(path.join(repoDir, 'fileA.ts'), 'A original')
+      fs.writeFileSync(path.join(repoDir, 'fileB.ts'), 'B original')
+      git(['add', 'fileA.ts', 'fileB.ts'], repoDir)
+      git(['commit', '-m', 'add files A and B'], repoDir)
+
+      // Create worktree
+      await mockIpcMain._invoke('git:worktreeAdd', {
+        cwd: repoDir,
+        worktreePath,
+        branch: 'kanban/multi-conflict-1',
+      })
+
+      // Modify both files in worktree
+      fs.writeFileSync(path.join(worktreePath, 'fileA.ts'), 'A from worktree')
+      fs.writeFileSync(path.join(worktreePath, 'fileB.ts'), 'B from worktree')
+      git(['add', 'fileA.ts', 'fileB.ts'], worktreePath)
+      git(['commit', '-m', 'change A and B in worktree'], worktreePath)
+
+      // Modify both files on default branch
+      fs.writeFileSync(path.join(repoDir, 'fileA.ts'), 'A from main')
+      fs.writeFileSync(path.join(repoDir, 'fileB.ts'), 'B from main')
+      git(['add', 'fileA.ts', 'fileB.ts'], repoDir)
+      git(['commit', '-m', 'change A and B on main'], repoDir)
+
+      // Attempt merge
+      const result = await mockIpcMain._invoke('git:worktreeMergeAndCleanup', {
+        repoPath: repoDir,
+        worktreePath,
+        worktreeBranch: 'kanban/multi-conflict-1',
+        ticketLabel: 'MC-01',
+        targetBranch: defaultBranch,
+      })
+
+      expect(result.success).toBe(false)
+      expect(result.conflict).toBe(true)
+      expect(result.conflictFiles).toHaveLength(2)
+      expect(result.conflictFiles).toContain('fileA.ts')
+      expect(result.conflictFiles).toContain('fileB.ts')
+
+      // Verify clean state after abort — no unmerged entries remain
+      const status = git(['diff', '--name-only', '--diff-filter=U'], repoDir)
+      expect(status).toBe('')
+    })
+  })
+
   describe('worktree session locking', () => {
     it('lock and unlock cycle works correctly', async () => {
       const worktreePath = path.join(repoDir, '.kanbai-worktrees', 'task-lock')

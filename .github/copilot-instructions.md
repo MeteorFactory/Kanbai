@@ -11,6 +11,7 @@ Kanbai is an AI-enhanced desktop terminal built with Electron. It combines a ful
 
 ## Tech Stack
 
+- Node.js >= 22.12.0 (runtime requirement)
 - Electron 40+ (macOS + Windows)
 - TypeScript 5.9+ (strict mode, no `any`)
 - React 19 (renderer UI)
@@ -29,9 +30,9 @@ Kanbai is an AI-enhanced desktop terminal built with Electron. It combines a ful
 
 Three-process Electron model:
 
-- **Main** (`src/main/`) — Node.js, IPC handlers in `ipc/` (32 handlers), services in `services/` (storage, healthCheck, notifications, appUpdateState, activityHooks, ai-cli, pixel-agents-service, pixel-agents-assets, database/ [connection, queries, backup, crypto, NL, drivers/], packages/ [analysis, NL])
+- **Main** (`src/main/`) — Node.js, IPC handlers in `ipc/` (32 handlers), services in `services/` (storage, healthCheck, notifications, appUpdateState, activityHooks, ai-cli, pixel-agents-service, pixel-agents-assets, companion-server [AES-256-GCM encrypted data server], database/ [connection, queries, backup, crypto, NL, drivers/], packages/ [analysis, NL])
 - **Preload** (`src/preload/`) — contextBridge, exposes `window.kanbai` API
-- **Renderer** (`src/renderer/`) — React, flat + claude-settings components (~130), Zustand stores in `lib/stores/` (15 stores)
+- **Renderer** (`src/renderer/`) — React, flat + claude-settings components (~60), Zustand stores in `lib/stores/` (15 stores)
 - **Shared** (`src/shared/`) — All types in `types/index.ts`, constants in `constants/`
 
 ## Security (Mandatory)

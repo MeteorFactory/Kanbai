@@ -13,6 +13,7 @@ Kanbai is an AI-enhanced desktop terminal built with Electron. It combines a ful
 
 | Technology | Version | Purpose |
 |------------|---------|---------|
+| Node.js | >= 22.12.0 | Runtime requirement |
 | Electron | 40+ | Desktop framework (macOS + Windows) |
 | TypeScript | 5.9+ | Strict mode everywhere |
 | React | 19 | Renderer UI |
@@ -44,12 +45,13 @@ src/
       ai-cli.ts          # AI CLI detection and management
       pixel-agents-service.ts   # Pixel agents integration
       pixel-agents-assets.ts    # Pixel agents static assets
+      companion-server.ts  # Companion data server (AES-256-GCM encrypted)
       database/      # DB connection, queries, backup, crypto, NL queries, drivers/
       packages/      # Package analysis, NL package queries
     assets/          # Static assets (rule-templates)
   preload/           # Preload scripts — contextBridge, exposes window.kanbai
   renderer/          # Renderer process (React + Zustand)
-    components/      # All UI components (flat + claude-settings subdirectory, ~130 components)
+    components/      # All UI components (flat + claude-settings subdirectory, ~60 components)
     lib/stores/      # Zustand stores (per domain, 15 stores)
     styles/          # CSS custom properties
   shared/            # Shared types and constants (both processes)

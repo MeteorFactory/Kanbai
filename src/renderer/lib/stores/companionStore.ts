@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import type { KanbanTask } from '../../../shared/types'
 
 export type CompanionStatus = 'disconnected' | 'waiting' | 'connected' | 'lost' | 'maintenance'
 
@@ -6,6 +7,7 @@ interface CompanionState {
   status: CompanionStatus
   pairingCode: string | null
   companionName: string | null
+  syncing: boolean
 }
 
 interface CompanionActions {
@@ -15,6 +17,7 @@ interface CompanionActions {
   register: (workspaceId: string) => Promise<void>
   cancel: () => Promise<void>
   disconnect: () => Promise<void>
+  syncTickets: (workspaceId: string) => Promise<void>
 }
 
 type CompanionStore = CompanionState & CompanionActions
@@ -23,6 +26,7 @@ export const useCompanionStore = create<CompanionStore>((set) => ({
   status: 'disconnected',
   pairingCode: null,
   companionName: null,
+  syncing: false,
 
   setStatus: (status) => set({ status }),
   setPairingCode: (code) => set({ pairingCode: code }),
@@ -46,10 +50,19 @@ export const useCompanionStore = create<CompanionStore>((set) => ({
     await window.kanbai.companion.disconnect()
     set({ pairingCode: null, status: 'disconnected', companionName: null })
   },
+
+  syncTickets: async (workspaceId: string) => {
+    set({ syncing: true })
+    try {
+      await window.kanbai.companion.syncTickets(workspaceId)
+    } finally {
+      set({ syncing: false })
+    }
+  },
 }))
 
 export function initCompanionListener(): () => void {
-  return window.kanbai.companion.onStatusChanged((status: string, companionName?: string) => {
+  const cleanupStatus = window.kanbai.companion.onStatusChanged((status: string, companionName?: string) => {
     const validStatus = status as CompanionStatus
     const store = useCompanionStore.getState()
     store.setStatus(validStatus)
@@ -61,4 +74,13 @@ export function initCompanionListener(): () => void {
       store.setCompanionName(null)
     }
   })
+
+  return cleanupStatus
+}
+
+/** Listen for ticket updates coming from the companion app */
+export function initCompanionTicketListener(
+  onTicketUpdated: (task: KanbanTask) => void,
+): () => void {
+  return window.kanbai.companion.onTicketUpdated(onTicketUpdated)
 }

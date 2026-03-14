@@ -40,6 +40,9 @@ function repoPathFromWorktree(worktreePath: string): string {
  * then remove the worktree and delete the branch.
  * Uses worktreeBaseBranch to merge into the branch that was active at worktree creation.
  * Only runs if the task has worktree info and autoMergeWorktrees is enabled.
+ *
+ * On merge conflict: aborts the merge, preserves the worktree and branch,
+ * sets the task to PENDING with conflict details, and notifies the user.
  */
 async function autoMergeWorktree(
   task: KanbanTask,
@@ -59,6 +62,44 @@ async function autoMergeWorktree(
       task.worktreeBaseBranch,
     )
     if (!result?.success) {
+      if (result?.conflict) {
+        // Merge conflict detected — preserve worktree, notify user, set task PENDING
+        const conflictFiles: string[] = result.conflictFiles ?? []
+        const t = useI18n.getState().t
+        const wsName = useWorkspaceStore.getState().workspaces.find((w) => w.id === workspaceId)?.name ?? ''
+        const conflictSummary = conflictFiles.length <= 5
+          ? conflictFiles.join(', ')
+          : `${conflictFiles.slice(0, 5).join(', ')} (+${conflictFiles.length - 5})`
+
+        pushNotification(
+          'warning',
+          wsName,
+          t('notifications.mergeConflict', {
+            ticket: ticketLabel,
+            branch: task.worktreeBranch,
+            target: result.targetBranch ?? task.worktreeBaseBranch ?? 'main',
+            files: conflictSummary,
+            count: conflictFiles.length,
+          }),
+          { workspaceId },
+        )
+
+        // Update task to PENDING with conflict details so user can resolve manually
+        const conflictQuestion = t('notifications.mergeConflictQuestion', {
+          branch: task.worktreeBranch,
+          target: result.targetBranch ?? task.worktreeBaseBranch ?? 'main',
+          files: conflictFiles.join('\n  - '),
+        })
+
+        await window.kanbai.kanban.update({
+          id: task.id,
+          workspaceId,
+          status: 'PENDING',
+          question: conflictQuestion,
+        }).catch(() => { /* best-effort */ })
+
+        return
+      }
       // eslint-disable-next-line no-console
       console.warn(`Auto-merge failed for ${ticketLabel}:`, result?.error)
     }
@@ -200,6 +241,7 @@ interface KanbanActions {
   reactivateIfDone: (tabId: string, message?: string) => void
   acceptSplit: (taskId: string) => Promise<void>
   dismissSplit: (taskId: string) => void
+  applyCompanionUpdate: (task: KanbanTask) => void
 }
 
 type KanbanStore = KanbanState & KanbanActions
@@ -490,6 +532,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
         }
         if (newTask.status === 'FAILED') {
           termStore.setTabColor(tabId, '#F47067')
+          termStore.killTabProcesses(tabId)
           taskFinished = true
           relaunchedTaskIds.delete(newTask.id) // allow future re-launch
 
@@ -510,7 +553,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
         if (newTask.status === 'PENDING') {
           termStore.setTabColor(tabId, '#fbbf24')
           termStore.setTabActivity(tabId, true)
-          // PENDING does NOT trigger next task — the task is still "in progress"
+          termStore.killTabProcesses(tabId)
         }
       }
 
@@ -742,8 +785,15 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
   },
 
   updateTaskStatus: async (taskId, status) => {
-    const { currentWorkspaceId } = get()
+    const { currentWorkspaceId, kanbanTabIds } = get()
     if (!currentWorkspaceId) return
+    // Kill terminal process when ticket moves to PENDING or FAILED (not DONE — hooks handle that)
+    if (status === 'PENDING' || status === 'FAILED') {
+      const tabId = kanbanTabIds[taskId]
+      if (tabId) {
+        useTerminalTabStore.getState().killTabProcesses(tabId)
+      }
+    }
     await window.kanbai.kanban.update({ id: taskId, status, workspaceId: currentWorkspaceId })
     set((state) => ({
       tasks: state.tasks.map((t) => (t.id === taskId ? { ...t, status, updatedAt: Date.now() } : t)),
@@ -1334,6 +1384,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
         }
         if (newTask.status === 'FAILED') {
           termStore.setTabColor(tabId, '#F47067')
+          termStore.killTabProcesses(tabId)
           taskFinished = true
           relaunchedTaskIds.delete(newTask.id)
 
@@ -1359,6 +1410,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
         if (newTask.status === 'PENDING') {
           termStore.setTabColor(tabId, '#fbbf24')
           termStore.setTabActivity(tabId, true)
+          termStore.killTabProcesses(tabId)
         }
       }
 
@@ -1683,6 +1735,12 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
       tasks: state.tasks.map((t) =>
         t.id === taskId ? { ...t, splitSuggestions: undefined } : t,
       ),
+    }))
+  },
+
+  applyCompanionUpdate: (task: KanbanTask) => {
+    set((state) => ({
+      tasks: state.tasks.map((t) => (t.id === task.id ? { ...t, ...task } : t)),
     }))
   },
 }))

@@ -1973,6 +1973,8 @@ export const fr = {
   'notifications.ticketsRemaining': 'Fin du ticket {ticket}. Encore {count} ticket(s) à faire',
   'notifications.noMoreTickets': 'Fin du ticket {ticket}. Plus de tickets en attente',
   'notifications.taskFailed': 'Échec du ticket {ticket}',
+  'notifications.mergeConflict': '{ticket} — Conflit de merge entre {branch} et {target} ({count} fichier(s) : {files}). Le worktree est préservé pour résolution manuelle.',
+  'notifications.mergeConflictQuestion': 'Conflit de merge détecté entre {branch} et {target}. Fichiers en conflit :\n  - {files}\n\nRésolvez les conflits manuellement puis relancez le merge, ou abandonnez le worktree.',
 
   // Companion
   'companion.tooltip': 'Application compagnon',
@@ -1987,6 +1989,8 @@ export const fr = {
   'companion.connectedInfo': 'Application compagnon connectée.',
   'companion.connectedAs': 'Connecté : {name}',
   'companion.disconnect': 'Déconnecter',
+  'companion.syncTickets': 'Synchroniser les tickets',
+  'companion.syncing': 'Synchronisation...',
   'companion.lostInfo': 'La connexion avec le compagnon a été perdue.',
   'companion.reconnect': 'Reconnecter',
   'companion.status.maintenance': 'Serveur indisponible',

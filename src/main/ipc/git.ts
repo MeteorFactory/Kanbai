@@ -92,6 +92,24 @@ function execGit(args: string[], cwd: string): string {
   }).trim()
 }
 
+/**
+ * Parse git status --porcelain output for unmerged (conflict) entries.
+ * Conflict markers: UU (both modified), AA (both added), DD (both deleted),
+ * AU/UA (added by us/them), DU/UD (deleted by us/them).
+ */
+function detectConflictFiles(cwd: string): string[] {
+  try {
+    const status = execGit(['status', '--porcelain'], cwd)
+    const conflictPrefixes = ['UU', 'AA', 'DD', 'AU', 'UA', 'DU', 'UD']
+    return status
+      .split('\n')
+      .filter((line) => conflictPrefixes.some((prefix) => line.startsWith(prefix)))
+      .map((line) => line.slice(3).trim())
+  } catch {
+    return []
+  }
+}
+
 function hasCommits(cwd: string): boolean {
   try {
     execGit(['rev-parse', 'HEAD'], cwd)
@@ -869,9 +887,41 @@ export function registerGitHandlers(ipcMain: IpcMain): void {
           // Branch doesn't exist — already merged and deleted by the shell hook
         }
 
-        // Step 3: Merge the worktree branch into the main branch
+        // Step 3: Merge the worktree branch into the main branch with conflict detection
         if (branchExists) {
-          execGit(['merge', validateRef(worktreeBranch)], repoPath)
+          try {
+            execGit(['merge', '--no-edit', validateRef(worktreeBranch)], repoPath)
+          } catch (mergeErr) {
+            // Detect merge conflicts by checking git status for unmerged entries
+            const conflictFiles = detectConflictFiles(repoPath)
+            if (conflictFiles.length > 0) {
+              // Abort the failed merge to restore clean state
+              try {
+                execGit(['merge', '--abort'], repoPath)
+              } catch {
+                // merge --abort may fail if merge didn't start properly — reset instead
+                try { execGit(['reset', '--hard', 'HEAD'], repoPath) } catch { /* last resort */ }
+              }
+
+              // Restore the original branch if we switched away from it
+              if (targetBranch && currentBranch !== targetBranch) {
+                try { execGit(['checkout', validateRef(currentBranch)], repoPath) } catch { /* best-effort */ }
+              }
+
+              return {
+                success: false,
+                merged: false,
+                conflict: true,
+                conflictFiles,
+                worktreeBranch,
+                targetBranch: mainBranch,
+                error: `Merge conflict: ${conflictFiles.length} file(s) in conflict between ${worktreeBranch} and ${mainBranch}`,
+              }
+            }
+
+            // Not a conflict — rethrow
+            throw mergeErr
+          }
         }
 
         // Step 4: Remove the worktree

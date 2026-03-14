@@ -873,11 +873,26 @@ const api = {
       ipcRenderer.invoke(IPC_CHANNELS.COMPANION_CANCEL),
     disconnect: (): Promise<void> =>
       ipcRenderer.invoke(IPC_CHANNELS.COMPANION_DISCONNECT),
+    getDataInfo: (): Promise<{ port: number; encryptionKey: string } | null> =>
+      ipcRenderer.invoke(IPC_CHANNELS.COMPANION_DATA_INFO),
+    syncTickets: (workspaceId: string): Promise<void> =>
+      ipcRenderer.invoke(IPC_CHANNELS.COMPANION_SYNC_TICKETS, workspaceId),
     onStatusChanged: (callback: (status: string, companionName?: string) => void) => {
       const listener = (_event: Electron.IpcRendererEvent, status: string, companionName?: string) =>
         callback(status, companionName)
       ipcRenderer.on(IPC_CHANNELS.COMPANION_STATUS_CHANGED, listener)
       return () => ipcRenderer.removeListener(IPC_CHANNELS.COMPANION_STATUS_CHANGED, listener)
+    },
+    onDataInfo: (callback: (info: { port: number; encryptionKey: string }) => void) => {
+      const listener = (_event: Electron.IpcRendererEvent, info: { port: number; encryptionKey: string }) => callback(info)
+      ipcRenderer.on(IPC_CHANNELS.COMPANION_DATA_INFO, listener)
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.COMPANION_DATA_INFO, listener)
+    },
+    onTicketUpdated: (callback: (task: import('../shared/types').KanbanTask) => void) => {
+      const listener = (_event: Electron.IpcRendererEvent, task: import('../shared/types').KanbanTask) =>
+        callback(task)
+      ipcRenderer.on(IPC_CHANNELS.COMPANION_TICKET_UPDATED, listener)
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.COMPANION_TICKET_UPDATED, listener)
     },
   },
 

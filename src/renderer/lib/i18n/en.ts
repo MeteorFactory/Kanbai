@@ -1973,6 +1973,8 @@ export const en = {
   'notifications.ticketsRemaining': 'Ticket {ticket}: done. {count} ticket(s) remaining',
   'notifications.noMoreTickets': 'Ticket {ticket}: done. No more pending tickets',
   'notifications.taskFailed': 'Ticket {ticket} failed',
+  'notifications.mergeConflict': '{ticket} — Merge conflict between {branch} and {target} ({count} file(s): {files}). Worktree preserved for manual resolution.',
+  'notifications.mergeConflictQuestion': 'Merge conflict detected between {branch} and {target}. Conflicting files:\n  - {files}\n\nResolve conflicts manually then retry the merge, or abandon the worktree.',
 
   // Companion
   'companion.tooltip': 'Companion app',
@@ -1987,6 +1989,8 @@ export const en = {
   'companion.connectedInfo': 'Companion app connected.',
   'companion.connectedAs': 'Connected: {name}',
   'companion.disconnect': 'Disconnect',
+  'companion.syncTickets': 'Sync tickets',
+  'companion.syncing': 'Syncing...',
   'companion.lostInfo': 'Connection to companion was lost.',
   'companion.reconnect': 'Reconnect',
   'companion.status.maintenance': 'Server unavailable',
