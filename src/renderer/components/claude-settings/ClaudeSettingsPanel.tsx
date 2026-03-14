@@ -9,6 +9,8 @@ import { CodexGeneralTab } from './CodexGeneralTab'
 import { CodexRulesTab } from './CodexRulesTab'
 import { CodexSkillsTab } from './CodexSkillsTab'
 import { CodexMemoryTab } from './CodexMemoryTab'
+import { CodexMcpTab } from './CodexMcpTab'
+import { CodexAgentsTab } from './CodexAgentsTab'
 import { SecuritySandboxTab } from './SecuritySandboxTab'
 import { AgentsTab } from './AgentsTab'
 import { SkillsTab } from './SkillsTab'
@@ -30,7 +32,7 @@ import { WORKFLOW_MARKER } from '../../../shared/constants/defaultWorkflows'
 
 type SidebarSection = 'general' | 'claude' | 'codex' | 'copilot' | 'gemini'
 type ClaudeSubTab = 'general' | 'security' | 'agents' | 'skills' | 'integrations' | 'memory'
-type CodexSubTab = 'general' | 'rules' | 'skills' | 'memory'
+type CodexSubTab = 'general' | 'rules' | 'agents' | 'skills' | 'mcp' | 'memory'
 type CopilotSubTab = 'general' | 'rules' | 'skills' | 'memory'
 type GeminiSubTab = 'general' | 'ui' | 'tools' | 'security' | 'agents' | 'skills' | 'memory'
 
@@ -329,7 +331,9 @@ export function ClaudeSettingsPanel() {
                 {([
                   { key: 'general' as CodexSubTab, label: t('codex.generalTab') },
                   { key: 'rules' as CodexSubTab, label: t('codex.rulesTab') },
+                  { key: 'agents' as CodexSubTab, label: t('codex.agentsTab') },
                   { key: 'skills' as CodexSubTab, label: t('codex.skillsTab') },
+                  { key: 'mcp' as CodexSubTab, label: t('codex.mcpTab') },
                   { key: 'memory' as CodexSubTab, label: t('codex.memoryTab') },
                 ]).map((tab) => (
                   <button
@@ -349,8 +353,14 @@ export function ClaudeSettingsPanel() {
                 {codexSubTab === 'rules' && (
                   <CodexRulesTab projectPath={activeProject.path} />
                 )}
+                {codexSubTab === 'agents' && (
+                  <CodexAgentsTab projectPath={activeProject.path} />
+                )}
                 {codexSubTab === 'skills' && (
                   <CodexSkillsTab projectPath={activeProject.path} />
+                )}
+                {codexSubTab === 'mcp' && (
+                  <CodexMcpTab projectPath={activeProject.path} />
                 )}
                 {codexSubTab === 'memory' && (
                   <CodexMemoryTab projectPath={activeProject.path} />
