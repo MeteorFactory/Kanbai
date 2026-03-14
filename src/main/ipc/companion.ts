@@ -70,7 +70,7 @@ function startPolling(code: string, getWindow: () => BrowserWindow | null): void
     } catch {
       const win = getWindow()
       if (win && !win.isDestroyed()) {
-        win.webContents.send(IPC_CHANNELS.COMPANION_STATUS_CHANGED, 'lost')
+        win.webContents.send(IPC_CHANNELS.COMPANION_STATUS_CHANGED, 'maintenance')
       }
     }
   }, 2000)

@@ -515,6 +515,10 @@ body {
   color: var(--danger);
 }
 
+.companion-info--maintenance {
+  color: var(--warning);
+}
+
 /* Notification Center */
 .notification-center {
   position: relative;

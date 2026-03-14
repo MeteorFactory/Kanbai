@@ -8,6 +8,7 @@ const STATUS_COLORS: Record<string, string> = {
   waiting: 'var(--warning)',
   connected: 'var(--success)',
   lost: 'var(--danger)',
+  maintenance: 'var(--warning)',
 }
 
 export function CompanionIndicator() {
@@ -102,6 +103,14 @@ export function CompanionIndicator() {
                 <p className="companion-info companion-info--warning">{t('companion.lostInfo')}</p>
                 <button className="companion-action-btn" onClick={handleRegister} disabled={!activeWorkspaceId}>
                   {t('companion.reconnect')}
+                </button>
+              </>
+            )}
+            {status === 'maintenance' && (
+              <>
+                <p className="companion-info companion-info--maintenance">{t('companion.maintenanceInfo')}</p>
+                <button className="companion-action-btn" onClick={handleRegister} disabled={!activeWorkspaceId}>
+                  {t('companion.retry')}
                 </button>
               </>
             )}

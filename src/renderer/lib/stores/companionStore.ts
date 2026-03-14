@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-export type CompanionStatus = 'disconnected' | 'waiting' | 'connected' | 'lost'
+export type CompanionStatus = 'disconnected' | 'waiting' | 'connected' | 'lost' | 'maintenance'
 
 interface CompanionState {
   status: CompanionStatus
@@ -24,8 +24,12 @@ export const useCompanionStore = create<CompanionStore>((set) => ({
   setPairingCode: (code) => set({ pairingCode: code }),
 
   register: async (workspaceId: string) => {
-    const result = await window.kanbai.companion.register(workspaceId)
-    set({ pairingCode: result.code, status: 'waiting' })
+    try {
+      const result = await window.kanbai.companion.register(workspaceId)
+      set({ pairingCode: result.code, status: 'waiting' })
+    } catch {
+      set({ pairingCode: null, status: 'maintenance' })
+    }
   },
 
   cancel: async () => {

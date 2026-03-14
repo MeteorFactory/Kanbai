@@ -1911,6 +1911,9 @@ export const fr = {
   'companion.connectedInfo': 'Application compagnon connectée.',
   'companion.lostInfo': 'La connexion avec le compagnon a été perdue.',
   'companion.reconnect': 'Reconnecter',
+  'companion.status.maintenance': 'Serveur indisponible',
+  'companion.maintenanceInfo': 'Le serveur compagnon est actuellement en maintenance.',
+  'companion.retry': 'Réessayer',
 
   // Title bar
   'titlebar.title': 'Kanbai',
