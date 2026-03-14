@@ -100,12 +100,36 @@ export function WorkspaceItem({ workspace, projects, isActive }: WorkspaceItemPr
   const isFlashing = workspace.id === flashingWorkspaceId
   const workspaceClaudeStatus = useClaudeStore((s) => s.workspaceClaudeStatus[workspace.id])
 
+  // Native kanban-based working ticket detection (independent of AI hooks)
+  const [workingTickets, setWorkingTickets] = useState<Array<{
+    ticketNumber: number | null; isCtoTicket: boolean; type?: string; title: string
+  }>>([])
+  const [showWorkingTooltip, setShowWorkingTooltip] = useState(false)
+
+  const fetchWorkingTickets = useCallback(() => {
+    window.kanbai.kanban.getWorkingTickets(workspace.id).then((result) => {
+      setWorkingTickets(result ?? [])
+    }).catch(() => setWorkingTickets([]))
+  }, [workspace.id])
+
+  // Fetch on mount + listen to kanban file changes
+  useEffect(() => {
+    fetchWorkingTickets()
+    const unsubscribe = window.kanbai.kanban.onFileChanged(({ workspaceId }) => {
+      if (workspaceId === workspace.id) {
+        fetchWorkingTickets()
+      }
+    })
+    return () => { unsubscribe() }
+  }, [workspace.id, fetchWorkingTickets])
+
+  // Also keep the single working ticket info for hook-based statuses (ask, waiting, failed)
   const [workingTicketInfo, setWorkingTicketInfo] = useState<{
     ticketNumber: number | null; isCtoTicket: boolean; type?: string
   } | null>(null)
 
   useEffect(() => {
-    if (workspaceClaudeStatus === 'working' || workspaceClaudeStatus === 'ask' || workspaceClaudeStatus === 'waiting' || workspaceClaudeStatus === 'failed') {
+    if (workspaceClaudeStatus === 'ask' || workspaceClaudeStatus === 'waiting' || workspaceClaudeStatus === 'failed') {
       window.kanbai.kanban.getWorkingTicket(workspace.id).then((result) => {
         setWorkingTicketInfo(result ? { ticketNumber: result.ticketNumber, isCtoTicket: result.isCtoTicket, type: result.type } : null)
       }).catch(() => setWorkingTicketInfo(null))
@@ -356,16 +380,45 @@ export function WorkspaceItem({ workspace, projects, isActive }: WorkspaceItemPr
           <span className="workspace-item-name">{workspace.name}</span>
         )}
 
-        {workspaceClaudeStatus === 'working' && (
-          <>
-            <span className={`workspace-ia-tag workspace-ia-tag--working${workingTicketInfo?.isCtoTicket ? ' workspace-ia-tag--cto' : ''}`}>
-              {workingTicketInfo?.isCtoTicket ? t('workspace.ctoMode') : t('workspace.aiWorking')}
-            </span>
-            {workingTicketInfo?.ticketNumber != null && (
-              <span className="workspace-ia-tag workspace-ia-tag--ticket">{({'bug':'B','feature':'F','test':'T','doc':'D','ia':'A','refactor':'R'}[workingTicketInfo.type ?? 'feature'] ?? 'F')}-{String(workingTicketInfo.ticketNumber).padStart(2, '0')}</span>
+        {/* Native kanban-based Working tag (independent of AI hooks) */}
+        {workingTickets.length === 1 && workingTickets[0] && (() => {
+          const ticket = workingTickets[0]
+          const prefix = ({'bug':'B','feature':'F','test':'T','doc':'D','ia':'A','refactor':'R'}[ticket.type ?? 'feature'] ?? 'F')
+          return (
+            <>
+              <span className={`workspace-ia-tag workspace-ia-tag--working${ticket.isCtoTicket ? ' workspace-ia-tag--cto' : ''}`}>
+                {ticket.isCtoTicket ? t('workspace.ctoMode') : t('workspace.aiWorking')}
+              </span>
+              {ticket.ticketNumber != null && (
+                <span className="workspace-ia-tag workspace-ia-tag--ticket">
+                  {prefix}-{String(ticket.ticketNumber).padStart(2, '0')}
+                </span>
+              )}
+            </>
+          )
+        })()}
+        {workingTickets.length > 1 && (
+          <span
+            className="workspace-ia-tag workspace-ia-tag--working workspace-ia-tag--multi"
+            onMouseEnter={() => setShowWorkingTooltip(true)}
+            onMouseLeave={() => setShowWorkingTooltip(false)}
+          >
+            {t('workspace.aiWorking')} {workingTickets.length}T
+            {showWorkingTooltip && (
+              <span className="workspace-working-tooltip">
+                {workingTickets.map((ticket, index) => {
+                  const prefix = ({'bug':'B','feature':'F','test':'T','doc':'D','ia':'A','refactor':'R'}[ticket.type ?? 'feature'] ?? 'F')
+                  const label = ticket.ticketNumber != null
+                    ? `${prefix}-${String(ticket.ticketNumber).padStart(2, '0')}`
+                    : ticket.title
+                  return <span key={index} className="workspace-working-tooltip-item">{label}</span>
+                })}
+              </span>
             )}
-          </>
+          </span>
         )}
+
+        {/* Hook-based AI statuses (ask, waiting, failed, finished) */}
         {workspaceClaudeStatus === 'ask' && (
           <>
             <span className="workspace-ia-tag workspace-ia-tag--ask">{t('workspace.aiAsk')}</span>
@@ -382,7 +435,7 @@ export function WorkspaceItem({ workspace, projects, isActive }: WorkspaceItemPr
             )}
           </>
         )}
-        {workspaceClaudeStatus === 'failed' && (
+        {workspaceClaudeStatus === 'failed' && workingTickets.length === 0 && (
           <>
             <span className="workspace-ia-tag workspace-ia-tag--failed">{t('workspace.aiFailed')}</span>
             {workingTicketInfo?.ticketNumber != null && (
@@ -390,7 +443,7 @@ export function WorkspaceItem({ workspace, projects, isActive }: WorkspaceItemPr
             )}
           </>
         )}
-        {workspaceClaudeStatus === 'finished' && (
+        {workspaceClaudeStatus === 'finished' && workingTickets.length === 0 && (
           <span className="workspace-ia-tag workspace-ia-tag--finished">{t('workspace.aiFinish')}</span>
         )}
 

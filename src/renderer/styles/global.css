@@ -1532,6 +1532,37 @@ body {
   font-weight: 700;
 }
 
+.workspace-ia-tag--multi {
+  position: relative;
+  cursor: default;
+}
+
+.workspace-working-tooltip {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  z-index: 100;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+}
+
+.workspace-working-tooltip-item {
+  font-size: 10px;
+  font-weight: 600;
+  font-family: 'Menlo', monospace;
+  color: var(--accent);
+  letter-spacing: 0.3px;
+}
+
 @keyframes ia-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.3; }

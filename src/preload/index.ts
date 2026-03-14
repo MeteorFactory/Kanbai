@@ -339,6 +339,8 @@ const api = {
       ipcRenderer.invoke(IPC_CHANNELS.KANBAN_REMOVE_ATTACHMENT, { taskId, workspaceId, attachmentId }),
     getWorkingTicket: (workspaceId: string): Promise<{ ticketNumber: number | null; isCtoTicket: boolean; type?: string } | null> =>
       ipcRenderer.invoke(IPC_CHANNELS.KANBAN_GET_WORKING_TICKET, { workspaceId }),
+    getWorkingTickets: (workspaceId: string): Promise<Array<{ ticketNumber: number | null; isCtoTicket: boolean; type?: string; title: string }>> =>
+      ipcRenderer.invoke(IPC_CHANNELS.KANBAN_GET_WORKING_TICKETS, { workspaceId }),
     watch: (workspaceId: string): Promise<void> =>
       ipcRenderer.invoke(IPC_CHANNELS.KANBAN_WATCH, { workspaceId }),
     unwatch: (): Promise<void> =>

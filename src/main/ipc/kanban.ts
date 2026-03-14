@@ -931,6 +931,27 @@ export function registerKanbanHandlers(ipcMain: IpcMain): void {
   )
 
   ipcMain.handle(
+    IPC_CHANNELS.KANBAN_GET_WORKING_TICKETS,
+    async (_event, { workspaceId }: { workspaceId: string }) => {
+      const tasks = readKanbanTasks(workspaceId)
+      const working = tasks.filter((t) => t.status === 'WORKING')
+      return working.map((task) => {
+        let isCto = task.isCtoTicket ?? false
+        if (!isCto && task.parentTicketId) {
+          const parent = tasks.find((t) => t.id === task.parentTicketId)
+          if (parent?.isCtoTicket) isCto = true
+        }
+        return {
+          ticketNumber: task.ticketNumber ?? null,
+          isCtoTicket: isCto,
+          type: task.type,
+          title: task.title,
+        }
+      })
+    },
+  )
+
+  ipcMain.handle(
     IPC_CHANNELS.KANBAN_WATCH,
     async (_event, { workspaceId }: { workspaceId: string }) => {
       addWatcher(workspaceId)

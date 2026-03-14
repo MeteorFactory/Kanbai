@@ -1103,6 +1103,7 @@ export const IPC_CHANNELS = {
   KANBAN_ATTACH_FROM_CLIPBOARD: 'kanban:attachFromClipboard',
   KANBAN_REMOVE_ATTACHMENT: 'kanban:removeAttachment',
   KANBAN_GET_WORKING_TICKET: 'kanban:getWorkingTicket',
+  KANBAN_GET_WORKING_TICKETS: 'kanban:getWorkingTickets',
   KANBAN_WATCH: 'kanban:watch',
   KANBAN_UNWATCH: 'kanban:unwatch',
   KANBAN_WATCH_ADD: 'kanban:watchAdd',
