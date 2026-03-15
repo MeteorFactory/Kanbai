@@ -135,7 +135,7 @@ function serializeToml(config: CodexConfig): string {
 
   lines.push('')
   lines.push('[features]')
-  lines.push(`web_search = "${config.webSearch}"`)
+  lines.push(`web_search = ${config.webSearch !== 'disabled'}`)
   lines.push(`multi_agent = ${config.multiAgent}`)
   if (!config.undo) lines.push(`undo = false`)
   if (config.shellSnapshot) lines.push(`shell_snapshot = true`)
