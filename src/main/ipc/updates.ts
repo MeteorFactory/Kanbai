@@ -551,9 +551,15 @@ async function resolveToolInstallSource(tool: string): Promise<ToolInstallResolu
   }
   if (tool === 'npm') {
     if (!IS_WIN && await isBrewManaged('npm')) {
+      const brewInfo = await getBrewPackageInfo('node')
       return {
         source: 'brew-formula',
-        brew: { kind: 'formula', latestVersion: null, installed: true, name: 'node' },
+        brew: {
+          kind: 'formula',
+          latestVersion: brewInfo?.latestVersion ?? null,
+          installed: true,
+          name: 'node',
+        },
       }
     }
     return { source: 'npm-global', npmPackage: 'npm' }
@@ -598,7 +604,16 @@ async function getLatestVersionForTool(
 
   if (tool === 'npm') {
     if (resolution.source.startsWith('brew')) {
-      // npm is bundled with brew node; updating node updates npm.
+      // npm is bundled with brew's node formula. Check if brew has a newer
+      // node version available — upgrading node also upgrades npm.
+      const latestBrewNode = await getLatestBrewVersion(resolution.brew?.name || 'node')
+      if (latestBrewNode) {
+        const currentNode = await getVersion('node', ['--version'])
+        if (currentNode && compareVersions(currentNode, latestBrewNode)) {
+          // Brew has a newer node → npm will be updated along with it
+          return await getLatestNpmVersion('npm') ?? currentVersion
+        }
+      }
       return currentVersion
     }
     // On Windows, npm is updated independently via `npm install -g npm@latest`,
