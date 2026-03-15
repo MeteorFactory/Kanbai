@@ -1463,6 +1463,8 @@ export const IPC_CHANNELS = {
   AI_PROVIDER_CHECK_INSTALLED: 'ai:providerCheckInstalled',
   AI_DEFAULTS_SET: 'ai:defaultsSet',
   AI_DEFAULTS_GET: 'ai:defaultsGet',
+  AI_DEFAULTS_GET_GLOBAL: 'ai:defaultsGetGlobal',
+  AI_DEFAULTS_SET_GLOBAL: 'ai:defaultsSetGlobal',
 
   // Code Analysis
   ANALYSIS_DETECT_TOOLS: 'analysis:detectTools',

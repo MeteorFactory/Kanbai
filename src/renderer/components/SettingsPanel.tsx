@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import type { AppSettings, SshKeyInfo, SshKeyType, Namespace, KanbanConfig } from '../../shared/types'
+import type { AppSettings, SshKeyInfo, SshKeyType, Namespace, KanbanConfig, AiDefaults } from '../../shared/types'
 import type { AiProviderId } from '../../shared/types/ai-provider'
+import { AI_PROVIDERS } from '../../shared/types/ai-provider'
 import { useI18n } from '../lib/i18n'
 import { useAppUpdateStore } from '../lib/stores/appUpdateStore'
 import { useWorkspaceStore } from '../lib/stores/workspaceStore'
@@ -113,6 +114,14 @@ export function SettingsPanel() {
   const [kanbanDefaultConfig, setKanbanDefaultConfig] = useState<KanbanConfig | null>(null)
   const [kanbanProjectConfig, setKanbanProjectConfig] = useState<KanbanConfig | null>(null)
   const [kanbanProjectLoading, setKanbanProjectLoading] = useState(false)
+
+  // AI defaults config state
+  const activeProjectId = useWorkspaceStore((s) => s.activeProjectId)
+  const projects = useWorkspaceStore((s) => s.projects)
+  const activeProjectName = projects.find((p) => p.id === activeProjectId)?.name ?? ''
+  const [aiGlobalDefaults, setAiGlobalDefaults] = useState<AiDefaults | null>(null)
+  const [aiProjectDefaults, setAiProjectDefaults] = useState<AiDefaults | null>(null)
+  const [aiProjectLoading, setAiProjectLoading] = useState(false)
 
   // Git config state
   const [namespaces, setNamespaces] = useState<Namespace[]>([])
@@ -374,6 +383,21 @@ export function SettingsPanel() {
       })
     }
   }, [activeSection, activeWorkspaceId])
+
+  useEffect(() => {
+    if (activeSection !== 'ai') return
+    window.kanbai.aiDefaults.getGlobal().then(setAiGlobalDefaults).catch(() => {})
+    if (activeProjectId) {
+      setAiProjectLoading(true)
+      window.kanbai.aiDefaults.get(activeProjectId).then((d: AiDefaults) => {
+        setAiProjectDefaults(d ?? {})
+      }).catch(() => {
+        setAiProjectDefaults(null)
+      }).finally(() => {
+        setAiProjectLoading(false)
+      })
+    }
+  }, [activeSection, activeProjectId])
 
   useEffect(() => {
     if (activeSection !== 'tools') return
@@ -1130,6 +1154,135 @@ export function SettingsPanel() {
                   </button>
                 </div>
               </div>
+
+              {/* Global AI defaults */}
+              <h4 className="settings-section-subtitle" style={{ marginTop: 24 }}>{t('settings.aiDefaultConfig')}</h4>
+              <p className="settings-section-hint">{t('settings.aiDefaultConfigHint')}</p>
+              {aiGlobalDefaults && (
+                <div className="settings-card">
+                  {([
+                    { key: 'kanban' as const, label: t('settings.aiKanbanProvider'), hint: t('settings.aiKanbanProviderHint') },
+                    { key: 'packages' as const, label: t('settings.aiPackagesProvider'), hint: t('settings.aiPackagesProviderHint') },
+                    { key: 'database' as const, label: t('settings.aiDatabaseProvider'), hint: t('settings.aiDatabaseProviderHint') },
+                  ]).map(({ key, label, hint }) => (
+                    <div key={key} className="settings-row">
+                      <div className="settings-row-info">
+                        <label className="settings-label">{label}</label>
+                        <span className="settings-hint">{hint}</span>
+                      </div>
+                      <div className="ai-defaults-btns">
+                        {(Object.keys(AI_PROVIDERS) as AiProviderId[]).map((id) => (
+                          <button
+                            key={id}
+                            className={`ai-defaults-btn${aiGlobalDefaults[key] === id ? ' ai-defaults-btn--active' : ''}`}
+                            style={
+                              aiGlobalDefaults[key] === id
+                                ? { backgroundColor: AI_PROVIDERS[id].detectionColor, borderColor: AI_PROVIDERS[id].detectionColor, color: '#fff' }
+                                : undefined
+                            }
+                            onClick={async () => {
+                              const modelDefaults: Partial<AiDefaults> = key === 'packages'
+                                ? { packagesModel: id === 'codex' ? 'gpt-5.1-codex-mini' : id === 'copilot' ? 'gpt-4o' : '' }
+                                : key === 'database'
+                                  ? { databaseModel: id === 'codex' ? 'gpt-5.1-codex-mini' : id === 'copilot' ? 'gpt-4o' : '' }
+                                  : {}
+                              const updated = await window.kanbai.aiDefaults.setGlobal({ [key]: id, ...modelDefaults })
+                              setAiGlobalDefaults(updated)
+                            }}
+                          >
+                            {AI_PROVIDERS[id].displayName}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Project-specific AI defaults */}
+              <h4 className="settings-section-subtitle" style={{ marginTop: 24 }}>
+                {t('settings.aiProjectConfig')}
+                {activeProjectName && <span className="settings-section-subtitle-badge">{activeProjectName}</span>}
+              </h4>
+              <p className="settings-section-hint">{t('settings.aiProjectConfigHint')}</p>
+              {!activeProjectId && (
+                <div className="settings-card">
+                  <div className="settings-row">
+                    <span className="settings-hint">{t('settings.aiNoProject')}</span>
+                  </div>
+                </div>
+              )}
+              {activeProjectId && aiProjectLoading && (
+                <div className="settings-card">
+                  <div className="settings-row">
+                    <span className="settings-hint">{t('common.loading')}</span>
+                  </div>
+                </div>
+              )}
+              {activeProjectId && aiProjectDefaults && !aiProjectLoading && (
+                <div className="settings-card">
+                  {([
+                    { key: 'kanban' as const, label: t('settings.aiKanbanProvider'), hint: t('settings.aiKanbanProviderHint') },
+                    { key: 'packages' as const, label: t('settings.aiPackagesProvider'), hint: t('settings.aiPackagesProviderHint') },
+                    { key: 'database' as const, label: t('settings.aiDatabaseProvider'), hint: t('settings.aiDatabaseProviderHint') },
+                  ]).map(({ key, label, hint }) => (
+                    <div key={key} className="settings-row">
+                      <div className="settings-row-info">
+                        <label className="settings-label">{label}</label>
+                        <span className="settings-hint">{hint}</span>
+                      </div>
+                      <div className="ai-defaults-btns">
+                        {(Object.keys(AI_PROVIDERS) as AiProviderId[]).map((id) => (
+                          <button
+                            key={id}
+                            className={`ai-defaults-btn${aiProjectDefaults[key] === id ? ' ai-defaults-btn--active' : ''}`}
+                            style={
+                              aiProjectDefaults[key] === id
+                                ? { backgroundColor: AI_PROVIDERS[id].detectionColor, borderColor: AI_PROVIDERS[id].detectionColor, color: '#fff' }
+                                : undefined
+                            }
+                            onClick={async () => {
+                              const modelDefaults: Partial<AiDefaults> = key === 'packages'
+                                ? { packagesModel: id === 'codex' ? 'gpt-5.1-codex-mini' : id === 'copilot' ? 'gpt-4o' : '' }
+                                : key === 'database'
+                                  ? { databaseModel: id === 'codex' ? 'gpt-5.1-codex-mini' : id === 'copilot' ? 'gpt-4o' : '' }
+                                  : {}
+                              const next: AiDefaults = { ...aiProjectDefaults, [key]: id, ...modelDefaults }
+                              await window.kanbai.aiDefaults.set(activeProjectId, next as unknown as Record<string, unknown>)
+                              setAiProjectDefaults(next)
+                              const { projects: currentProjects } = useWorkspaceStore.getState()
+                              const updatedProjects = currentProjects.map((p) =>
+                                p.id === activeProjectId ? { ...p, aiDefaults: next } : p,
+                              )
+                              useWorkspaceStore.setState({ projects: updatedProjects })
+                            }}
+                          >
+                            {AI_PROVIDERS[id].displayName}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                  <div className="settings-row" style={{ justifyContent: 'flex-end', borderTop: '1px solid var(--border)', paddingTop: 12 }}>
+                    <button
+                      className="settings-btn"
+                      onClick={async () => {
+                        if (!confirm(t('settings.aiResetConfirm'))) return
+                        const globalDefaults = await window.kanbai.aiDefaults.getGlobal()
+                        await window.kanbai.aiDefaults.set(activeProjectId, globalDefaults as unknown as Record<string, unknown>)
+                        setAiProjectDefaults(globalDefaults)
+                        const { projects: currentProjects } = useWorkspaceStore.getState()
+                        const updatedProjects = currentProjects.map((p) =>
+                          p.id === activeProjectId ? { ...p, aiDefaults: globalDefaults } : p,
+                        )
+                        useWorkspaceStore.setState({ projects: updatedProjects })
+                      }}
+                    >
+                      {t('settings.aiResetToDefaults')}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
