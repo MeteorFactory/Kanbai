@@ -29,6 +29,34 @@ export function deleteWorkspaceEnv(workspaceName: string): void {
   }
 }
 
+/**
+ * Get the directory for a worktree env — nested under the main workspace env.
+ * Structure: ~/.kanbai/envs/{workspaceName}/.worktrees/{worktreeId}/
+ * This ensures Claude Code inherits trust from the parent workspace env.
+ */
+function getWorktreeEnvDir(workspaceName: string, worktreeId: string): string {
+  return path.join(getEnvDir(workspaceName), '.worktrees', worktreeId)
+}
+
+/**
+ * Delete a single worktree env subdirectory.
+ * Only removes the specific worktree dir, not the parent workspace env.
+ */
+export function deleteWorktreeEnv(workspaceName: string, worktreeId: string): void {
+  const worktreeDir = getWorktreeEnvDir(workspaceName, worktreeId)
+  if (fs.existsSync(worktreeDir)) {
+    fs.rmSync(worktreeDir, { recursive: true, force: true })
+  }
+  // Clean up .worktrees dir if empty
+  const worktreesDir = path.dirname(worktreeDir)
+  if (fs.existsSync(worktreesDir)) {
+    const remaining = fs.readdirSync(worktreesDir)
+    if (remaining.length === 0) {
+      fs.rmSync(worktreesDir, { recursive: true, force: true })
+    }
+  }
+}
+
 export function renameWorkspaceEnv(oldName: string, newName: string): void {
   const oldDir = getEnvDir(oldName)
   const newDir = getEnvDir(newName)
@@ -242,15 +270,21 @@ export function registerWorkspaceEnvHandlers(ipcMain: IpcMain): void {
     IPC_CHANNELS.WORKSPACE_ENV_SETUP,
     async (
       _event,
-      { workspaceName, workspaceId, projectPaths }: {
+      { workspaceName, workspaceId, projectPaths, worktreeId }: {
         workspaceName: string
         workspaceId?: string
         projectPaths: Array<string | { path: string; name: string }>
+        worktreeId?: string
       },
     ) => {
       try {
         ensureEnvsDir()
-        const envDir = getEnvDir(workspaceName)
+
+        // For worktree envs, create as subdirectory of the main workspace env.
+        // This ensures Claude Code inherits trust from the parent.
+        const envDir = worktreeId
+          ? getWorktreeEnvDir(workspaceName, worktreeId)
+          : getEnvDir(workspaceName)
 
         // Normalize projectPaths to { path, name } tuples
         const entries = projectPaths.map((p) =>
@@ -264,6 +298,7 @@ export function registerWorkspaceEnvHandlers(ipcMain: IpcMain): void {
           ...AI_CONFIG_DIRS,
           ...Object.values(AI_MEMORY_FILES),
           '.kanbai',
+          '.worktrees',
         ])
         if (fs.existsSync(envDir)) {
           const existing = fs.readdirSync(envDir)
@@ -303,39 +338,43 @@ export function registerWorkspaceEnvHandlers(ipcMain: IpcMain): void {
           }
         }
 
-        // Extract raw paths for AI rules and hooks
-        const rawPaths = entries.map((e) => e.path)
+        // Worktree envs inherit AI config, hooks, and MCP from the parent workspace env.
+        // Only apply these for the main workspace env (no worktreeId).
+        if (!worktreeId) {
+          // Extract raw paths for AI rules and hooks
+          const rawPaths = entries.map((e) => e.path)
 
-        // Auto-apply AI config rules from the first project that has them
-        applyAiRulesToEnv(envDir, rawPaths)
+          // Auto-apply AI config rules from the first project that has them
+          applyAiRulesToEnv(envDir, rawPaths)
 
-        // Install activity hooks for all AI providers in the env directory
-        await installActivityHooks(envDir, workspaceName, 'claude')
-        await installActivityHooks(envDir, workspaceName, 'codex')
-        await installActivityHooks(envDir, workspaceName, 'copilot')
-        await installActivityHooks(envDir, workspaceName, 'gemini')
+          // Install activity hooks for all AI providers in the env directory
+          await installActivityHooks(envDir, workspaceName, 'claude')
+          await installActivityHooks(envDir, workspaceName, 'codex')
+          await installActivityHooks(envDir, workspaceName, 'copilot')
+          await installActivityHooks(envDir, workspaceName, 'gemini')
 
-        // Also install hooks in each project for the AI providers they have configured
-        for (const projectPath of rawPaths) {
-          if (fs.existsSync(path.join(projectPath, '.claude'))) {
-            await installActivityHooks(projectPath, workspaceName, 'claude')
+          // Also install hooks in each project for the AI providers they have configured
+          for (const projectPath of rawPaths) {
+            if (fs.existsSync(path.join(projectPath, '.claude'))) {
+              await installActivityHooks(projectPath, workspaceName, 'claude')
+            }
+            if (fs.existsSync(path.join(projectPath, '.codex'))) {
+              await installActivityHooks(projectPath, workspaceName, 'codex')
+            }
+            if (fs.existsSync(path.join(projectPath, '.copilot'))) {
+              await installActivityHooks(projectPath, workspaceName, 'copilot')
+            }
+            if (fs.existsSync(path.join(projectPath, '.gemini'))) {
+              await installActivityHooks(projectPath, workspaceName, 'gemini')
+            }
           }
-          if (fs.existsSync(path.join(projectPath, '.codex'))) {
-            await installActivityHooks(projectPath, workspaceName, 'codex')
-          }
-          if (fs.existsSync(path.join(projectPath, '.copilot'))) {
-            await installActivityHooks(projectPath, workspaceName, 'copilot')
-          }
-          if (fs.existsSync(path.join(projectPath, '.gemini'))) {
-            await installActivityHooks(projectPath, workspaceName, 'gemini')
-          }
-        }
 
-        // Register the Kanbai MCP server so Claude gets kanban/analysis/project tools
-        if (workspaceId) {
-          try {
-            installMcpServer(envDir, workspaceId, workspaceName)
-          } catch { /* non-critical: MCP registration failure should not block env setup */ }
+          // Register the Kanbai MCP server so Claude gets kanban/analysis/project tools
+          if (workspaceId) {
+            try {
+              installMcpServer(envDir, workspaceId, workspaceName)
+            } catch { /* non-critical: MCP registration failure should not block env setup */ }
+          }
         }
 
         return { success: true, envPath: envDir }
@@ -406,12 +445,16 @@ export function registerWorkspaceEnvHandlers(ipcMain: IpcMain): void {
     },
   )
 
-  // Delete workspace env directory
+  // Delete workspace env directory (or a specific worktree env subdirectory)
   ipcMain.handle(
     IPC_CHANNELS.WORKSPACE_ENV_DELETE,
-    async (_event, { workspaceName }: { workspaceName: string }) => {
+    async (_event, { workspaceName, worktreeId }: { workspaceName: string; worktreeId?: string }) => {
       try {
-        deleteWorkspaceEnv(workspaceName)
+        if (worktreeId) {
+          deleteWorktreeEnv(workspaceName, worktreeId)
+        } else {
+          deleteWorkspaceEnv(workspaceName)
+        }
         return { success: true }
       } catch (err) {
         return { success: false, error: String(err) }

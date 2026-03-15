@@ -65,8 +65,8 @@ async function autoMergeWorktree(
       // Clean up the task-specific workspace env now that the worktree is merged
       const workspace = useWorkspaceStore.getState().workspaces.find((w) => w.id === workspaceId)
       if (workspace) {
-        const taskEnvName = `${workspace.name}__wt_${task.id.slice(0, 8)}`
-        await window.kanbai.workspaceEnv.delete(taskEnvName).catch(() => { /* best-effort */ })
+        const worktreeId = task.id.slice(0, 8)
+        await window.kanbai.workspaceEnv.delete(workspace.name, worktreeId).catch(() => { /* best-effort */ })
       }
     }
     if (!result?.success) {
@@ -941,7 +941,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
                 try {
                   const workspace = workspaces.find((w) => w.id === workspaceId)
                   if (workspace && workspaceProjects.length > 0) {
-                    const taskEnvName = `${workspace.name}__wt_${task.id.slice(0, 8)}`
+                    const worktreeId = task.id.slice(0, 8)
                     // Replace the git project's path with the worktree, preserving the original folder name
                     const modifiedPaths = workspaceProjects.map((p) =>
                       p.path === projectPath
@@ -949,9 +949,10 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
                         : p.path,
                     )
                     const envResult = await window.kanbai.workspaceEnv.setup(
-                      taskEnvName,
+                      workspace.name,
                       modifiedPaths,
                       workspaceId,
+                      worktreeId,
                     )
                     if (envResult?.success && envResult.envPath) {
                       cwd = envResult.envPath
@@ -993,7 +994,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
           const workspace = workspaces.find((w) => w.id === workspaceId)
           if (workspace && workspaceProjects.length > 0) {
             const repoPath = task.worktreePath.replace(/\/\.kanbai-worktrees\/[^/]+$/, '')
-            const taskEnvName = `${workspace.name}__wt_${task.id.slice(0, 8)}`
+            const worktreeId = task.id.slice(0, 8)
             const wtPath = task.worktreePath!
             const modifiedPaths = workspaceProjects.map((p) =>
               p.path === repoPath
@@ -1001,9 +1002,10 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
                 : p.path,
             )
             const envResult = await window.kanbai.workspaceEnv.setup(
-              taskEnvName,
+              workspace.name,
               modifiedPaths,
               workspaceId,
+              worktreeId,
             )
             if (envResult?.success && envResult.envPath) {
               cwd = envResult.envPath
