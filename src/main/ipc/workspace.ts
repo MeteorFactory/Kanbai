@@ -5,6 +5,7 @@ import path from 'path'
 import { IPC_CHANNELS, Workspace, WorkspaceExportData } from '../../shared/types'
 import { StorageService } from '../services/storage'
 import { deleteWorkspaceEnv, renameWorkspaceEnv } from './workspaceEnv'
+import { readDefaultKanbanConfig, writeKanbanConfig } from './kanban'
 
 const storage = new StorageService()
 
@@ -26,6 +27,11 @@ export function registerWorkspaceHandlers(ipcMain: IpcMain): void {
         updatedAt: Date.now(),
       }
       storage.addWorkspace(workspace)
+
+      // Initialize kanban config with defaults for the new workspace
+      const defaultConfig = readDefaultKanbanConfig()
+      writeKanbanConfig(workspace.id, defaultConfig)
+
       return workspace
     },
   )
@@ -138,6 +144,10 @@ export function registerWorkspaceHandlers(ipcMain: IpcMain): void {
         updatedAt: Date.now(),
       }
       storage.addWorkspace(workspace)
+
+      // Initialize kanban config with defaults for the imported workspace
+      const defaultConfig = readDefaultKanbanConfig()
+      writeKanbanConfig(workspace.id, defaultConfig)
 
       // Add projects that exist on disk
       for (const projectPath of data.projectPaths) {

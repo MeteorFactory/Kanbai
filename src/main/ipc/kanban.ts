@@ -36,7 +36,7 @@ function getDefaultKanbanConfigPath(): string {
   return path.join(os.homedir(), '.kanbai', 'kanban', 'default-config.json')
 }
 
-function readDefaultKanbanConfig(): KanbanConfig {
+export function readDefaultKanbanConfig(): KanbanConfig {
   const configPath = getDefaultKanbanConfigPath()
   try {
     if (fs.existsSync(configPath)) {
@@ -91,7 +91,7 @@ function readKanbanConfig(workspaceId: string): KanbanConfig {
   return { ...defaults }
 }
 
-function writeKanbanConfig(workspaceId: string, config: KanbanConfig): void {
+export function writeKanbanConfig(workspaceId: string, config: KanbanConfig): void {
   const configPath = getKanbanConfigPath(workspaceId)
   const dir = path.dirname(configPath)
   if (!fs.existsSync(dir)) {
