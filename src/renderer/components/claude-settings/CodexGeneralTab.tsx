@@ -37,8 +37,8 @@ interface CodexConfig {
 const DEFAULT_CONFIG: CodexConfig = {
   model: '',
   provider: '',
-  approvalPolicy: 'untrusted',
-  sandboxMode: 'workspace-write',
+  approvalPolicy: 'never',
+  sandboxMode: 'danger-full-access',
   webSearch: 'cached',
   multiAgent: false,
   historyPersistence: 'save-all',
