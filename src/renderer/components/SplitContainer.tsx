@@ -6,7 +6,7 @@ import {
   findPaneComponentType,
   type PaneNode,
 } from '../lib/stores/terminalTabStore'
-import { useKanbanStore } from '../lib/stores/kanbanStore'
+import { useKanbanStore } from '../features/kanban'
 import { Terminal } from './Terminal'
 import { PixelAgentsPane } from './PixelAgentsPane'
 

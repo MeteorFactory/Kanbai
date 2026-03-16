@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
-import { useWorkspaceStore } from '../lib/stores/workspaceStore'
-import { useKanbanStore, pickNextTask } from '../lib/stores/kanbanStore'
-import type { KanbanTask } from '../../shared/types/index'
+import { useWorkspaceStore } from '../../lib/stores/workspaceStore'
+import { useKanbanStore, pickNextTask } from './kanban-store'
+import type { KanbanTask } from '../../../shared/types/index'
 
 /**
  * Global hook that monitors kanban files for all workspaces.

@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useWorkspaceStore } from '../lib/stores/workspaceStore'
 import { useViewStore } from '../lib/stores/viewStore'
-import { useKanbanStore } from '../lib/stores/kanbanStore'
+import { useKanbanStore } from '../features/kanban'
 import { useI18n } from '../lib/i18n'
 import type { TodoEntry } from '../../shared/types'
 

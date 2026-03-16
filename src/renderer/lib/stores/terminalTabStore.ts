@@ -216,7 +216,7 @@ function getClaudeStore() {
 function getKanbanStore() {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    return require('./kanbanStore').useKanbanStore
+    return require('../../features/kanban/kanban-store').useKanbanStore
   } catch {
     return null
   }

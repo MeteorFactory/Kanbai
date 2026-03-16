@@ -1,10 +1,10 @@
 import { create } from 'zustand'
 import type { KanbanTask, KanbanTaskType, KanbanStatus, KanbanComment } from '../../../shared/types/index'
 import { AI_PROVIDERS, type AiProviderId } from '../../../shared/types/ai-provider'
-import { useTerminalTabStore } from './terminalTabStore'
-import { useWorkspaceStore } from './workspaceStore'
-import { pushNotification } from './notificationStore'
-import { useI18n } from '../i18n'
+import { useTerminalTabStore } from '../../lib/stores/terminalTabStore'
+import { useWorkspaceStore } from '../../lib/stores/workspaceStore'
+import { pushNotification } from '../../lib/stores/notificationStore'
+import { useI18n } from '../../lib/i18n'
 
 const PRIORITY_ORDER: Record<string, number> = { high: 0, medium: 1, low: 2 }
 

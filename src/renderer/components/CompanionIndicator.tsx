@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { useCompanionStore, initCompanionListener, initCompanionTicketListener } from '../lib/stores/companionStore'
 import { useWorkspaceStore } from '../lib/stores/workspaceStore'
-import { useKanbanStore } from '../lib/stores/kanbanStore'
+import { useKanbanStore } from '../features/kanban'
 import { useI18n } from '../lib/i18n'
 
 const STATUS_COLORS: Record<string, string> = {

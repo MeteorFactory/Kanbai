@@ -1,7 +1,7 @@
 import React, { useEffect, useCallback, useRef, useState, useMemo } from 'react'
 import { useTerminalTabStore } from '../lib/stores/terminalTabStore'
 import { useWorkspaceStore } from '../lib/stores/workspaceStore'
-import { useKanbanStore } from '../lib/stores/kanbanStore'
+import { useKanbanStore } from '../features/kanban'
 import { useViewStore } from '../lib/stores/viewStore'
 import { useUpdateStore } from '../lib/stores/updateStore'
 import { useI18n } from '../lib/i18n'
