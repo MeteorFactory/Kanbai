@@ -1406,6 +1406,9 @@ export const IPC_CHANNELS = {
   CODEX_READ_CONFIG: 'codex:readConfig',
   CODEX_WRITE_CONFIG: 'codex:writeConfig',
   CODEX_CHECK_CONFIG: 'codex:checkConfig',
+  CODEX_READ_GLOBAL_CONFIG: 'codex:readGlobalConfig',
+  CODEX_WRITE_GLOBAL_CONFIG: 'codex:writeGlobalConfig',
+  CODEX_CHECK_GLOBAL_CONFIG: 'codex:checkGlobalConfig',
 
   // Codex rules
   CODEX_LIST_RULES: 'codex:listRules',

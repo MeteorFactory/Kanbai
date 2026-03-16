@@ -637,6 +637,11 @@ export const fr = {
   'codex.configRawDesc': 'Éditer directement le fichier config.toml',
   'codex.noConfig': 'Aucune configuration Codex. Créez-en une pour commencer.',
   'codex.createConfig': 'Créer config.toml',
+  'codex.configScope': 'Portée de la configuration',
+  'codex.configScopeProject': 'Projet',
+  'codex.configScopeProjectDesc': 'Config spécifique au projet (.codex/config.toml)',
+  'codex.configScopeGlobal': 'Global',
+  'codex.configScopeGlobalDesc': 'Config globale (~/.codex/config.toml)',
   'codex.saveConfig': 'Sauvegarder',
   'codex.saved': 'Sauvegarde !',
   // AI sidebar

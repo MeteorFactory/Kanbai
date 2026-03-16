@@ -52,6 +52,43 @@ export function registerCodexConfigHandlers(ipcMain: IpcMain): void {
     },
   )
 
+  // --- Global config (~/.codex/config.toml) ---
+
+  ipcMain.handle(IPC_CHANNELS.CODEX_CHECK_GLOBAL_CONFIG, async () => {
+    const configPath = path.join(os.homedir(), '.codex', 'config.toml')
+    return { exists: fs.existsSync(configPath) }
+  })
+
+  ipcMain.handle(IPC_CHANNELS.CODEX_READ_GLOBAL_CONFIG, async () => {
+    const configPath = path.join(os.homedir(), '.codex', 'config.toml')
+    if (!fs.existsSync(configPath)) {
+      return { success: true, content: '' }
+    }
+    try {
+      const content = fs.readFileSync(configPath, 'utf-8')
+      return { success: true, content }
+    } catch (err) {
+      return { success: false, error: String(err) }
+    }
+  })
+
+  ipcMain.handle(
+    IPC_CHANNELS.CODEX_WRITE_GLOBAL_CONFIG,
+    async (_event, { config }: { config: string }) => {
+      if (typeof config !== 'string') throw new Error('Invalid config content')
+      const codexDir = path.join(os.homedir(), '.codex')
+      try {
+        if (!fs.existsSync(codexDir)) {
+          fs.mkdirSync(codexDir, { recursive: true })
+        }
+        fs.writeFileSync(path.join(codexDir, 'config.toml'), config, 'utf-8')
+        return { success: true }
+      } catch (err) {
+        return { success: false, error: String(err) }
+      }
+    },
+  )
+
   // --- Codex Rules (.codex/rules/*.rules) ---
 
   ipcMain.handle(

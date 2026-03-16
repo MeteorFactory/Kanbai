@@ -37,8 +37,8 @@ interface CodexConfig {
 const DEFAULT_CONFIG: CodexConfig = {
   model: '',
   provider: '',
-  approvalPolicy: 'never',
-  sandboxMode: 'danger-full-access',
+  approvalPolicy: 'untrusted',
+  sandboxMode: 'workspace-write',
   webSearch: 'cached',
   multiAgent: false,
   historyPersistence: 'save-all',
@@ -152,6 +152,8 @@ function serializeToml(config: CodexConfig): string {
   return lines.join('\n')
 }
 
+type ConfigScope = 'project' | 'global'
+
 export function CodexGeneralTab({ projectPath }: Props) {
   const { t } = useI18n()
   const [config, setConfig] = useState<CodexConfig>(DEFAULT_CONFIG)
@@ -160,22 +162,35 @@ export function CodexGeneralTab({ projectPath }: Props) {
   const [loading, setLoading] = useState(true)
   const [showRaw, setShowRaw] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [scope, setScope] = useState<ConfigScope>('project')
 
   const loadConfig = useCallback(async () => {
     setLoading(true)
     try {
-      const check = await window.kanbai.codexConfig.check(projectPath)
-      setExists(check.exists)
-      if (check.exists) {
-        const result = await window.kanbai.codexConfig.read(projectPath)
-        if (result.success && result.content) {
-          setRawContent(result.content)
-          setConfig(parseToml(result.content))
+      if (scope === 'global') {
+        const check = await window.kanbai.codexConfig.checkGlobal()
+        setExists(check.exists)
+        if (check.exists) {
+          const result = await window.kanbai.codexConfig.readGlobal()
+          if (result.success && result.content) {
+            setRawContent(result.content)
+            setConfig(parseToml(result.content))
+          }
+        }
+      } else {
+        const check = await window.kanbai.codexConfig.check(projectPath)
+        setExists(check.exists)
+        if (check.exists) {
+          const result = await window.kanbai.codexConfig.read(projectPath)
+          if (result.success && result.content) {
+            setRawContent(result.content)
+            setConfig(parseToml(result.content))
+          }
         }
       }
     } catch { /* ignore */ }
     setLoading(false)
-  }, [projectPath])
+  }, [projectPath, scope])
 
   useEffect(() => { loadConfig() }, [loadConfig])
 
@@ -183,31 +198,64 @@ export function CodexGeneralTab({ projectPath }: Props) {
     setConfig(newConfig)
     const toml = serializeToml(newConfig)
     setRawContent(toml)
-    await window.kanbai.codexConfig.write(projectPath, toml)
+    if (scope === 'global') {
+      await window.kanbai.codexConfig.writeGlobal(toml)
+    } else {
+      await window.kanbai.codexConfig.write(projectPath, toml)
+    }
     setExists(true)
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
-  }, [projectPath])
+  }, [projectPath, scope])
 
   const saveRaw = useCallback(async () => {
-    await window.kanbai.codexConfig.write(projectPath, rawContent)
+    if (scope === 'global') {
+      await window.kanbai.codexConfig.writeGlobal(rawContent)
+    } else {
+      await window.kanbai.codexConfig.write(projectPath, rawContent)
+    }
     setConfig(parseToml(rawContent))
     setExists(true)
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
-  }, [projectPath, rawContent])
+  }, [projectPath, rawContent, scope])
 
   const handleCreateConfig = useCallback(async () => {
     await saveConfig(DEFAULT_CONFIG)
   }, [saveConfig])
 
+  const handleScopeChange = useCallback((newScope: ConfigScope) => {
+    setScope(newScope)
+    setConfig(DEFAULT_CONFIG)
+    setRawContent('')
+    setExists(false)
+  }, [])
+
   if (loading) {
     return <div className="file-viewer-empty">{t('common.loading')}</div>
   }
 
+  const scopeSelector = (
+    <div className="cs-general-section">
+      <div className="cs-general-card cs-agent-teams">
+        <CardSelector
+          label={t('codex.configScope')}
+          options={[
+            { value: 'project', label: t('codex.configScopeProject'), description: t('codex.configScopeProjectDesc') },
+            { value: 'global', label: t('codex.configScopeGlobal'), description: t('codex.configScopeGlobalDesc') },
+          ]}
+          value={scope}
+          onChange={(v) => handleScopeChange(v as ConfigScope)}
+          accentColor={ACCENT_COLOR}
+        />
+      </div>
+    </div>
+  )
+
   if (!exists) {
     return (
       <div className="cs-general-tab">
+        {scopeSelector}
         <div className="cs-general-section">
           <div className="claude-rules-section">
             <p style={{ color: 'var(--text-secondary)', marginBottom: 12 }}>{t('codex.noConfig')}</p>
@@ -345,6 +393,8 @@ export function CodexGeneralTab({ projectPath }: Props) {
 
   return (
     <div className="cs-general-tab">
+      {scopeSelector}
+
       {/* Model */}
       <div className="cs-general-section">
         <div className="cs-general-section-header">{t('codex.model')}</div>

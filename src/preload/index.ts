@@ -637,6 +637,9 @@ const api = {
     read: (projectPath: string) => ipcRenderer.invoke(IPC_CHANNELS.CODEX_READ_CONFIG, { projectPath }),
     write: (projectPath: string, config: string) => ipcRenderer.invoke(IPC_CHANNELS.CODEX_WRITE_CONFIG, { projectPath, config }),
     check: (projectPath: string) => ipcRenderer.invoke(IPC_CHANNELS.CODEX_CHECK_CONFIG, { projectPath }),
+    readGlobal: () => ipcRenderer.invoke(IPC_CHANNELS.CODEX_READ_GLOBAL_CONFIG),
+    writeGlobal: (config: string) => ipcRenderer.invoke(IPC_CHANNELS.CODEX_WRITE_GLOBAL_CONFIG, { config }),
+    checkGlobal: () => ipcRenderer.invoke(IPC_CHANNELS.CODEX_CHECK_GLOBAL_CONFIG),
   },
 
   // Codex rules
