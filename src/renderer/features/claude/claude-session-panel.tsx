@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
-import { useClaudeStore } from '../lib/stores/claudeStore'
-import { useWorkspaceStore } from '../lib/stores/workspaceStore'
+import { useClaudeStore } from './claude-store'
+import { useWorkspaceStore } from '../../lib/stores/workspaceStore'
 
 export function ClaudeSessionPanel() {
   const { sessions, flashingSessionId, startSession, stopSession } = useClaudeStore()

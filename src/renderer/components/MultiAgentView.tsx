@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { Terminal } from '../features/terminal'
-import { useClaudeStore } from '../lib/stores/claudeStore'
+import { useClaudeStore } from '../features/claude'
 import { useWorkspaceStore } from '../lib/stores/workspaceStore'
 import '../styles/multiagent.css'
 

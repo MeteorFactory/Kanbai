@@ -99,7 +99,7 @@ export const useClaudeStore = create<ClaudeStore>((set, get) => ({
     // Clear workspace "Working" status when session is stopped
     if (session) {
       try {
-        const { useWorkspaceStore } = await import('./workspaceStore')
+        const { useWorkspaceStore } = await import('../../lib/stores/workspaceStore')
         const { projects } = useWorkspaceStore.getState()
         const project = projects.find((p: { id: string }) => p.id === session.projectId)
         if (project) {
@@ -166,7 +166,7 @@ export const useClaudeStore = create<ClaudeStore>((set, get) => ({
     // Listen for file-based activity events from hooks
     const unsubActivity = window.kanbai.claude.onActivity(async (data: { path: string; status: string }) => {
       // Map the project path to a workspace (lazy import to avoid circular dependency)
-      const { useWorkspaceStore } = await import('./workspaceStore')
+      const { useWorkspaceStore } = await import('../../lib/stores/workspaceStore')
       const { projects } = useWorkspaceStore.getState()
 
       // Check if path matches a project path
@@ -275,7 +275,7 @@ export const useClaudeStore = create<ClaudeStore>((set, get) => ({
       // Flash the workspace orange
       if (session) {
         // Lazy import to avoid circular dependency
-        const { useWorkspaceStore } = await import('./workspaceStore')
+        const { useWorkspaceStore } = await import('../../lib/stores/workspaceStore')
         const { projects } = useWorkspaceStore.getState()
         const project = projects.find((p: { id: string }) => p.id === session.projectId)
         if (project) {

@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useWorkspaceStore } from '../lib/stores/workspaceStore'
-import { useI18n } from '../lib/i18n'
-import type { DefaultProfile } from '../../shared/constants/defaultProfiles'
-import type { DefaultSkill } from '../../shared/constants/defaultSkills'
+import { useWorkspaceStore } from '../../lib/stores/workspaceStore'
+import { useI18n } from '../../lib/i18n'
+import type { DefaultProfile } from '../../../shared/constants/defaultProfiles'
+import type { DefaultSkill } from '../../../shared/constants/defaultSkills'
 
 interface Props {
   onDeploySuccess?: () => void

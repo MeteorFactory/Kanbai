@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useI18n } from '../lib/i18n'
+import { useI18n } from '../../lib/i18n'
 
 interface ClaudeInfoPanelProps {
   projectPath: string

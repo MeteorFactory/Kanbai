@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
-import type { AiProviderId } from '../../shared/types/ai-provider'
-import { AI_PROVIDER_IDS, AI_PROVIDERS } from '../../shared/types/ai-provider'
-import { useI18n } from '../lib/i18n'
+import type { AiProviderId } from '../../../shared/types/ai-provider'
+import { AI_PROVIDER_IDS, AI_PROVIDERS } from '../../../shared/types/ai-provider'
+import { useI18n } from '../../lib/i18n'
 
 interface AiProviderSelectorProps {
   value: AiProviderId

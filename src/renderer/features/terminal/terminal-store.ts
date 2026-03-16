@@ -206,7 +206,7 @@ function countAiPanes(node: PaneNode): number {
 function getClaudeStore() {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    return require('../../lib/stores/claudeStore').useClaudeStore
+    return require('../../features/claude/claude-store').useClaudeStore
   } catch {
     return null
   }

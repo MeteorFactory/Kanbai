@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { useWorkspaceStore } from '../lib/stores/workspaceStore'
+import { useWorkspaceStore } from '../../lib/stores/workspaceStore'
 
 const DEFAULT_CLAUDE_MD = `# Project Configuration
 
