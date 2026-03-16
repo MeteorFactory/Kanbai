@@ -711,6 +711,8 @@ const api = {
   aiProvider: {
     set: (projectId: string, provider: string) => ipcRenderer.invoke(IPC_CHANNELS.AI_PROVIDER_SET, { projectId, provider }),
     checkInstalled: (): Promise<Record<string, boolean>> => ipcRenderer.invoke(IPC_CHANNELS.AI_PROVIDER_CHECK_INSTALLED),
+    checkMultiAgent: (provider: string, projectPath: string): Promise<{ enabled: boolean }> =>
+      ipcRenderer.invoke(IPC_CHANNELS.AI_CHECK_MULTI_AGENT, { provider, projectPath }),
   },
 
   // AI defaults per project (kanban, packages, database)

@@ -1465,6 +1465,7 @@ export const IPC_CHANNELS = {
   AI_DEFAULTS_GET: 'ai:defaultsGet',
   AI_DEFAULTS_GET_GLOBAL: 'ai:defaultsGetGlobal',
   AI_DEFAULTS_SET_GLOBAL: 'ai:defaultsSetGlobal',
+  AI_CHECK_MULTI_AGENT: 'ai:checkMultiAgent',
 
   // Code Analysis
   ANALYSIS_DETECT_TOOLS: 'analysis:detectTools',

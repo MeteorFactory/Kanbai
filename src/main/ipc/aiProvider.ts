@@ -141,4 +141,74 @@ export function registerAiProviderHandlers(ipcMain: IpcMain): void {
       return updated
     },
   )
+
+  // Check if multi-agent is enabled for a given provider and project path
+  ipcMain.handle(
+    IPC_CHANNELS.AI_CHECK_MULTI_AGENT,
+    async (_event, { provider, projectPath }: { provider: AiProviderId; projectPath: string }) => {
+      if (typeof provider !== 'string' || typeof projectPath !== 'string') {
+        return { enabled: false }
+      }
+
+      try {
+        if (provider === 'claude') {
+          // Check Claude: env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS in settings
+          // Priority: project local settings > user global settings
+          const localSettingsPath = path.join(projectPath, '.claude', 'settings.local.json')
+          const userSettingsPath = path.join(os.homedir(), '.claude', 'settings.json')
+
+          for (const settingsPath of [localSettingsPath, userSettingsPath]) {
+            try {
+              if (fs.existsSync(settingsPath)) {
+                const raw = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'))
+                const envVars = raw?.env as Record<string, string> | undefined
+                if (envVars?.['CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS'] === '1') {
+                  return { enabled: true }
+                }
+              }
+            } catch { /* continue to next file */ }
+          }
+          return { enabled: false }
+        }
+
+        if (provider === 'codex') {
+          // Check Codex: multi_agent in [features] section of .codex/config.toml
+          const configPath = path.join(projectPath, '.codex', 'config.toml')
+          try {
+            if (fs.existsSync(configPath)) {
+              const content = fs.readFileSync(configPath, 'utf-8')
+              // Simple TOML check: look for multi_agent = true in [features] section
+              const featuresMatch = content.match(/\[features\]([\s\S]*?)(?:\[|$)/)
+              if (featuresMatch?.[1]) {
+                const featuresSection = featuresMatch[1]
+                if (/multi_agent\s*=\s*true/.test(featuresSection)) {
+                  return { enabled: true }
+                }
+              }
+            }
+          } catch { /* fallback */ }
+          return { enabled: false }
+        }
+
+        if (provider === 'gemini') {
+          // Check Gemini: experimental.enableAgents in .gemini/settings.json
+          const configPath = path.join(projectPath, '.gemini', 'settings.json')
+          try {
+            if (fs.existsSync(configPath)) {
+              const raw = JSON.parse(fs.readFileSync(configPath, 'utf-8'))
+              if (raw?.experimental?.enableAgents === true) {
+                return { enabled: true }
+              }
+            }
+          } catch { /* fallback */ }
+          return { enabled: false }
+        }
+
+        // Copilot: no multi-agent support currently
+        return { enabled: false }
+      } catch {
+        return { enabled: false }
+      }
+    },
+  )
 }

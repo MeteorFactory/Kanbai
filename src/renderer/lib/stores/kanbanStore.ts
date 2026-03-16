@@ -1161,6 +1161,24 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
         }
       }
 
+      // Check if multi-agent is enabled for the selected AI provider
+      const multiAgentProjectPath = targetProject?.path ?? firstProject?.path
+      if (multiAgentProjectPath) {
+        try {
+          const multiAgentResult = await window.kanbai.aiProvider.checkMultiAgent(provider, multiAgentProjectPath)
+          if (multiAgentResult?.enabled) {
+            promptParts.push(
+              ``,
+              `## Mode Multi-Agents`,
+              `L'option multi-agents est **activee** pour le provider ${providerConfig.displayName}.`,
+              `Tu DOIS utiliser les sous-agents/agents multiples pour realiser cette tache.`,
+              `Decompose le travail en sous-taches et delegue-les a des agents specialises (architecture, implementation, tests, etc.).`,
+              `Coordonne les agents et assure-toi que leurs contributions sont coherentes.`,
+            )
+          }
+        } catch { /* multi-agent check is best-effort */ }
+      }
+
       promptParts.push(
         ``,
         `## Fichier Kanban`,
