@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import type { Project } from '../../shared/types/index'
 import { useWorkspaceStore } from '../lib/stores/workspaceStore'
-import { useTerminalTabStore } from '../lib/stores/terminalTabStore'
+import { useTerminalTabStore } from '../features/terminal'
 import { useI18n } from '../lib/i18n'
 import { ContextMenu, ContextMenuItem } from './ContextMenu'
 import { useViewStore } from '../lib/stores/viewStore'

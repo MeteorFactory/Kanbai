@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react'
-import { useTerminalTabStore } from '../lib/stores/terminalTabStore'
+import { useTerminalTabStore } from '../features/terminal'
 import { useViewStore } from '../lib/stores/viewStore'
 import { useI18n } from '../lib/i18n'
 

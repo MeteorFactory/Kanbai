@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import type { KanbanTask, KanbanTaskType, KanbanStatus, KanbanComment } from '../../../shared/types/index'
 import { AI_PROVIDERS, type AiProviderId } from '../../../shared/types/ai-provider'
-import { useTerminalTabStore } from './terminalTabStore'
+import { useTerminalTabStore } from '../../features/terminal'
 import { useWorkspaceStore } from './workspaceStore'
 import { pushNotification } from './notificationStore'
 import { useI18n } from '../i18n'

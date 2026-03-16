@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { useTerminalTabStore } from '../../src/renderer/lib/stores/terminalTabStore'
-import type { TerminalTabData } from '../../src/renderer/lib/stores/terminalTabStore'
+import { useTerminalTabStore } from '../../src/renderer/features/terminal'
+import type { TerminalTabData } from '../../src/renderer/features/terminal'
 
 /**
  * Integration tests for terminal session navigation.

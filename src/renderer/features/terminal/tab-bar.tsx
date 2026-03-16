@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback } from 'react'
-import { useTerminalTabStore, type TerminalTabData } from '../lib/stores/terminalTabStore'
-import { useWorkspaceStore } from '../lib/stores/workspaceStore'
-import { ContextMenu, type ContextMenuItem } from './ContextMenu'
+import { useTerminalTabStore, type TerminalTabData } from './terminal-store'
+import { useWorkspaceStore } from '../../lib/stores/workspaceStore'
+import { ContextMenu, type ContextMenuItem } from '../../components/ContextMenu'
 
 export function TabBar() {
   const { tabs, activeTabId, createTab, closeTab, setActiveTab, renameTab, reorderTabs, closeOtherTabs, closeTabsToRight, duplicateTab } =

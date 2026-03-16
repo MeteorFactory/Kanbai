@@ -1,13 +1,13 @@
 import React, { useEffect, useCallback, useRef, useState, useMemo } from 'react'
-import { useTerminalTabStore } from '../lib/stores/terminalTabStore'
-import { useWorkspaceStore } from '../lib/stores/workspaceStore'
-import { useKanbanStore } from '../lib/stores/kanbanStore'
-import { useViewStore } from '../lib/stores/viewStore'
-import { useUpdateStore } from '../lib/stores/updateStore'
-import { useI18n } from '../lib/i18n'
-import { AI_PROVIDERS } from '../../shared/types/ai-provider'
-import { SplitContainer } from './SplitContainer'
-import { ProjectToolbar } from './ProjectToolbar'
+import { useTerminalTabStore } from './terminal-store'
+import { useWorkspaceStore } from '../../lib/stores/workspaceStore'
+import { useKanbanStore } from '../../lib/stores/kanbanStore'
+import { useViewStore } from '../../lib/stores/viewStore'
+import { useUpdateStore } from '../../lib/stores/updateStore'
+import { useI18n } from '../../lib/i18n'
+import { AI_PROVIDERS } from '../../../shared/types/ai-provider'
+import { SplitContainer } from '../../components/SplitContainer'
+import { ProjectToolbar } from '../../components/ProjectToolbar'
 
 export function TerminalArea() {
   const { t } = useI18n()

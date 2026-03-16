@@ -4,7 +4,7 @@ import { FitAddon } from '@xterm/addon-fit'
 import { SearchAddon } from '@xterm/addon-search'
 import { WebLinksAddon } from '@xterm/addon-web-links'
 import '@xterm/xterm/css/xterm.css'
-import '../styles/terminal.css'
+import './terminal.css'
 
 const TERMINAL_THEMES = {
   dark: {

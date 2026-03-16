@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useWorkspaceStore } from '../lib/stores/workspaceStore'
-import { useTerminalTabStore, type PaneNode } from '../lib/stores/terminalTabStore'
+import { useTerminalTabStore, type PaneNode } from '../features/terminal'
 import type { ProjectInfo } from '../../shared/types'
 
 /** Find a terminal pane session (never Claude). Prefers active pane if it's not Claude. */

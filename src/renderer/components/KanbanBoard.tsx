@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react'
 import { useKanbanStore } from '../lib/stores/kanbanStore'
-import { useTerminalTabStore } from '../lib/stores/terminalTabStore'
+import { useTerminalTabStore } from '../features/terminal'
 import { useViewStore } from '../lib/stores/viewStore'
 import { useWorkspaceStore } from '../lib/stores/workspaceStore'
 import { useI18n } from '../lib/i18n'

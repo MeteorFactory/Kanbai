@@ -47,7 +47,7 @@ vi.stubGlobal('window', {
 
 // Import real stores — zustand stores have no side effects on import
 const { useKanbanStore } = await import('../../src/renderer/lib/stores/kanbanStore')
-const { useTerminalTabStore } = await import('../../src/renderer/lib/stores/terminalTabStore')
+const { useTerminalTabStore } = await import('../../src/renderer/features/terminal')
 const { useViewStore } = await import('../../src/renderer/lib/stores/viewStore')
 
 // Spy targets: create mock functions to inject into stores via setState

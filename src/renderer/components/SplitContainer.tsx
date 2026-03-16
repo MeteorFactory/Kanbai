@@ -4,10 +4,10 @@ import {
   computePaneRects,
   computeSplitDividers,
   findPaneComponentType,
+  Terminal,
   type PaneNode,
-} from '../lib/stores/terminalTabStore'
+} from '../features/terminal'
 import { useKanbanStore } from '../lib/stores/kanbanStore'
-import { Terminal } from './Terminal'
 import { PixelAgentsPane } from './PixelAgentsPane'
 
 function findPaneInitialCommand(node: PaneNode, paneId: string): string | null {

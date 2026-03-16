@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { Terminal } from './Terminal'
+import { Terminal } from '../features/terminal'
 import { useClaudeStore } from '../lib/stores/claudeStore'
 import { useWorkspaceStore } from '../lib/stores/workspaceStore'
 import '../styles/multiagent.css'

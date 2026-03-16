@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { useTerminalTabStore, countLeaves, collectLeafIds } from '../../src/renderer/lib/stores/terminalTabStore'
-import type { PaneLeaf, PaneSplit } from '../../src/renderer/lib/stores/terminalTabStore'
+import { useTerminalTabStore, countLeaves, collectLeafIds } from '../../src/renderer/features/terminal'
+import type { PaneLeaf, PaneSplit } from '../../src/renderer/features/terminal'
 
 describe('useTerminalTabStore', () => {
   beforeEach(() => {

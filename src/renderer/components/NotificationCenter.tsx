@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { useNotificationStore, type AppNotification } from '../lib/stores/notificationStore'
 import { useWorkspaceStore } from '../lib/stores/workspaceStore'
-import { useTerminalTabStore } from '../lib/stores/terminalTabStore'
+import { useTerminalTabStore } from '../features/terminal'
 import { useI18n } from '../lib/i18n'
 
 function formatRelativeTime(ts: number, t: (key: string, params?: Record<string, string | number>) => string): string {

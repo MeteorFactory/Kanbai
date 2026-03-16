@@ -206,7 +206,7 @@ function countAiPanes(node: PaneNode): number {
 function getClaudeStore() {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    return require('./claudeStore').useClaudeStore
+    return require('../../lib/stores/claudeStore').useClaudeStore
   } catch {
     return null
   }
@@ -216,7 +216,7 @@ function getClaudeStore() {
 function getKanbanStore() {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    return require('./kanbanStore').useKanbanStore
+    return require('../../lib/stores/kanbanStore').useKanbanStore
   } catch {
     return null
   }
@@ -226,7 +226,7 @@ function getKanbanStore() {
 function getNotificationStore() {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    return require('./notificationStore').useNotificationStore
+    return require('../../lib/stores/notificationStore').useNotificationStore
   } catch {
     return null
   }
