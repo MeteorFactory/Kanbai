@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react'
-import { useI18n } from '../lib/i18n'
+import { useI18n } from '../../lib/i18n'
 
 interface ConfirmModalProps {
   title: string

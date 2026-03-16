@@ -3,7 +3,7 @@ import type { KanbanTask, KanbanTaskType, KanbanStatus, KanbanComment } from '..
 import { AI_PROVIDERS, type AiProviderId } from '../../../shared/types/ai-provider'
 import { useTerminalTabStore } from '../../features/terminal'
 import { useWorkspaceStore } from './workspaceStore'
-import { pushNotification } from './notificationStore'
+import { pushNotification } from '../../shared/stores/notification-store'
 import { useI18n } from '../i18n'
 
 const PRIORITY_ORDER: Record<string, number> = { high: 0, medium: 1, low: 2 }

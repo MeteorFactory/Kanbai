@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { useViewStore } from '../../src/renderer/lib/stores/viewStore'
-import type { ViewMode } from '../../src/renderer/lib/stores/viewStore'
+import { useViewStore } from '../../src/renderer/shared/stores/view-store'
+import type { ViewMode } from '../../src/renderer/shared/stores/view-store'
 
 describe('useViewStore', () => {
   beforeEach(() => {

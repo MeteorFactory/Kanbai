@@ -1,6 +1,25 @@
+<<<<<<<< HEAD:src/renderer/features/prompts/prompt-templates.tsx
 import { useRef } from 'react'
 import { useI18n } from '../../lib/i18n'
 import { usePrompts } from './use-prompts'
+========
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { useTerminalTabStore } from '../../lib/stores/terminalTabStore'
+import { useViewStore } from '../stores/view-store'
+import { useI18n } from '../../lib/i18n'
+import type { PromptTemplate } from '../../../shared/types/index'
+import type { PaneNode } from '../../lib/stores/terminalTabStore'
+
+function findClaudeSession(tree: PaneNode): string | null {
+  if (tree.type === 'leaf') return tree.initialCommand === 'claude' ? tree.sessionId : null
+  return findClaudeSession(tree.children[0]) || findClaudeSession(tree.children[1])
+}
+
+function findAnyTerminalSession(tree: PaneNode): string | null {
+  if (tree.type === 'leaf') return tree.sessionId
+  return findAnyTerminalSession(tree.children[0]) || findAnyTerminalSession(tree.children[1])
+}
+>>>>>>>> kanban/r-57:src/renderer/shared/ui/prompt-templates.tsx
 
 const CATEGORY_ICONS: Record<string, string> = {
   Development: '\u2699',

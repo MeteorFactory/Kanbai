@@ -1,5 +1,5 @@
-import type { SessionData } from '../../shared/types'
-import { useI18n } from '../lib/i18n'
+import type { SessionData } from '../../../shared/types'
+import { useI18n } from '../../lib/i18n'
 
 interface SessionModalProps {
   session: SessionData

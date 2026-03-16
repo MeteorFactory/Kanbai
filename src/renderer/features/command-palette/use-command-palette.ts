@@ -1,5 +1,9 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+<<<<<<<< HEAD:src/renderer/features/command-palette/use-command-palette.ts
 import { useViewStore, ViewMode } from '../../lib/stores/viewStore'
+========
+import { useViewStore, ViewMode } from '../stores/view-store'
+>>>>>>>> kanban/r-57:src/renderer/shared/ui/command-palette.tsx
 import { useWorkspaceStore } from '../../lib/stores/workspaceStore'
 import { useI18n } from '../../lib/i18n'
 

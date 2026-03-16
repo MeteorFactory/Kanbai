@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useI18n } from '../lib/i18n'
-import { CONFIGURABLE_TABS, ALL_TAB_IDS } from '../../shared/constants/tabs'
+import { useI18n } from '../../lib/i18n'
+import { CONFIGURABLE_TABS, ALL_TAB_IDS } from '../../../shared/constants/tabs'
 
 const SECTION_ICONS: Record<string, string> = {
   welcome: '👋',

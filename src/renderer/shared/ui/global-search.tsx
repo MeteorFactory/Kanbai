@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { useViewStore } from '../lib/stores/viewStore'
-import { useWorkspaceStore } from '../lib/stores/workspaceStore'
-import { useI18n } from '../lib/i18n'
-import type { SearchResult } from '../../shared/types'
+import { useViewStore } from '../stores/view-store'
+import { useWorkspaceStore } from '../../lib/stores/workspaceStore'
+import { useI18n } from '../../lib/i18n'
+import type { SearchResult } from '../../../shared/types'
 
 interface GroupedResults {
   file: string
