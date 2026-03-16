@@ -1,8 +1,8 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
-import { useNotesStore } from '../lib/stores/notesStore'
-import { useWorkspaceStore } from '../lib/stores/workspaceStore'
-import { useI18n } from '../lib/i18n'
-import '../styles/notes.css'
+import { useNotesStore } from './notes-store'
+import { useWorkspaceStore } from '../workspace'
+import { useI18n } from '../../lib/i18n'
+import './notes.css'
 
 function formatRelativeDate(timestamp: number): string {
   const now = Date.now()
