@@ -82,6 +82,7 @@ function summarizeTask(task: KanbanTask): Partial<KanbanTask> {
     workspaceId: task.workspaceId,
     ticketNumber: task.ticketNumber,
     title: task.title,
+    description: task.description,
     status: task.status,
     priority: task.priority,
     type: task.type,
