@@ -1,8 +1,8 @@
-import { useI18n } from '../../lib/i18n'
-import { AI_PROVIDERS } from '../../../shared/types/ai-provider'
-import { CardSelector } from './CardSelector'
-import { FeatureToggleGrid } from './FeatureToggleGrid'
-import type { GeminiFullConfig } from './useGeminiConfig'
+import { useI18n } from '../../../../../../lib/i18n'
+import { AI_PROVIDERS } from '../../../../../../../shared/types/ai-provider'
+import { CardSelector } from '../../../../../../components/claude-settings/CardSelector'
+import { FeatureToggleGrid } from '../../../../../../components/claude-settings/FeatureToggleGrid'
+import type { GeminiFullConfig } from './use-gemini-config'
 
 interface Props {
   config: GeminiFullConfig

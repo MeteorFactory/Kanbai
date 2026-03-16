@@ -1,4 +1,4 @@
-import { RulesManager } from './RulesManager'
+import { RulesManager } from '../../../../../../components/claude-settings/RulesManager'
 
 interface Props {
   projectPath: string

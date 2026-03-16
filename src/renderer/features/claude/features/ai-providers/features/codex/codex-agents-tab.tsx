@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useI18n } from '../../lib/i18n'
-import { AI_PROVIDERS } from '../../../shared/types/ai-provider'
-import { CardSelector } from './CardSelector'
+import { useI18n } from '../../../../../../lib/i18n'
+import { AI_PROVIDERS } from '../../../../../../../shared/types/ai-provider'
+import { CardSelector } from '../../../../../../components/claude-settings/CardSelector'
 
 const ACCENT_COLOR = AI_PROVIDERS.codex.detectionColor
 

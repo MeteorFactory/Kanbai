@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useI18n } from '../../lib/i18n'
-import { AI_PROVIDERS } from '../../../shared/types/ai-provider'
+import { useI18n } from '../../../../../../lib/i18n'
+import { AI_PROVIDERS } from '../../../../../../../shared/types/ai-provider'
 
 const ACCENT_COLOR = AI_PROVIDERS.codex.detectionColor
 

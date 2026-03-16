@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useI18n } from '../../lib/i18n'
-import { MemoryEditor } from './MemoryEditor'
+import { useI18n } from '../../../../../../lib/i18n'
+import { MemoryEditor } from '../../../../../../components/claude-settings/MemoryEditor'
 
 interface Props {
   projectPath: string
@@ -8,10 +8,10 @@ interface Props {
 
 type SubTab = 'project' | 'global'
 
-const PROJECT_TEMPLATE = `# Project Instructions (instructions.md)
+const PROJECT_TEMPLATE = `# Project Instructions (AGENTS.md)
 
 ## Overview
-<!-- Describe your project here for Copilot -->
+<!-- Describe your project here for Codex -->
 
 ## Code Conventions
 <!-- Add your coding standards -->
@@ -20,12 +20,12 @@ const PROJECT_TEMPLATE = `# Project Instructions (instructions.md)
 <!-- List key files and their purposes -->
 `
 
-const GLOBAL_TEMPLATE = `# Global Instructions (instructions.md)
+const GLOBAL_TEMPLATE = `# Global Instructions (AGENTS.md)
 
-<!-- Your personal preferences for Copilot across all projects -->
+<!-- Your personal preferences for Codex across all projects -->
 `
 
-export function CopilotMemoryTab({ projectPath }: Props) {
+export function CodexMemoryTab({ projectPath }: Props) {
   const { t } = useI18n()
   const [activeTab, setActiveTab] = useState<SubTab>('project')
   const [projectMd, setProjectMd] = useState<string | null>(null)
@@ -33,8 +33,8 @@ export function CopilotMemoryTab({ projectPath }: Props) {
 
   const load = useCallback(async () => {
     const [proj, global] = await Promise.all([
-      window.kanbai.copilotMemory.readInstructions(projectPath),
-      window.kanbai.copilotMemory.readGlobalInstructions(),
+      window.kanbai.codexMemory.readAgentsMd(projectPath),
+      window.kanbai.codexMemory.readGlobalAgentsMd(),
     ])
     setProjectMd(proj)
     setGlobalMd(global)
@@ -43,28 +43,28 @@ export function CopilotMemoryTab({ projectPath }: Props) {
   useEffect(() => { load() }, [load])
 
   const handleSaveProject = useCallback(async (content: string) => {
-    await window.kanbai.copilotMemory.writeInstructions(projectPath, content)
+    await window.kanbai.codexMemory.writeAgentsMd(projectPath, content)
     setProjectMd(content)
   }, [projectPath])
 
   const handleSaveGlobal = useCallback(async (content: string) => {
-    await window.kanbai.copilotMemory.writeGlobalInstructions(content)
+    await window.kanbai.codexMemory.writeGlobalAgentsMd(content)
     setGlobalMd(content)
   }, [])
 
   const handleCreateProject = useCallback(async () => {
-    await window.kanbai.copilotMemory.writeInstructions(projectPath, PROJECT_TEMPLATE)
+    await window.kanbai.codexMemory.writeAgentsMd(projectPath, PROJECT_TEMPLATE)
     setProjectMd(PROJECT_TEMPLATE)
   }, [projectPath])
 
   const handleCreateGlobal = useCallback(async () => {
-    await window.kanbai.copilotMemory.writeGlobalInstructions(GLOBAL_TEMPLATE)
+    await window.kanbai.codexMemory.writeGlobalAgentsMd(GLOBAL_TEMPLATE)
     setGlobalMd(GLOBAL_TEMPLATE)
   }, [])
 
   const tabs: { key: SubTab; label: string; exists: boolean }[] = [
-    { key: 'project', label: t('copilot.memoryProject'), exists: projectMd !== null },
-    { key: 'global', label: t('copilot.memoryGlobal'), exists: globalMd !== null },
+    { key: 'project', label: t('codex.memoryProject'), exists: projectMd !== null },
+    { key: 'global', label: t('codex.memoryGlobal'), exists: globalMd !== null },
   ]
 
   const renderFileTab = (
@@ -78,13 +78,13 @@ export function CopilotMemoryTab({ projectPath }: Props) {
         <div className="cs-memory-empty-file">
           <div className="cs-memory-empty-file-icon">&#128196;</div>
           <div className="cs-memory-empty-file-title">{title}</div>
-          <div className="cs-memory-empty-file-desc">{t('copilot.instructionsNotFound')}</div>
+          <div className="cs-memory-empty-file-desc">{t('codex.agentsMdNotFound')}</div>
           <button
             className="modal-btn modal-btn--primary"
             style={{ marginTop: 12 }}
             onClick={onCreate}
           >
-            {t('copilot.createInstructions')}
+            {t('codex.createAgentsMd')}
           </button>
         </div>
       )
@@ -110,13 +110,13 @@ export function CopilotMemoryTab({ projectPath }: Props) {
       <div className="cs-memory-content">
         {activeTab === 'project' && renderFileTab(
           projectMd,
-          `${projectPath}/.copilot/instructions.md`,
+          `${projectPath}/AGENTS.md`,
           handleSaveProject,
           handleCreateProject,
         )}
         {activeTab === 'global' && renderFileTab(
           globalMd,
-          '~/.copilot/instructions.md',
+          '~/.codex/AGENTS.md',
           handleSaveGlobal,
           handleCreateGlobal,
         )}

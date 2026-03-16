@@ -1,9 +1,9 @@
 import { useState, useCallback, useEffect } from 'react'
-import { useI18n } from '../../lib/i18n'
-import { AgentCard } from './AgentCard'
-import { AddCard } from './AddCard'
-import { AgentSkillEditorModal } from './AgentSkillEditorModal'
-import { parseAgentFrontmatter, type EnrichedAgent } from './parseAgentFrontmatter'
+import { useI18n } from '../../../../../../lib/i18n'
+import { AgentCard } from '../../../../../../components/claude-settings/AgentCard'
+import { AddCard } from '../../../../../../components/claude-settings/AddCard'
+import { AgentSkillEditorModal } from '../../../../../../components/claude-settings/AgentSkillEditorModal'
+import { parseAgentFrontmatter, type EnrichedAgent } from '../../../../../../components/claude-settings/parseAgentFrontmatter'
 
 interface SkillEntry {
   name: string

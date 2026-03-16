@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { useI18n } from '../../lib/i18n'
-import { AI_PROVIDERS } from '../../../shared/types/ai-provider'
-import type { GeminiFullConfig } from './useGeminiConfig'
+import { useI18n } from '../../../../../../lib/i18n'
+import { AI_PROVIDERS } from '../../../../../../../shared/types/ai-provider'
+import type { GeminiFullConfig } from './use-gemini-config'
 
 const ACCENT_COLOR = AI_PROVIDERS.gemini.detectionColor
 

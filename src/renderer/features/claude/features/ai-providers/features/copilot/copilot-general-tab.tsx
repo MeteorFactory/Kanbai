@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useI18n } from '../../lib/i18n'
-import { AI_PROVIDERS } from '../../../shared/types/ai-provider'
-import { CardSelector } from './CardSelector'
-import { FeatureToggleGrid } from './FeatureToggleGrid'
+import { useI18n } from '../../../../../../lib/i18n'
+import { AI_PROVIDERS } from '../../../../../../../shared/types/ai-provider'
+import { CardSelector } from '../../../../../../components/claude-settings/CardSelector'
+import { FeatureToggleGrid } from '../../../../../../components/claude-settings/FeatureToggleGrid'
 
 const ACCENT_COLOR = AI_PROVIDERS.copilot.detectionColor
 

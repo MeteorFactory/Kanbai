@@ -5,29 +5,31 @@ import { AI_PROVIDERS } from '../../../shared/types/ai-provider'
 import type { AiProviderId } from '../../../shared/types/ai-provider'
 import { AiDefaultsTab } from './AiDefaultsTab'
 import { GeneralTab } from './GeneralTab'
-import { CodexGeneralTab } from './CodexGeneralTab'
-import { CodexRulesTab } from './CodexRulesTab'
-import { CodexSkillsTab } from './CodexSkillsTab'
-import { CodexMemoryTab } from './CodexMemoryTab'
-import { CodexMcpTab } from './CodexMcpTab'
-import { CodexAgentsTab } from './CodexAgentsTab'
+import {
+  CodexGeneralTab,
+  CodexRulesTab,
+  CodexSkillsTab,
+  CodexMemoryTab,
+  CodexMcpTab,
+  CodexAgentsTab,
+  CopilotGeneralTab,
+  CopilotRulesTab,
+  CopilotSkillsTab,
+  CopilotMemoryTab,
+  GeminiGeneralTab,
+  GeminiUiTab,
+  GeminiToolsTab,
+  GeminiSecurityTab,
+  GeminiAgentsTab,
+  GeminiSkillsTab,
+  GeminiMemoryTab,
+  useGeminiConfig,
+} from '../../features/claude/features/ai-providers'
 import { SecuritySandboxTab } from './SecuritySandboxTab'
 import { AgentsTab } from './AgentsTab'
 import { SkillsTab } from './SkillsTab'
 import { IntegrationsTab } from './IntegrationsTab'
 import { MemoryTab } from './MemoryTab'
-import { CopilotGeneralTab } from './CopilotGeneralTab'
-import { CopilotRulesTab } from './CopilotRulesTab'
-import { CopilotSkillsTab } from './CopilotSkillsTab'
-import { CopilotMemoryTab } from './CopilotMemoryTab'
-import { GeminiGeneralTab } from './GeminiGeneralTab'
-import { GeminiUiTab } from './GeminiUiTab'
-import { GeminiToolsTab } from './GeminiToolsTab'
-import { GeminiSecurityTab } from './GeminiSecurityTab'
-import { GeminiAgentsTab } from './GeminiAgentsTab'
-import { GeminiSkillsTab } from './GeminiSkillsTab'
-import { GeminiMemoryTab } from './GeminiMemoryTab'
-import { useGeminiConfig } from './useGeminiConfig'
 import { WORKFLOW_MARKER } from '../../../shared/constants/defaultWorkflows'
 
 type SidebarSection = 'general' | 'claude' | 'codex' | 'copilot' | 'gemini'

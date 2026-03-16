@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useI18n } from '../../lib/i18n'
-import { MemoryEditor } from './MemoryEditor'
+import { useI18n } from '../../../../../../lib/i18n'
+import { MemoryEditor } from '../../../../../../components/claude-settings/MemoryEditor'
 
 interface Props {
   projectPath: string
