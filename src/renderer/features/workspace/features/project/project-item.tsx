@@ -7,7 +7,7 @@ import { ContextMenu, ContextMenuItem } from '../../../../components/ContextMenu
 import { useViewStore } from '../../../../lib/stores/viewStore'
 import { ClaudeInfoPanel } from '../../../../components/ClaudeInfoPanel'
 import { ConfirmModal } from '../../../../components/ConfirmModal'
-import { SidebarFileTree } from '../../../../components/SidebarFileTree'
+import { SidebarFileTree } from '../../../files'
 
 interface ProjectItemProps {
   project: Project

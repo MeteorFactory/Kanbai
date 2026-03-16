@@ -1,9 +1,9 @@
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import Editor, { OnMount } from '@monaco-editor/react'
 import type { editor } from 'monaco-editor'
-import { useViewStore } from '../lib/stores/viewStore'
-import { useI18n } from '../lib/i18n'
-import { CopyableError } from './CopyableError'
+import { useViewStore } from '../../lib/stores/viewStore'
+import { useI18n } from '../../lib/i18n'
+import { CopyableError } from '../../components/CopyableError'
 
 const EXT_TO_LANGUAGE: Record<string, string> = {
   '.ts': 'typescript',

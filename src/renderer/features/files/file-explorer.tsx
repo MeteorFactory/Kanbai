@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { useWorkspaceStore } from '../lib/stores/workspaceStore'
-import { ContextMenu } from './ContextMenu'
-import type { ContextMenuItem } from './ContextMenu'
-import type { FileEntry } from '../../shared/types'
+import { useWorkspaceStore } from '../../lib/stores/workspaceStore'
+import { ContextMenu } from '../../components/ContextMenu'
+import type { ContextMenuItem } from '../../components/ContextMenu'
+import type { FileEntry } from '../../../shared/types'
 import { FolderIcon, getFileIcon } from './file-icons'
-import '../styles/fileexplorer.css'
+import './fileexplorer.css'
 
 type SortField = 'name' | 'size' | 'date'
 
