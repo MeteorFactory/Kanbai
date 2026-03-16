@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import type { AppSettings, SshKeyInfo, SshKeyType, Namespace, KanbanConfig, AiDefaults } from '../../shared/types'
+import type { AppSettings, Namespace, KanbanConfig, AiDefaults } from '../../shared/types'
+import { useSsh } from '../features/ssh'
 import type { AiProviderId } from '../../shared/types/ai-provider'
 import { AI_PROVIDERS } from '../../shared/types/ai-provider'
 import { useI18n } from '../lib/i18n'
@@ -132,20 +133,8 @@ export function SettingsPanel() {
   const [gitLoading, setGitLoading] = useState(false)
   const [gitSaved, setGitSaved] = useState(false)
 
-  // SSH state
-  const [sshKeys, setSshKeys] = useState<SshKeyInfo[]>([])
-  const [sshLoading, setSshLoading] = useState(false)
-  const [showGenerateForm, setShowGenerateForm] = useState(false)
-  const [showImportForm, setShowImportForm] = useState(false)
-  const [genName, setGenName] = useState('id_ed25519')
-  const [genType, setGenType] = useState<SshKeyType>('ed25519')
-  const [genComment, setGenComment] = useState('')
-  const [genLoading, setGenLoading] = useState(false)
-  const [importName, setImportName] = useState('')
-  const [importPrivateKey, setImportPrivateKey] = useState('')
-  const [importPublicKey, setImportPublicKey] = useState('')
-  const [copiedKeyId, setCopiedKeyId] = useState<string | null>(null)
-  const [sshError, setSshError] = useState<string | null>(null)
+  // SSH state (from useSsh hook)
+  const ssh = useSsh()
 
   // Copy error state for tool update errors
   const [toolErrorCopied, setToolErrorCopied] = useState(false)
@@ -202,22 +191,6 @@ export function SettingsPanel() {
     }
   }, [selectedNamespaceId, loadGitConfig, t])
 
-  const loadSshKeys = useCallback(async () => {
-    setSshLoading(true)
-    setSshError(null)
-    try {
-      const result = await window.kanbai.ssh.listKeys()
-      if (result.success) {
-        setSshKeys(result.keys)
-      } else {
-        setSshError(result.error || 'Failed to load SSH keys')
-      }
-    } catch (err) {
-      setSshError(String(err))
-    } finally {
-      setSshLoading(false)
-    }
-  }, [])
 
   useEffect(() => {
     setLoading(true)
@@ -229,7 +202,7 @@ export function SettingsPanel() {
       setLoading(false)
     })
     window.kanbai.app.version().then(setAppVersion)
-    loadSshKeys()
+    ssh.loadKeys()
     // Load namespaces for git config section
     window.kanbai.namespace.list().then((nsList) => {
       setNamespaces(nsList)
@@ -239,7 +212,7 @@ export function SettingsPanel() {
         loadGitConfig(defaultNs.id)
       }
     })
-  }, [setLocale, loadSshKeys, loadGitConfig])
+  }, [setLocale, ssh.loadKeys, loadGitConfig])
 
   useEffect(() => {
     const fromStorage = window.sessionStorage.getItem('kanbai:settingsSection')
@@ -279,97 +252,6 @@ export function SettingsPanel() {
     setSettings((prev) => ({ ...prev, locale: newLocale }))
   }, [setLocale])
 
-  const handleGenerateKey = useCallback(async () => {
-    if (!genName.trim()) return
-    setGenLoading(true)
-    setSshError(null)
-    try {
-      const result = await window.kanbai.ssh.generateKey(genName.trim(), genType, genComment.trim())
-      if (result.success) {
-        setShowGenerateForm(false)
-        setGenName('id_ed25519')
-        setGenType('ed25519')
-        setGenComment('')
-        await loadSshKeys()
-      } else {
-        setSshError(result.error || 'Generation failed')
-      }
-    } catch (err) {
-      setSshError(String(err))
-    } finally {
-      setGenLoading(false)
-    }
-  }, [genName, genType, genComment, loadSshKeys])
-
-  const handleImportKey = useCallback(async () => {
-    if (!importName.trim() || !importPrivateKey.trim()) return
-    setSshError(null)
-    try {
-      const result = await window.kanbai.ssh.importKey(
-        importName.trim(),
-        importPrivateKey,
-        importPublicKey || undefined,
-      )
-      if (result.success) {
-        setShowImportForm(false)
-        setImportName('')
-        setImportPrivateKey('')
-        setImportPublicKey('')
-        await loadSshKeys()
-      } else {
-        setSshError(result.error || 'Import failed')
-      }
-    } catch (err) {
-      setSshError(String(err))
-    }
-  }, [importName, importPrivateKey, importPublicKey, loadSshKeys])
-
-  const handleSelectKeyFile = useCallback(async () => {
-    setSshError(null)
-    try {
-      const result = await window.kanbai.ssh.selectKeyFile()
-      if (result.success && result.content && result.fileName) {
-        setImportName(result.fileName)
-        setImportPrivateKey(result.content)
-        setShowImportForm(true)
-      }
-    } catch (err) {
-      setSshError(String(err))
-    }
-  }, [])
-
-  const handleCopyPublicKey = useCallback(async (key: SshKeyInfo) => {
-    if (!key.publicKeyPath) return
-    try {
-      const result = await window.kanbai.ssh.readPublicKey(key.publicKeyPath)
-      if (result.success) {
-        await navigator.clipboard.writeText(result.content)
-        setCopiedKeyId(key.id)
-        setTimeout(() => setCopiedKeyId(null), 2000)
-      }
-    } catch (err) {
-      setSshError(String(err))
-    }
-  }, [])
-
-  const handleDeleteKey = useCallback(async (key: SshKeyInfo) => {
-    if (!confirm(t('settings.sshDeleteConfirm'))) return
-    setSshError(null)
-    try {
-      const result = await window.kanbai.ssh.deleteKey(key.name)
-      if (result.success) {
-        await loadSshKeys()
-      } else {
-        setSshError(result.error || 'Delete failed')
-      }
-    } catch (err) {
-      setSshError(String(err))
-    }
-  }, [loadSshKeys, t])
-
-  const handleOpenSshDir = useCallback(() => {
-    window.kanbai.ssh.openDirectory()
-  }, [])
 
   useEffect(() => {
     if (activeSection !== 'kanban') return
@@ -785,33 +667,33 @@ export function SettingsPanel() {
             <div className="settings-section">
               <div className="settings-card">
                 <div className="ssh-actions">
-                  <button className="ssh-action-btn" onClick={() => { setShowGenerateForm(!showGenerateForm); setShowImportForm(false) }}>
+                  <button className="ssh-action-btn" onClick={() => { ssh.setShowGenerateForm(!ssh.showGenerateForm); ssh.setShowImportForm(false) }}>
                     + {t('settings.sshGenerate')}
                   </button>
-                  <button className="ssh-action-btn" onClick={() => { setShowImportForm(!showImportForm); setShowGenerateForm(false) }}>
+                  <button className="ssh-action-btn" onClick={() => { ssh.setShowImportForm(!ssh.showImportForm); ssh.setShowGenerateForm(false) }}>
                     {t('settings.sshImport')}
                   </button>
-                  <button className="ssh-action-btn" onClick={handleSelectKeyFile}>
+                  <button className="ssh-action-btn" onClick={ssh.selectKeyFile}>
                     {t('settings.sshSelectFile')}
                   </button>
-                  <button className="ssh-action-btn" onClick={handleOpenSshDir}>
+                  <button className="ssh-action-btn" onClick={ssh.openDirectory}>
                     {t('settings.sshOpenFolder')}
                   </button>
                 </div>
 
-                {sshError && (
-                  <div className="ssh-error">{sshError}</div>
+                {ssh.error && (
+                  <div className="ssh-error">{ssh.error}</div>
                 )}
 
-                {showGenerateForm && (
+                {ssh.showGenerateForm && (
                   <div className="ssh-form">
                     <div className="ssh-form-row">
                       <label className="settings-label">{t('settings.sshKeyName')}</label>
                       <input
                         type="text"
                         className="ssh-input"
-                        value={genName}
-                        onChange={(e) => setGenName(e.target.value)}
+                        value={ssh.genName}
+                        onChange={(e) => ssh.setGenName(e.target.value)}
                         placeholder="id_ed25519"
                       />
                     </div>
@@ -821,10 +703,10 @@ export function SettingsPanel() {
                         {(['ed25519', 'rsa'] as const).map((kt) => (
                           <button
                             key={kt}
-                            className={`settings-radio-btn${genType === kt ? ' settings-radio-btn--active' : ''}`}
+                            className={`settings-radio-btn${ssh.genType === kt ? ' settings-radio-btn--active' : ''}`}
                             onClick={() => {
-                              setGenType(kt)
-                              setGenName(kt === 'ed25519' ? 'id_ed25519' : 'id_rsa')
+                              ssh.setGenType(kt)
+                              ssh.setGenName(kt === 'ed25519' ? 'id_ed25519' : 'id_rsa')
                             }}
                           >
                             {kt.toUpperCase()}
@@ -837,31 +719,31 @@ export function SettingsPanel() {
                       <input
                         type="text"
                         className="ssh-input"
-                        value={genComment}
-                        onChange={(e) => setGenComment(e.target.value)}
+                        value={ssh.genComment}
+                        onChange={(e) => ssh.setGenComment(e.target.value)}
                         placeholder="user@example.com"
                       />
                     </div>
                     <div className="ssh-form-actions">
-                      <button className="ssh-btn ssh-btn--primary" onClick={handleGenerateKey} disabled={genLoading || !genName.trim()}>
-                        {genLoading ? t('settings.sshGenerating') : t('settings.sshGenerateBtn')}
+                      <button className="ssh-btn ssh-btn--primary" onClick={ssh.generateKey} disabled={ssh.genLoading || !ssh.genName.trim()}>
+                        {ssh.genLoading ? t('settings.sshGenerating') : t('settings.sshGenerateBtn')}
                       </button>
-                      <button className="ssh-btn" onClick={() => setShowGenerateForm(false)}>
+                      <button className="ssh-btn" onClick={() => ssh.setShowGenerateForm(false)}>
                         {t('common.cancel')}
                       </button>
                     </div>
                   </div>
                 )}
 
-                {showImportForm && (
+                {ssh.showImportForm && (
                   <div className="ssh-form">
                     <div className="ssh-form-row">
                       <label className="settings-label">{t('settings.sshKeyName')}</label>
                       <input
                         type="text"
                         className="ssh-input"
-                        value={importName}
-                        onChange={(e) => setImportName(e.target.value)}
+                        value={ssh.importName}
+                        onChange={(e) => ssh.setImportName(e.target.value)}
                         placeholder="my_key"
                       />
                     </div>
@@ -869,8 +751,8 @@ export function SettingsPanel() {
                       <label className="settings-label">{t('settings.sshPastePrivateKey')}</label>
                       <textarea
                         className="ssh-textarea"
-                        value={importPrivateKey}
-                        onChange={(e) => setImportPrivateKey(e.target.value)}
+                        value={ssh.importPrivateKey}
+                        onChange={(e) => ssh.setImportPrivateKey(e.target.value)}
                         placeholder="-----BEGIN OPENSSH PRIVATE KEY-----"
                         rows={4}
                       />
@@ -879,17 +761,17 @@ export function SettingsPanel() {
                       <label className="settings-label">{t('settings.sshPastePublicKey')}</label>
                       <textarea
                         className="ssh-textarea"
-                        value={importPublicKey}
-                        onChange={(e) => setImportPublicKey(e.target.value)}
+                        value={ssh.importPublicKey}
+                        onChange={(e) => ssh.setImportPublicKey(e.target.value)}
                         placeholder="ssh-ed25519 AAAA..."
                         rows={2}
                       />
                     </div>
                     <div className="ssh-form-actions">
-                      <button className="ssh-btn ssh-btn--primary" onClick={handleImportKey} disabled={!importName.trim() || !importPrivateKey.trim()}>
+                      <button className="ssh-btn ssh-btn--primary" onClick={ssh.importKey} disabled={!ssh.importName.trim() || !ssh.importPrivateKey.trim()}>
                         {t('settings.sshImportBtn')}
                       </button>
-                      <button className="ssh-btn" onClick={() => setShowImportForm(false)}>
+                      <button className="ssh-btn" onClick={() => ssh.setShowImportForm(false)}>
                         {t('common.cancel')}
                       </button>
                     </div>
@@ -899,13 +781,13 @@ export function SettingsPanel() {
 
               {/* Key list */}
               <div className="settings-card">
-                {sshLoading ? (
+                {ssh.loading ? (
                   <div className="ssh-loading">{t('common.loading')}</div>
-                ) : sshKeys.length === 0 ? (
+                ) : ssh.keys.length === 0 ? (
                   <div className="ssh-empty">{t('settings.sshNoKeys')}</div>
                 ) : (
                   <div className="ssh-key-list">
-                    {sshKeys.map((key) => (
+                    {ssh.keys.map((key) => (
                       <div key={key.id} className="ssh-key-card">
                         <div className="ssh-key-header">
                           <span className="ssh-key-name">{key.name}</span>
@@ -918,11 +800,11 @@ export function SettingsPanel() {
                         )}
                         <div className="ssh-key-actions">
                           {key.publicKeyPath && (
-                            <button className="ssh-btn ssh-btn--small" onClick={() => handleCopyPublicKey(key)}>
-                              {copiedKeyId === key.id ? t('settings.sshCopied') : t('settings.sshCopyPublicKey')}
+                            <button className="ssh-btn ssh-btn--small" onClick={() => ssh.copyPublicKey(key)}>
+                              {ssh.copiedKeyId === key.id ? t('settings.sshCopied') : t('settings.sshCopyPublicKey')}
                             </button>
                           )}
-                          <button className="ssh-btn ssh-btn--small ssh-btn--danger" onClick={() => handleDeleteKey(key)}>
+                          <button className="ssh-btn ssh-btn--small ssh-btn--danger" onClick={() => { if (confirm(t('settings.sshDeleteConfirm'))) ssh.deleteKey(key) }}>
                             {t('settings.sshDelete')}
                           </button>
                         </div>
