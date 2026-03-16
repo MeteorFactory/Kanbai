@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
-import { useWorkspaceStore } from '../lib/stores/workspaceStore'
-import { useViewStore } from '../lib/stores/viewStore'
-import { useI18n } from '../lib/i18n'
-import { ContextMenu, ContextMenuItem } from './ContextMenu'
-import type { GitStatus, GitLogEntry, GitTag, GitBlameLine, GitRemote, Project } from '../../shared/types'
-import '../styles/git.css'
+import { useWorkspaceStore } from '../../lib/stores/workspaceStore'
+import { useViewStore } from '../../lib/stores/viewStore'
+import { useI18n } from '../../lib/i18n'
+import { ContextMenu, ContextMenuItem } from '../../components/ContextMenu'
+import type { GitStatus, GitLogEntry, GitTag, GitBlameLine, GitRemote, Project } from '../../../shared/types'
+import './git.css'
 
 // --- Types ---
 

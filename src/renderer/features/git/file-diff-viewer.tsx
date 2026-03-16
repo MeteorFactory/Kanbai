@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { DiffEditor } from '@monaco-editor/react'
-import { useViewStore } from '../lib/stores/viewStore'
-import { useI18n } from '../lib/i18n'
+import { useViewStore } from '../../lib/stores/viewStore'
+import { useI18n } from '../../lib/i18n'
 
 export function FileDiffViewer() {
   const { t } = useI18n()
