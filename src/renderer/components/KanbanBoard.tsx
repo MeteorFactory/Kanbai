@@ -189,6 +189,7 @@ export function KanbanBoard() {
   const [newTargetProjectId, setNewTargetProjectId] = useState('')
   const [pendingAttachments, setPendingAttachments] = useState<string[]>([])
   const [pendingClipboardImages, setPendingClipboardImages] = useState<PendingClipboardImage[]>([])
+  const [createLightboxSrc, setCreateLightboxSrc] = useState<string | null>(null)
   const [newIsCtoMode, setNewIsCtoMode] = useState(false)
   const [newAiProvider, setNewAiProvider] = useState<AiProviderId | ''>('')
   const [selectedTask, setSelectedTask] = useState<KanbanTask | null>(null)
@@ -945,22 +946,31 @@ export function KanbanBoard() {
                       </button>
                     </span>
                   ))}
-                  {pendingClipboardImages.map((img, i) => (
-                    <span key={`clip-${i}`} className="kanban-attachment-chip kanban-attachment-chip--image">
-                      <img
-                        src={`data:${img.mimeType};base64,${img.dataBase64}`}
-                        alt={img.filename}
-                        className="kanban-attachment-chip-preview"
-                      />
-                      {img.filename}
-                      <button
-                        className="kanban-attachment-chip-remove"
-                        onClick={() => setPendingClipboardImages((prev) => prev.filter((_, idx) => idx !== i))}
-                      >
-                        &times;
-                      </button>
-                    </span>
-                  ))}
+                  {pendingClipboardImages.map((img, i) => {
+                    const dataUrl = `data:${img.mimeType};base64,${img.dataBase64}`
+                    return (
+                      <div key={`clip-${i}`} className="kanban-attachment-chip kanban-attachment-chip--image">
+                        <img
+                          src={dataUrl}
+                          alt={img.filename}
+                          className="kanban-attachment-chip-preview"
+                          onClick={() => setCreateLightboxSrc(dataUrl)}
+                        />
+                        <span
+                          className="kanban-attachment-chip-name"
+                          onClick={() => setCreateLightboxSrc(dataUrl)}
+                        >
+                          {img.filename}
+                        </span>
+                        <button
+                          className="kanban-attachment-chip-remove"
+                          onClick={() => setPendingClipboardImages((prev) => prev.filter((_, idx) => idx !== i))}
+                        >
+                          &times;
+                        </button>
+                      </div>
+                    )
+                  })}
                 </div>
               )}
 
@@ -984,6 +994,16 @@ export function KanbanBoard() {
               </button>
             </div>
           </div>
+
+          {/* Lightbox for creation modal */}
+          {createLightboxSrc && (
+            <div className="kanban-lightbox-overlay" onClick={() => setCreateLightboxSrc(null)}>
+              <div className="kanban-lightbox-content" onClick={(e) => e.stopPropagation()}>
+                <img src={createLightboxSrc} alt="preview" onClick={() => setCreateLightboxSrc(null)} />
+              </div>
+              <button className="kanban-lightbox-close" onClick={() => setCreateLightboxSrc(null)}>&times;</button>
+            </div>
+          )}
         </div>
         )
       })()}

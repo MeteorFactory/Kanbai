@@ -2141,14 +2141,37 @@
 
 .kanban-attachment-chip--image {
   height: auto;
-  padding: 4px 10px;
+  padding: 6px 10px;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 200px;
 }
 
 .kanban-attachment-chip-preview {
-  width: 28px;
-  height: 28px;
-  object-fit: cover;
+  width: 100%;
+  max-height: 120px;
+  object-fit: contain;
   border-radius: 4px;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.kanban-attachment-chip-preview:hover {
+  opacity: 0.8;
+}
+
+.kanban-attachment-chip-name {
+  font-size: 10px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+  max-width: 100%;
+}
+
+.kanban-attachment-chip-name:hover {
+  color: var(--accent);
 }
 
 .kanban-attachment-chip-remove {
