@@ -37,23 +37,24 @@ src/renderer/
 ```
 src/renderer/
 ├── features/                    # Feature modules colocated
-│   ├── terminal/
-│   │   ├── index.ts             # Public API
+│   ├── terminal/                # F-38
+│   │   ├── index.ts
 │   │   ├── terminal.tsx
 │   │   ├── terminal-area.tsx
 │   │   ├── terminal-store.ts
 │   │   ├── use-terminal.ts
 │   │   └── terminal.css
-│   ├── workspace/
+│   ├── workspace/               # F-39
 │   │   ├── index.ts
 │   │   ├── sidebar.tsx
 │   │   ├── workspace-item.tsx
 │   │   ├── workspace-store.ts
 │   │   ├── use-workspace.ts
 │   │   └── features/
-│   │       ├── namespace/
-│   │       └── project/
-│   ├── claude/
+│   │       ├── namespace/       # Gestion namespaces, git profiles
+│   │       ├── project/         # ProjectItem, Stats, Toolbar
+│   │       └── session/         # Save/load/clear, tab persistence
+│   ├── claude/                  # F-40
 │   │   ├── index.ts
 │   │   ├── claude-session-panel.tsx
 │   │   ├── claude-info-panel.tsx
@@ -62,151 +63,163 @@ src/renderer/
 │   │   ├── use-claude.ts
 │   │   ├── claude.css
 │   │   └── features/
-│   │       ├── settings/        # 65+ composants, sous-features: model, security, memory
-│   │       ├── agents/          # 8 composants, sous-feature: skills
-│   │       ├── rules/           # 11 composants + hooks + utils
-│   │       └── ai-providers/    # codex, copilot, gemini (17+ composants)
-│   ├── kanban/
+│   │       ├── settings/        # F-41 (65+ composants)
+│   │       │   └── features/
+│   │       │       ├── model/
+│   │       │       ├── security/
+│   │       │       └── memory/
+│   │       ├── agents/          # F-42 (8 composants)
+│   │       │   └── features/skills/
+│   │       ├── rules/           # F-43 (11 composants + hooks + utils)
+│   │       └── ai-providers/    # F-44
+│   │           └── features/
+│   │               ├── codex/
+│   │               ├── copilot/
+│   │               └── gemini/
+│   ├── kanban/                  # F-45
 │   │   ├── index.ts
 │   │   ├── kanban-board.tsx
 │   │   ├── kanban-store.ts
 │   │   ├── use-kanban.ts
-│   │   └── kanban.css
-│   ├── git/
+│   │   ├── use-background-kanban-sync.ts
+│   │   ├── kanban.css
+│   │   └── features/
+│   │       ├── attachments/
+│   │       ├── config/
+│   │       └── comments/
+│   ├── git/                     # F-46
 │   │   ├── index.ts
 │   │   ├── git-panel.tsx
 │   │   ├── file-diff-viewer.tsx
 │   │   ├── use-git.ts
 │   │   └── git.css
-│   ├── database/
+│   ├── database/                # F-47
 │   │   ├── index.ts
 │   │   ├── database-explorer.tsx
 │   │   ├── database-store.ts
 │   │   ├── database-tab-store.ts
 │   │   ├── use-database.ts
 │   │   └── features/
-│   │       ├── query/
-│   │       ├── nl-chat/
-│   │       └── connection/
-│   ├── devops/
-│   ├── packages/
-│   ├── healthcheck/
-│   ├── api-tester/
-│   ├── files/
-│   ├── notes/
-│   ├── code-analysis/
-│   ├── mcp/
-│   ├── pixel-agents/
-│   ├── companion/
-│   ├── multi-agent/
-│   ├── ssh/
-│   ├── settings/
-│   └── updates/
-├── shared/
-│   ├── ui/                      # Composants reutilisables
-│   │   ├── command-palette.tsx
+│   │       ├── query/           # QueryArea, ResultsTable, TabBar
+│   │       ├── nl-chat/         # NL queries, SQL generation
+│   │       ├── connection/      # ConnectionModal, Sidebar
+│   │       ├── backup/          # Backup, restore, transfer
+│   │       └── schema/          # Tables, views, columns, indexes
+│   ├── devops/                  # F-48
+│   ├── packages/                # F-49
+│   ├── healthcheck/             # F-50
+│   ├── api-tester/              # F-51
+│   ├── files/                   # F-52
+│   ├── notes/                   # F-53
+│   ├── code-analysis/           # F-54
+│   │   └── features/
+│   │       ├── reports/
+│   │       └── tools/
+│   ├── mcp/                     # F-59
+│   ├── pixel-agents/            # F-60
+│   ├── companion/               # F-61
+│   ├── multi-agent/             # F-62
+│   ├── ssh/                     # F-63
+│   ├── notifications/           # F-64
+│   │   ├── notification-center.tsx
+│   │   ├── toast-container.tsx
+│   │   └── notification-store.ts
+│   ├── prompts/                 # F-65
+│   ├── search/                  # F-66
 │   │   ├── global-search.tsx
+│   │   └── todo-scanner.tsx
+│   ├── skills-store/            # F-67
+│   ├── command-palette/         # F-68
+│   │   ├── command-palette.tsx
+│   │   └── shortcuts-panel.tsx
+│   ├── settings/                # F-56
+│   └── updates/                 # F-56
+├── shared/                      # F-57
+│   ├── ui/
 │   │   ├── confirm-modal.tsx
 │   │   ├── error-boundary.tsx
-│   │   ├── toast-container.tsx
+│   │   ├── copyable-error.tsx
 │   │   ├── context-menu.tsx
-│   │   └── ...
+│   │   ├── tutorial-modal.tsx
+│   │   └── session-modal.tsx
 │   ├── layout/
 │   │   ├── title-bar.tsx
 │   │   ├── resize-divider.tsx
 │   │   └── split-container.tsx
 │   └── stores/
-│       ├── view-store.ts
-│       └── notification-store.ts
+│       └── view-store.ts
 ├── lib/
 │   └── i18n/
 └── styles/
     └── global.css
 ```
 
-## Inventaire complet des features
+## Inventaire complet des features (30 tickets)
 
-### 1. Terminal (F-38)
-| Type | Fichier actuel | Destination |
-|------|---------------|-------------|
-| Component | Terminal.tsx | features/terminal/terminal.tsx |
-| Component | TerminalArea.tsx | features/terminal/terminal-area.tsx |
-| Component | TabBar.tsx | features/terminal/tab-bar.tsx |
-| Store | terminalTabStore.ts | features/terminal/terminal-store.ts |
-| CSS | terminal.css | features/terminal/terminal.css |
+### Features principales
 
-### 2. Workspace & Project (F-39)
-| Type | Fichier actuel | Destination |
-|------|---------------|-------------|
-| Component | Sidebar.tsx | features/workspace/sidebar.tsx |
-| Component | WorkspaceItem.tsx | features/workspace/workspace-item.tsx |
-| Component | ProjectItem.tsx | features/workspace/features/project/project-item.tsx |
-| Component | ProjectStats.tsx | features/workspace/features/project/project-stats.tsx |
-| Component | ProjectToolbar.tsx | features/workspace/features/project/project-toolbar.tsx |
-| Store | workspaceStore.ts | features/workspace/workspace-store.ts |
+| # | Feature | Ticket | Composants | Store(s) | Sous-features |
+|---|---------|--------|------------|----------|---------------|
+| 1 | Terminal | F-38 | 3 | terminalTabStore | Split panes, zoom, sessions |
+| 2 | Workspace & Project | F-39 | 5 | workspaceStore | Namespace, Project, Session |
+| 3 | Claude Core | F-40 | 5 | claudeStore | Provider selection, defaults |
+| 4 | Claude Settings | F-41 | 65+ | — | Model, Security, Memory |
+| 5 | Claude Agents | F-42 | 8 | — | Skills |
+| 6 | Claude Rules | F-43 | 11+hooks | — | DnD, tree, templates |
+| 7 | AI Providers | F-44 | 17+ | — | Codex, Copilot, Gemini |
+| 8 | Kanban Board | F-45 | 1 | kanbanStore | Attachments, Config, Comments |
+| 9 | Git | F-46 | 2 | — | Diff, blame, worktrees |
+| 10 | Database Explorer | F-47 | 7 | 2 stores | Query, NL-Chat, Connection, Backup, Schema |
+| 11 | DevOps | F-48 | 1 | devopsStore | Pipelines, approvals |
+| 12 | Packages | F-49 | 5 | packagesStore | NL queries, multi-tech |
+| 13 | Health Check | F-50 | 1 | healthCheckStore | Scheduling, incidents |
+| 14 | API Tester | F-51 | 1 | — | Collections, chains, assertions |
+| 15 | File Explorer | F-52 | 3 | — | Bookmarks, icons |
+| 16 | Notes | F-53 | 1 | notesStore | Markdown, workspace-scoped |
+| 17 | Code Analysis | F-54 | 1 | — | Reports, Tools detection |
+| 18 | Settings & Updates | F-56 | 3 | 2 stores | Theme, locale, auto-update |
+| 19 | Shared UI | F-57 | 6+ | viewStore | Modals, layout, error boundary |
+| 20 | Finalisation | F-58 | — | — | Imports, barrel exports, build |
 
-### 3. Claude Core (F-40)
-| Type | Fichier actuel | Destination |
-|------|---------------|-------------|
-| Component | ClaudeSessionPanel.tsx | features/claude/claude-session-panel.tsx |
-| Component | ClaudeInfoPanel.tsx | features/claude/claude-info-panel.tsx |
-| Component | AutoClauder.tsx | features/claude/auto-clauder.tsx |
-| Component | AiProviderSelector.tsx | features/claude/ai-provider-selector.tsx |
-| Component | ClaudeDefaultsLibrary.tsx | features/claude/claude-defaults-library.tsx |
-| Store | claudeStore.ts | features/claude/claude-store.ts |
-| CSS | claude.css | features/claude/claude.css |
+### Features ajoutees (v2)
 
-### 4. Claude Settings (F-41) — 65+ composants
-Sous-features: model, security, memory. Voir ticket pour detail complet.
-
-### 5. Claude Agents (F-42) — 8 composants
-Sous-feature: skills (3 composants).
-
-### 6. Claude Rules (F-43) — 11 composants + 2 hooks + 1 util
-
-### 7. AI Providers (F-44) — 17+ composants
-Codex (6), Copilot (4), Gemini (7+1 hook).
-
-### 8. Kanban (F-45)
-| Type | Fichier actuel | Destination |
-|------|---------------|-------------|
-| Component | KanbanBoard.tsx | features/kanban/kanban-board.tsx |
-| Store | kanbanStore.ts | features/kanban/kanban-store.ts |
-| Hook | useBackgroundKanbanSync.ts | features/kanban/use-background-kanban-sync.ts |
-| CSS | kanban.css | features/kanban/kanban.css |
-
-### 9. Git (F-46)
-| Type | Fichier actuel | Destination |
-|------|---------------|-------------|
-| Component | GitPanel.tsx | features/git/git-panel.tsx |
-| Component | FileDiffViewer.tsx | features/git/file-diff-viewer.tsx |
-| CSS | git.css | features/git/git.css |
-
-### 10. Database (F-47) — 7 composants, 2 stores
-Sous-features: query, nl-chat, connection.
-
-### 11. DevOps (F-48)
-### 12. Packages (F-49) — 5 composants, 1 store
-### 13. Health Check (F-50) — 1 composant, 1 store
-### 14. API Tester (F-51)
-### 15. File Explorer (F-52) — 3 composants + file-icons util
-### 16. Notes (F-53) — 1 composant, 1 store
-### 17. Code Analysis (F-54) — 1 composant
-### 18. Features legeres (F-55) — MCP, Pixel Agents, Companion, Multi-Agent, SSH
-### 19. Settings & Updates (F-56) — 3 composants, 2 stores
-### 20. Shared UI (F-57) — 13+ composants reutilisables + layout + stores partages
-### 21. Finalisation imports (F-58) — dernier ticket, mise a jour imports + barrel exports
+| # | Feature | Ticket | Composants | Store | Raison |
+|---|---------|--------|------------|-------|--------|
+| 21 | MCP | F-59 | 1 | — | Catalogue serveurs, tools |
+| 22 | Pixel Agents | F-60 | 1 | — | Editeur noeuds visuels, layout |
+| 23 | Companion | F-61 | 1 | companionStore | Pairing, sync, chiffrement |
+| 24 | Multi-Agent | F-62 | 1 | — | Orchestration agents |
+| 25 | SSH | F-63 | 0 (IPC) | — | Cles Ed25519/RSA |
+| 26 | Notifications | F-64 | 2 | notificationStore | Inbox, toasts, tab-scoped |
+| 27 | Prompt Templates | F-65 | 1 | — | Bibliotheque, categories |
+| 28 | Search & Todos | F-66 | 2 | — | Full-text, TODO scanner |
+| 29 | Skills Store | F-67 | 1 | — | Marketplace, installation |
+| 30 | Command Palette | F-68 | 2 | — | Fuzzy search, shortcuts |
 
 ## Ordre d'execution recommande
 
+### Phase 1 — Infrastructure
 1. **F-57** (Shared UI) — creer d'abord l'infrastructure partagee
-2. **F-38 a F-56** (Features) — en parallele, par ordre de complexite croissante:
-   - Simples: F-50, F-51, F-53, F-54, F-55 (1-2 composants)
-   - Moyens: F-38, F-45, F-46, F-48, F-52, F-56 (2-5 composants)
-   - Complexes: F-39, F-40, F-47, F-49 (5+ composants)
-   - Massifs: F-41, F-42, F-43, F-44 (Claude ecosystem, 65+ composants)
-3. **F-58** (Finalisation) — toujours en dernier
 
-## Sous-tickets crees
+### Phase 2 — Features simples (1-2 composants, pas de sous-features)
+F-50, F-51, F-53, F-48, F-59, F-62, F-63, F-65
 
-21 tickets de refactoring (F-38 a F-58) crees dans le kanban avec status TODO.
+### Phase 3 — Features moyennes (2-5 composants ou 1 store)
+F-38, F-45, F-46, F-52, F-56, F-60, F-61, F-64, F-66, F-67, F-68
+
+### Phase 4 — Features complexes (5+ composants, sous-features)
+F-39, F-40, F-47, F-49, F-54
+
+### Phase 5 — Claude ecosystem (massif, 65+ composants)
+F-41, F-42, F-43, F-44
+
+### Phase 6 — Finalisation
+**F-58** — toujours en dernier (imports, barrel exports, build verification)
+
+## Statistiques
+
+- **30 sous-tickets** de refactoring (F-38 a F-68, sauf F-55 supprime)
+- **~130 composants** a migrer
+- **15 stores** a reloger
+- **10 fichiers CSS** a coloquer
+- **33 domaines fonctionnels** identifies
