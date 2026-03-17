@@ -1446,8 +1446,10 @@ function KanbanCard({
           <span className="kanban-card-split-badge">{t('kanban.splitDetected')}</span>
         )}
         <div className="kanban-card-footer">
-          <span className="kanban-card-date">
-            {new Date(task.createdAt).toLocaleDateString(locale === 'en' ? 'en-US' : 'fr-FR', { day: 'numeric', month: 'short' })}
+          <span className="kanban-card-date" title={new Date(task.updatedAt).toLocaleString(locale === 'en' ? 'en-US' : 'fr-FR')}>
+            {new Date(task.updatedAt).toLocaleDateString(locale === 'en' ? 'en-US' : 'fr-FR', { day: 'numeric', month: 'short' })}
+            {' '}
+            {new Date(task.updatedAt).toLocaleTimeString(locale === 'en' ? 'en-US' : 'fr-FR', { hour: '2-digit', minute: '2-digit' })}
           </span>
           {onGoToTerminal && (
             <button
