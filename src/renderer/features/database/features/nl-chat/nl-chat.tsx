@@ -4,6 +4,7 @@ import { useDatabaseStore } from '../../database-store'
 import { useWorkspaceStore } from '../../../../lib/stores/workspaceStore'
 import { AI_PROVIDERS } from '../../../../../shared/types/ai-provider'
 import type { AiProviderId } from '../../../../../shared/types/ai-provider'
+import { resolveFeatureProvider } from '../../../../../shared/utils/ai-provider-resolver'
 import type {
   DbConnection,
   DbConnectionStatus,
@@ -46,11 +47,12 @@ export function DatabaseNLChat({
   const connectionId = connection?.id ?? ''
   const messages = useMemo(() => nlMessages[connectionId] ?? [], [nlMessages, connectionId])
   const isLoading = nlLoading[connectionId] ?? false
-  const { activeProjectId, projects } = useWorkspaceStore()
+  const { activeProjectId, activeWorkspaceId, projects, workspaces } = useWorkspaceStore()
   const dbProvider: AiProviderId = useMemo(() => {
     const p = projects.find((proj) => proj.id === activeProjectId)
-    return p?.aiDefaults?.database ?? p?.aiProvider ?? 'claude'
-  }, [activeProjectId, projects])
+    const ws = workspaces.find((w) => w.id === activeWorkspaceId)
+    return resolveFeatureProvider('database', p, ws)
+  }, [activeProjectId, activeWorkspaceId, projects, workspaces])
   const dbProviderConfig = AI_PROVIDERS[dbProvider]
 
   // Get permissions from connection (default: read-only)
@@ -99,10 +101,11 @@ export function DatabaseNLChat({
           sql: m.sql,
         }))
 
-      // Resolve AI provider from project defaults
-      const { activeProjectId, projects } = useWorkspaceStore.getState()
+      // Resolve AI provider from project/workspace defaults
+      const { activeProjectId, activeWorkspaceId, projects, workspaces } = useWorkspaceStore.getState()
       const activeProject = projects.find((p) => p.id === activeProjectId)
-      const dbProvider = activeProject?.aiDefaults?.database ?? activeProject?.aiProvider ?? 'claude'
+      const ws = workspaces.find((w) => w.id === activeWorkspaceId)
+      const dbProvider = resolveFeatureProvider('database', activeProject, ws)
 
       // Step 1: Generate SQL
       const genResponse = await window.kanbai.database.nlGenerateSql(

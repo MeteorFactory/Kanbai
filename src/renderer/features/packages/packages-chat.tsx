@@ -5,6 +5,7 @@ import { useWorkspaceStore } from '../../lib/stores/workspaceStore'
 import { AI_PROVIDERS } from '../../../shared/types/ai-provider'
 import type { AiProviderId } from '../../../shared/types/ai-provider'
 import type { PackageManagerType } from '../../../shared/types'
+import { resolveFeatureProvider } from '../../../shared/utils/ai-provider-resolver'
 
 interface PackagesChatProps {
   projectPath: string
@@ -30,11 +31,12 @@ export function PackagesChat({ projectPath, manager }: PackagesChatProps) {
     loadPackages,
     selectedProjectId,
   } = usePackagesStore()
-  const { activeProjectId, projects } = useWorkspaceStore()
+  const { activeProjectId, activeWorkspaceId, projects, workspaces } = useWorkspaceStore()
   const packagesProvider: AiProviderId = useMemo(() => {
     const p = projects.find((proj) => proj.id === activeProjectId)
-    return p?.aiDefaults?.packages ?? p?.aiProvider ?? 'claude'
-  }, [activeProjectId, projects])
+    const ws = workspaces.find((w) => w.id === activeWorkspaceId)
+    return resolveFeatureProvider('packages', p, ws)
+  }, [activeProjectId, activeWorkspaceId, projects, workspaces])
   const providerConfig = AI_PROVIDERS[packagesProvider]
 
   useEffect(() => {
@@ -72,9 +74,10 @@ export function PackagesChat({ projectPath, manager }: PackagesChatProps) {
     setInput('')
     setNlLoading(true)
     try {
-      const { activeProjectId, projects } = useWorkspaceStore.getState()
+      const { activeProjectId, activeWorkspaceId, projects, workspaces } = useWorkspaceStore.getState()
       const activeProject = projects.find((p) => p.id === activeProjectId)
-      const packagesProvider = activeProject?.aiDefaults?.packages ?? activeProject?.aiProvider ?? 'claude'
+      const ws = workspaces.find((w) => w.id === activeWorkspaceId)
+      const packagesProvider = resolveFeatureProvider('packages', activeProject, ws)
       const result = await window.kanbai.packages.nlAsk(
         projectPath,
         manager,

@@ -92,6 +92,8 @@ export interface Workspace {
   namespaceId?: string
   projectIds: string[]
   visibleTabs?: string[]
+  aiProvider?: import('./ai-provider').AiProviderId | null
+  aiDefaults?: AiDefaults
   createdAt: number
   updatedAt: number
   deletedAt?: number
@@ -474,6 +476,8 @@ export interface WorkspaceExportData {
   icon?: string
   projectPaths: string[]
   aiRules?: WorkspaceExportRule[]
+  aiProvider?: import('./ai-provider').AiProviderId | null
+  aiDefaults?: AiDefaults
   exportedAt: number
 }
 
@@ -1480,6 +1484,10 @@ export const IPC_CHANNELS = {
   AI_DEFAULTS_GET_GLOBAL: 'ai:defaultsGetGlobal',
   AI_DEFAULTS_SET_GLOBAL: 'ai:defaultsSetGlobal',
   AI_CHECK_MULTI_AGENT: 'ai:checkMultiAgent',
+  AI_WORKSPACE_PROVIDER_SET: 'ai:workspaceProviderSet',
+  AI_WORKSPACE_DEFAULTS_SET: 'ai:workspaceDefaultsSet',
+  AI_WORKSPACE_DEFAULTS_GET: 'ai:workspaceDefaultsGet',
+  AI_WORKSPACE_PROPAGATE: 'ai:workspacePropagate',
 
   // Code Analysis
   ANALYSIS_DETECT_TOOLS: 'analysis:detectTools',

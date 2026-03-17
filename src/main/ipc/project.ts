@@ -33,12 +33,20 @@ export function registerProjectHandlers(ipcMain: IpcMain): void {
     async (_event, data: { workspaceId: string; path: string }) => {
       const hasClaude = fs.existsSync(path.join(data.path, '.claude'))
       const hasGit = fs.existsSync(path.join(data.path, '.git'))
+
+      // Inherit AI profile from workspace if available
+      const workspace = storage.getWorkspace(data.workspaceId)
+      const inheritedProvider = workspace?.aiProvider ?? undefined
+      const inheritedDefaults = workspace?.aiDefaults ?? undefined
+
       const project: Project = {
         id: uuid(),
         name: path.basename(data.path),
         path: data.path,
-        hasClaude,
+        hasClaude: inheritedProvider ? inheritedProvider === 'claude' : hasClaude,
         hasGit,
+        aiProvider: inheritedProvider,
+        aiDefaults: inheritedDefaults,
         workspaceId: data.workspaceId,
         createdAt: Date.now(),
       }

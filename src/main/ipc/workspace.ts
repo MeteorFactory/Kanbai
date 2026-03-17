@@ -153,6 +153,8 @@ export function registerWorkspaceHandlers(ipcMain: IpcMain): void {
         icon: workspace.icon,
         projectPaths: projects.map((p) => p.path),
         aiRules: collectWorkspaceRules(workspace.name),
+        aiProvider: workspace.aiProvider,
+        aiDefaults: workspace.aiDefaults,
         exportedAt: Date.now(),
       }
 
@@ -185,7 +187,7 @@ export function registerWorkspaceHandlers(ipcMain: IpcMain): void {
       const raw = fs.readFileSync(result.filePaths[0]!, 'utf-8')
       const data: WorkspaceExportData = JSON.parse(raw)
 
-      // Create workspace
+      // Create workspace with imported AI profile
       const workspace: Workspace = {
         id: uuid(),
         name: data.name,
@@ -193,6 +195,8 @@ export function registerWorkspaceHandlers(ipcMain: IpcMain): void {
         icon: data.icon,
         namespaceId: storage.getDefaultNamespace().id,
         projectIds: [],
+        aiProvider: data.aiProvider,
+        aiDefaults: data.aiDefaults,
         createdAt: Date.now(),
         updatedAt: Date.now(),
       }

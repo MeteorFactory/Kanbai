@@ -9,6 +9,7 @@ import type { ContextMenuItem } from '../../shared/ui/context-menu'
 import type { KanbanStatus, KanbanTask, KanbanTaskType, KanbanComment, AiDefaults, KanbanConfig } from '../../../shared/types/index'
 import { AI_PROVIDERS } from '../../../shared/types/ai-provider'
 import type { AiProviderId } from '../../../shared/types/ai-provider'
+import { resolveFeatureProvider } from '../../../shared/utils/ai-provider-resolver'
 import './kanban.css'
 
 interface PendingClipboardImage {
@@ -270,13 +271,8 @@ export function KanbanBoard() {
   }, [t])
 
   // Resolve the effective default AI provider for this workspace
-  const [appDefaultAiProvider, setAppDefaultAiProvider] = useState<AiProviderId>('claude')
-  useEffect(() => {
-    window.kanbai.settings.get().then((s) => {
-      if (s.defaultAiProvider) setAppDefaultAiProvider(s.defaultAiProvider as AiProviderId)
-    }).catch(() => {})
-  }, [])
-  const workspaceDefaultAiProvider: AiProviderId = workspaceProjects[0]?.aiDefaults?.kanban ?? workspaceProjects[0]?.aiProvider ?? appDefaultAiProvider
+  const activeWorkspace = workspaces.find((w) => w.id === activeWorkspaceId)
+  const workspaceDefaultAiProvider: AiProviderId = resolveFeatureProvider('kanban', workspaceProjects[0], activeWorkspace)
 
   useEffect(() => {
     if (activeWorkspaceId) {

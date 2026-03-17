@@ -118,10 +118,20 @@ export function registerAiProviderHandlers(ipcMain: IpcMain): void {
       const globalDefaults = readGlobalAiDefaults()
       const projects = storage.getProjects()
       const project = projects.find((p) => p.id === projectId)
+
+      // Get workspace-level defaults if project belongs to a workspace
+      const workspaceDefaults: Partial<AiDefaults> = {}
+      if (project?.workspaceId) {
+        const workspace = storage.getWorkspace(project.workspaceId)
+        if (workspace?.aiDefaults) {
+          Object.assign(workspaceDefaults, workspace.aiDefaults)
+        }
+      }
+
       const projectDefaults = project?.aiDefaults ?? {}
 
-      // Merge: global defaults as base, project overrides on top
-      return { ...globalDefaults, ...projectDefaults }
+      // Merge: global → workspace → project (project wins)
+      return { ...globalDefaults, ...workspaceDefaults, ...projectDefaults }
     },
   )
 
@@ -139,6 +149,132 @@ export function registerAiProviderHandlers(ipcMain: IpcMain): void {
       const updated = { ...current, ...defaults }
       writeGlobalAiDefaults(updated)
       return updated
+    },
+  )
+
+  // Set AI provider at workspace level
+  ipcMain.handle(
+    IPC_CHANNELS.AI_WORKSPACE_PROVIDER_SET,
+    async (_event, { workspaceId, provider }: { workspaceId: string; provider: AiProviderId | null }) => {
+      if (typeof workspaceId !== 'string') throw new Error('Invalid workspace ID')
+
+      const workspace = storage.getWorkspace(workspaceId)
+      if (!workspace) {
+        return { success: false, error: 'Workspace not found' }
+      }
+
+      workspace.aiProvider = provider
+      workspace.updatedAt = Date.now()
+      storage.updateWorkspace(workspace)
+
+      // Auto-propagate to projects that don't have their own provider
+      const projects = storage.getProjects(workspaceId)
+      let updatedCount = 0
+      if (provider) {
+        for (const project of projects) {
+          if (!project.aiProvider) {
+            project.aiProvider = provider
+            project.hasClaude = provider === 'claude'
+            storage.updateProject(project)
+            updatedCount++
+          }
+        }
+      }
+
+      return { success: true, updatedCount }
+    },
+  )
+
+  // Set AI defaults at workspace level
+  ipcMain.handle(
+    IPC_CHANNELS.AI_WORKSPACE_DEFAULTS_SET,
+    async (_event, { workspaceId, defaults }: { workspaceId: string; defaults: AiDefaults }) => {
+      if (typeof workspaceId !== 'string') throw new Error('Invalid workspace ID')
+
+      const workspace = storage.getWorkspace(workspaceId)
+      if (!workspace) {
+        return { success: false, error: 'Workspace not found' }
+      }
+
+      workspace.aiDefaults = defaults
+      workspace.updatedAt = Date.now()
+      storage.updateWorkspace(workspace)
+
+      // Auto-propagate defaults to projects (fill-in-gaps, not overwrite)
+      const projects = storage.getProjects(workspaceId)
+      let updatedCount = 0
+      for (const project of projects) {
+        const merged = { ...defaults, ...(project.aiDefaults ?? {}) }
+        const hasChanges = JSON.stringify(merged) !== JSON.stringify(project.aiDefaults ?? {})
+        if (hasChanges) {
+          project.aiDefaults = merged
+          storage.updateProject(project)
+          updatedCount++
+        }
+      }
+
+      return { success: true, updatedCount }
+    },
+  )
+
+  // Get workspace AI defaults
+  ipcMain.handle(
+    IPC_CHANNELS.AI_WORKSPACE_DEFAULTS_GET,
+    async (_event, { workspaceId }: { workspaceId: string }) => {
+      if (typeof workspaceId !== 'string') throw new Error('Invalid workspace ID')
+
+      const workspace = storage.getWorkspace(workspaceId)
+      if (!workspace) {
+        return {}
+      }
+
+      const globalDefaults = readGlobalAiDefaults()
+      const workspaceDefaults = workspace.aiDefaults ?? {}
+      return { ...globalDefaults, ...workspaceDefaults }
+    },
+  )
+
+  // Propagate workspace AI profile to all its projects
+  ipcMain.handle(
+    IPC_CHANNELS.AI_WORKSPACE_PROPAGATE,
+    async (_event, { workspaceId }: { workspaceId: string }) => {
+      if (typeof workspaceId !== 'string') throw new Error('Invalid workspace ID')
+
+      const workspace = storage.getWorkspace(workspaceId)
+      if (!workspace) {
+        return { success: false, error: 'Workspace not found' }
+      }
+
+      const projects = storage.getProjects(workspaceId)
+      let updatedCount = 0
+
+      for (const project of projects) {
+        let changed = false
+
+        // Propagate aiProvider if workspace has one and project doesn't
+        if (workspace.aiProvider && !project.aiProvider) {
+          project.aiProvider = workspace.aiProvider
+          project.hasClaude = workspace.aiProvider === 'claude'
+          changed = true
+        }
+
+        // Propagate aiDefaults: workspace defaults fill in missing project defaults
+        if (workspace.aiDefaults) {
+          const merged = { ...workspace.aiDefaults, ...(project.aiDefaults ?? {}) }
+          const hasChanges = JSON.stringify(merged) !== JSON.stringify(project.aiDefaults ?? {})
+          if (hasChanges) {
+            project.aiDefaults = merged
+            changed = true
+          }
+        }
+
+        if (changed) {
+          storage.updateProject(project)
+          updatedCount++
+        }
+      }
+
+      return { success: true, updatedCount }
     },
   )
 

@@ -736,6 +736,10 @@ const api = {
     set: (projectId: string, defaults: Record<string, unknown>) => ipcRenderer.invoke(IPC_CHANNELS.AI_DEFAULTS_SET, { projectId, defaults }),
     getGlobal: () => ipcRenderer.invoke(IPC_CHANNELS.AI_DEFAULTS_GET_GLOBAL),
     setGlobal: (defaults: Record<string, unknown>) => ipcRenderer.invoke(IPC_CHANNELS.AI_DEFAULTS_SET_GLOBAL, { defaults }),
+    getWorkspace: (workspaceId: string) => ipcRenderer.invoke(IPC_CHANNELS.AI_WORKSPACE_DEFAULTS_GET, { workspaceId }),
+    setWorkspace: (workspaceId: string, defaults: Record<string, unknown>) => ipcRenderer.invoke(IPC_CHANNELS.AI_WORKSPACE_DEFAULTS_SET, { workspaceId, defaults }),
+    setWorkspaceProvider: (workspaceId: string, provider: string | null) => ipcRenderer.invoke(IPC_CHANNELS.AI_WORKSPACE_PROVIDER_SET, { workspaceId, provider }),
+    propagateWorkspace: (workspaceId: string): Promise<{ success: boolean; updatedCount?: number }> => ipcRenderer.invoke(IPC_CHANNELS.AI_WORKSPACE_PROPAGATE, { workspaceId }),
   },
 
   // App info

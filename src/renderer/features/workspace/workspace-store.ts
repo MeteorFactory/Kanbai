@@ -3,6 +3,7 @@ import { useShallow } from 'zustand/shallow'
 import type { Workspace, Project, Namespace } from '../../../shared/types/index'
 import type { AiProviderId } from '../../../shared/types/ai-provider'
 import { AI_PROVIDERS } from '../../../shared/types/ai-provider'
+import { resolveAiProvider } from '../../../shared/utils/ai-provider-resolver'
 import { useTerminalTabStore } from '../../lib/stores/terminalTabStore'
 import { useViewStore } from '../../lib/stores/viewStore'
 
@@ -225,6 +226,12 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
         }
       } catch { /* non-blocking */ }
 
+      // Set workspace-level AI provider if specified
+      if (aiProvider) {
+        await window.kanbai.aiDefaults.setWorkspaceProvider(workspace.id, aiProvider)
+        workspace.aiProvider = aiProvider
+      }
+
       set((state) => ({
         workspaces: [...state.workspaces, workspace],
       }))
@@ -237,13 +244,14 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
       }
 
       // Automatically add the selected folder as a project
+      // (project inherits workspace AI profile via PROJECT_ADD handler)
       const project: Project = await window.kanbai.project.add({
         workspaceId: workspace.id,
         path: dirPath,
       })
 
       if (project) {
-        if (aiProvider) {
+        if (aiProvider && !project.aiProvider) {
           project.aiProvider = aiProvider
         }
 
@@ -319,18 +327,24 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
         }
       } catch { /* non-blocking */ }
 
+      // Set workspace-level AI provider if specified
+      if (aiProvider) {
+        await window.kanbai.aiDefaults.setWorkspaceProvider(workspace.id, aiProvider)
+        workspace.aiProvider = aiProvider
+      }
+
       set((state) => ({
         workspaces: [...state.workspaces, workspace],
       }))
 
-      // Add project
+      // Add project (inherits workspace AI profile via PROJECT_ADD handler)
       const project: Project = await window.kanbai.project.add({
         workspaceId: workspace.id,
         path: projectPath,
       })
 
       if (project) {
-        if (aiProvider) {
+        if (aiProvider && !project.aiProvider) {
           project.aiProvider = aiProvider
         }
 
@@ -591,7 +605,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
         const workspaceTabs = termStore.tabs.filter((t) => t.workspaceId === id)
         if (workspaceTabs.length === 0) {
           // Auto-create split tab (AI + Terminal) if none exist for this workspace
-          const providerCfg2 = AI_PROVIDERS[firstProject.aiProvider ?? 'claude']
+          const providerCfg2 = AI_PROVIDERS[resolveAiProvider(firstProject, workspace)]
           const aiCmd = providerCfg2.cliCommand
           const aiLabel = `${providerCfg2.displayName} + Terminal`
           getWorkspaceCwd(workspace.name, workspaceProjects, id)

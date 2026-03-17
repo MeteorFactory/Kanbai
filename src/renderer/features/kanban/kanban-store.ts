@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import type { KanbanTask, KanbanTaskType, KanbanStatus, KanbanComment } from '../../../shared/types/index'
 import { AI_PROVIDERS, type AiProviderId } from '../../../shared/types/ai-provider'
+import { resolveFeatureProvider } from '../../../shared/utils/ai-provider-resolver'
 import { useTerminalTabStore } from '../terminal'
 import { useWorkspaceStore } from '../workspace/workspace-store'
 import { pushNotification } from '../../shared/stores/notification-store'
@@ -901,8 +902,9 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
     const targetProject = task.targetProjectId ? projects.find((p) => p.id === task.targetProjectId) : undefined
     const workspaceProjects = projects.filter((p) => p.workspaceId === workspaceId)
     const firstProject = workspaceProjects[0]
-    const kanbanDefault = targetProject?.aiDefaults?.kanban ?? firstProject?.aiDefaults?.kanban
-    const provider: AiProviderId = task.aiProvider ?? kanbanDefault ?? targetProject?.aiProvider ?? firstProject?.aiProvider ?? 'claude'
+    const workspace = workspaces.find((w) => w.id === workspaceId)
+    const effectiveProject = targetProject ?? firstProject
+    const provider: AiProviderId = task.aiProvider ?? resolveFeatureProvider('kanban', effectiveProject, workspace)
     const providerConfig = AI_PROVIDERS[provider]
 
     // Determine cwd: if task targets a specific project, use its path
