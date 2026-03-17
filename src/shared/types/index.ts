@@ -207,6 +207,7 @@ export interface KanbanTask {
   childTicketIds?: string[]
   conversationHistoryPath?: string
   aiProvider?: import('./ai-provider').AiProviderId
+  aiModel?: string
   isPrequalifying?: boolean
   splitSuggestions?: KanbanSplitSuggestion[]
   originalDescription?: string

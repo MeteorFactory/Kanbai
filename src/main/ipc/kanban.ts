@@ -222,6 +222,7 @@ const reason = 'RAPPEL: Tu n as pas mis a jour le ticket kanban !\\n'
   + 'Tu DOIS editer le fichier kanban pour mettre a jour ce ticket:\\n'
   + '- Change status a DONE (succes), FAILED (echec), ou PENDING (question)\\n'
   + '- Ajoute result, error, ou question selon le cas\\n'
+  + '- Ajoute aiModel avec le nom exact du modele IA que tu utilises\\n'
   + '- Mets a jour updatedAt avec Date.now()\\n\\n'
   + 'Fais-le MAINTENANT avant de terminer.';
 process.stdout.write(JSON.stringify({ decision: 'block', reason: reason }));
@@ -347,6 +348,7 @@ const reason = 'RAPPEL: Tu n as pas mis a jour le ticket kanban !\\n'
   + 'Tu DOIS editer le fichier kanban pour mettre a jour ce ticket:\\n'
   + '- Change status a DONE (succes), FAILED (echec), ou PENDING (question)\\n'
   + '- Ajoute result, error, ou question selon le cas\\n'
+  + '- Ajoute aiModel avec le nom exact du modele IA que tu utilises\\n'
   + '- Mets a jour updatedAt avec Date.now()\\n\\n'
   + 'Fais-le MAINTENANT avant de terminer.';
 process.stdout.write(JSON.stringify({ decision: 'block', reason: reason }));

@@ -1532,6 +1532,27 @@
   border-color: rgba(61, 214, 140, 0.4);
 }
 
+.kanban-detail-ai-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  font-size: 11px;
+}
+
+.kanban-detail-ai-provider {
+  font-weight: 600;
+}
+
+.kanban-detail-ai-model {
+  font-family: 'Menlo', monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+  padding: 1px 6px;
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+}
+
 .kanban-detail-result {
   padding: 8px 10px;
   background: rgba(61, 214, 140, 0.08);

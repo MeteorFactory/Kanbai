@@ -1145,6 +1145,7 @@ export const en = {
   'kanban.description': 'Description',
   'kanban.noDescription': 'No description. Double-click to add.',
   'kanban.aiAgent': 'AI Agent',
+  'kanban.aiRespondedBy': 'Responded by',
   'kanban.processing': 'Processing',
   'kanban.aiQuestion': 'AI Question',
   'kanban.result': 'Result',

@@ -2036,6 +2036,21 @@ function TaskDetailPanel({
               {copiedResult ? '\u2713' : t('common.copy')}
             </button>
           </div>
+          {(task.aiProvider || task.aiModel) && (
+            <div className="kanban-detail-ai-badge">
+              {task.aiProvider && (
+                <span
+                  className="kanban-detail-ai-provider"
+                  style={{ color: AI_PROVIDERS[task.aiProvider]?.detectionColor }}
+                >
+                  {AI_PROVIDERS[task.aiProvider]?.displayName ?? task.aiProvider}
+                </span>
+              )}
+              {task.aiModel && (
+                <span className="kanban-detail-ai-model">{task.aiModel}</span>
+              )}
+            </div>
+          )}
           <div className="kanban-detail-result">{task.result}</div>
         </div>
       )}
@@ -2044,6 +2059,21 @@ function TaskDetailPanel({
       {task.error && (
         <div className="kanban-detail-section">
           <span className="kanban-detail-section-title">{t('kanban.error')}</span>
+          {(task.aiProvider || task.aiModel) && (
+            <div className="kanban-detail-ai-badge">
+              {task.aiProvider && (
+                <span
+                  className="kanban-detail-ai-provider"
+                  style={{ color: AI_PROVIDERS[task.aiProvider]?.detectionColor }}
+                >
+                  {AI_PROVIDERS[task.aiProvider]?.displayName ?? task.aiProvider}
+                </span>
+              )}
+              {task.aiModel && (
+                <span className="kanban-detail-ai-model">{task.aiModel}</span>
+              )}
+            </div>
+          )}
           <div className="kanban-detail-error">{task.error}</div>
         </div>
       )}
