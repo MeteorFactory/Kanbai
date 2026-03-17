@@ -49,8 +49,39 @@ src/
     assets/          # Static assets (rule-templates)
   preload/           # Preload scripts — contextBridge, exposes window.kanbai
   renderer/          # Renderer process (React + Zustand)
-    components/      # All UI components (flat + claude-settings subdirectory, ~130 components)
-    lib/stores/      # Zustand stores (per domain, 15 stores)
+    features/        # Feature-based modules (26+ features)
+      terminal/      # Terminal emulator (components, hooks, store)
+      workspace/     # Workspace/project management
+      claude/        # Claude AI integration (nested features: agents, ai-providers, rules, settings)
+      kanban/        # Kanban board
+      database/      # Database explorer (nested: connection, nl-chat, query)
+      git/           # Git operations
+      healthcheck/   # Health monitoring
+      devops/        # DevOps CI/CD panel
+      code-analysis/ # Static analysis tools
+      packages/      # Package management
+      api-tester/    # HTTP request testing
+      mcp/           # MCP server management
+      files/         # File explorer/viewer
+      updates/       # App updates & version management
+      pixel-agents/  # AI pixel agents
+      multi-agent/   # Multi-agent orchestration
+      settings/      # Settings panel
+      skills-store/  # Skills marketplace
+      companion/     # Companion API integration
+      notes/         # Workspace notes
+      ssh/           # SSH connections
+      notifications/ # Toast & notification center
+      command-palette/ # Command palette
+      prompts/       # Prompt templates
+      search/        # Global search & TODO scanner
+    shared/          # Shared renderer modules
+      ui/            # Base UI components (ConfirmModal, ContextMenu, ErrorBoundary...)
+      stores/        # Shared stores (notificationStore, viewStore)
+      layout/        # Layout components (ResizeDivider, SplitContainer, TitleBar)
+    components/      # Legacy flat components (re-exports from features/)
+    lib/stores/      # Domain Zustand stores (14 stores)
+    hooks/           # Shared hooks
     styles/          # CSS custom properties
   shared/            # Shared types and constants (both processes)
     types/index.ts   # ALL interfaces + IPC_CHANNELS
@@ -59,6 +90,10 @@ tests/
   unit/              # Unit tests (services, stores, utils)
   integration/       # IPC round-trip tests
 ```
+
+### Renderer Organization Pattern
+
+Each feature module in `features/` is self-contained with its own components, hooks, and optionally a store. Hooks and stores are colocated with their feature (e.g., `features/terminal/use-terminal.ts`, `features/terminal/terminal-store.ts`). Shared UI primitives live in `shared/ui/`, shared stores in `shared/stores/`.
 
 ## Process Model
 
@@ -98,7 +133,9 @@ Every `BrowserWindow` must enforce:
 
 ### Zustand Stores
 
-terminalTabStore, workspaceStore, claudeStore, kanbanStore, viewStore, updateStore, appUpdateStore, notificationStore, devopsStore, packagesStore, databaseStore, databaseTabStore, healthCheckStore, companionStore, notesStore
+Domain stores in `lib/stores/`: terminalTabStore, workspaceStore, claudeStore, kanbanStore, viewStore, updateStore, appUpdateStore, devopsStore, packagesStore, databaseStore, databaseTabStore, healthCheckStore, companionStore, notesStore
+
+Feature-local stores are colocated in their feature directory (e.g., `features/terminal/terminal-store.ts`). Shared stores (notificationStore, viewStore) live in `shared/stores/`.
 
 ## Key Features
 

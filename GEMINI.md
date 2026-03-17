@@ -40,9 +40,12 @@ Three-process Electron model:
    - Domain-grouped methods (terminal, workspace, project, fs, git, claude, kanban, database, etc.)
 
 3. **Renderer** (`src/renderer/`) — Chromium, sandboxed
-   - React app with Zustand state management
-   - Flat component architecture + claude-settings subdirectory in `components/` (~130 components)
-   - Stores in `lib/stores/` (15 stores)
+   - Feature-based architecture: `features/` contains 26+ self-contained modules (terminal, workspace, claude, kanban, database, git, healthcheck, devops, packages, mcp, settings, skills-store, companion, notes, notifications, command-palette, prompts, search, etc.)
+   - Each feature colocates its components, hooks, and store
+   - `shared/ui/` — Base UI components (ConfirmModal, ContextMenu, ErrorBoundary...)
+   - `shared/stores/` — Shared stores (notificationStore, viewStore)
+   - `shared/layout/` — Layout components (ResizeDivider, SplitContainer, TitleBar)
+   - `lib/stores/` — Domain Zustand stores (14 stores)
    - CSS custom properties in `styles/`
 
 4. **Shared** (`src/shared/`) — Types and constants used by all processes
@@ -76,10 +79,13 @@ terminal, workspace, project, claude, kanban, git, filesystem, session, app, dat
 - Renderer uses Zustand stores as cache + UI state
 - Data flow: User action -> React -> Zustand -> IPC invoke -> Main service -> JSON file
 - Each domain has its own store (no monolithic global store)
+- Store organization: domain stores in `lib/stores/`, feature-local stores colocated in `features/`, shared stores in `shared/stores/`
 
-### Zustand Stores
+### Zustand Stores (lib/stores/)
 
-terminalTabStore, workspaceStore, claudeStore, kanbanStore, viewStore, updateStore, appUpdateStore, notificationStore, devopsStore, packagesStore, databaseStore, databaseTabStore, healthCheckStore, companionStore, notesStore
+terminalTabStore, workspaceStore, claudeStore, kanbanStore, viewStore, updateStore, appUpdateStore, devopsStore, packagesStore, databaseStore, databaseTabStore, healthCheckStore, companionStore, notesStore
+
+Feature-local stores are colocated (e.g., `features/terminal/terminal-store.ts`). Shared stores (notificationStore, viewStore) live in `shared/stores/`.
 
 ## Key Features
 
