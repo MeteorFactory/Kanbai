@@ -92,6 +92,10 @@ function ensureZshWrapper(): string {
   return shellDir
 }
 
+export function getTerminalSessions(): Array<{ id: string; cwd: string }> {
+  return Array.from(terminals.values()).map((t) => ({ id: t.id, cwd: t.cwd }))
+}
+
 export function registerTerminalHandlers(ipcMain: IpcMain): void {
   ipcMain.handle(
     IPC_CHANNELS.TERMINAL_CREATE,

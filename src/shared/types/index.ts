@@ -1,6 +1,7 @@
 // Types partagés entre main et renderer
 export type { AiProviderId, AiProviderConfig } from './ai-provider'
 export { AI_PROVIDERS, AI_PROVIDER_IDS } from './ai-provider'
+export type { CompanionContext, CompanionCommandDef, CompanionResult, CompanionFeature, CompanionFeatureMeta } from './companion'
 
 // --- Rules tree types ---
 

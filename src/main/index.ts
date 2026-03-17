@@ -34,6 +34,7 @@ import { registerAiProviderHandlers } from './ipc/aiProvider'
 import { registerPixelAgentsHandlers, shutdownPixelAgentsService } from './ipc/pixel-agents'
 import { registerDevOpsHandlers } from './ipc/devops'
 import { registerNotesHandlers } from './ipc/notes'
+import { initCompanionFeatures } from './companion'
 import { registerSkillsStoreHandlers, prefetchSkillsStore } from './ipc/skillsStore'
 import { cleanupTerminals } from './ipc/terminal'
 import { ensureActivityHookScript, ensureAutoApproveScript, ensureKanbanDoneScript, ensurePixelAgentsHookScript, syncAllWorkspaceEnvHooks, startActivityWatcher } from './services/activityHooks'
@@ -382,6 +383,7 @@ app.whenReady().then(() => {
   registerDevOpsHandlers(ipcMain)
   registerNotesHandlers(ipcMain)
   registerCompanionHandlers(ipcMain, () => mainWindow)
+  initCompanionFeatures()
   initDevCompanion(() => mainWindow)
 
   // Ensure a Default namespace exists (first launch or migration)

@@ -107,6 +107,10 @@ function startClaudeProcess(managed: ManagedClaudeSession, projectPath: string):
   })
 }
 
+export function getClaudeSessions(): ClaudeSession[] {
+  return Array.from(sessions.values()).map((m) => m.session)
+}
+
 export function registerClaudeHandlers(ipcMain: IpcMain): void {
   ipcMain.handle(
     IPC_CHANNELS.CLAUDE_START,

@@ -2,7 +2,9 @@ import http from 'http'
 import crypto from 'crypto'
 import { StorageService } from './storage'
 import { readKanbanTasks } from '../../mcp-server/lib/kanban-store'
+import { companionRegistry } from '../companion/registry'
 import type { KanbanTask } from '../../shared/types'
+import type { CompanionContext } from '../../shared/types/companion'
 
 const ENCRYPTION_ALGO = 'aes-256-gcm'
 const IV_LENGTH = 12
@@ -31,6 +33,16 @@ function encrypt(data: string, key: Buffer): { iv: string; encrypted: string; ta
     encrypted: encrypted.toString('base64'),
     tag: tag.toString('base64'),
   }
+}
+
+function decrypt(payload: { iv: string; encrypted: string; tag: string }, key: Buffer): string {
+  const iv = Buffer.from(payload.iv, 'base64')
+  const encrypted = Buffer.from(payload.encrypted, 'base64')
+  const tag = Buffer.from(payload.tag, 'base64')
+  const decipher = crypto.createDecipheriv(ENCRYPTION_ALGO, key, iv)
+  decipher.setAuthTag(tag)
+  const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()])
+  return decrypted.toString('utf-8')
 }
 
 function sendEncryptedJson(res: http.ServerResponse, data: unknown): void {
@@ -93,11 +105,140 @@ function summarizeTask(task: KanbanTask): Partial<KanbanTask> {
   }
 }
 
+function readBody(req: http.IncomingMessage): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = []
+    req.on('data', (chunk: Buffer) => chunks.push(chunk))
+    req.on('end', () => resolve(Buffer.concat(chunks).toString('utf-8')))
+    req.on('error', reject)
+  })
+}
+
+function parseBodyJson(raw: string): Record<string, unknown> | null {
+  try {
+    const parsed = JSON.parse(raw) as Record<string, unknown>
+    // If the body is encrypted (has iv/encrypted/tag), decrypt it
+    if (parsed.iv && parsed.encrypted && parsed.tag) {
+      const decrypted = decrypt(
+        parsed as { iv: string; encrypted: string; tag: string },
+        state.encryptionKey,
+      )
+      return JSON.parse(decrypted) as Record<string, unknown>
+    }
+    return parsed
+  } catch {
+    return null
+  }
+}
+
+/** Build a CompanionContext from query params or body fields */
+function buildContext(
+  workspaceParam: string | null,
+  projectParam: string | null,
+  body?: Record<string, unknown>,
+): CompanionContext | null {
+  const wsQuery = workspaceParam ?? (body?.workspace as string | undefined) ?? null
+  if (!wsQuery) return null
+
+  const workspaceId = resolveWorkspaceId(wsQuery)
+  if (!workspaceId) return null
+
+  const projectId = projectParam ?? (body?.project as string | undefined) ?? undefined
+  let projectPath: string | undefined
+  if (projectId) {
+    const storage = new StorageService()
+    const project = storage.getProjects(workspaceId).find((p) => p.id === projectId || p.name === projectId)
+    if (project) {
+      projectPath = project.path
+    }
+  }
+
+  return { workspaceId, projectId: projectId ?? undefined, projectPath }
+}
+
+// ---------------------------------------------------------------------------
+// V2 route handlers
+// ---------------------------------------------------------------------------
+
+async function handleV2Features(res: http.ServerResponse): Promise<void> {
+  const features = companionRegistry.listFeatures()
+  sendEncryptedJson(res, features)
+}
+
+async function handleV2FeatureState(
+  featureId: string,
+  url: URL,
+  res: http.ServerResponse,
+): Promise<void> {
+  const feature = companionRegistry.get(featureId)
+  if (!feature) {
+    sendError(res, 404, `Feature not found: ${featureId}`)
+    return
+  }
+
+  const ctx = buildContext(
+    url.searchParams.get('workspace'),
+    url.searchParams.get('project'),
+  )
+
+  if ((feature.workspaceScoped || feature.projectScoped) && !ctx) {
+    sendError(res, 400, 'Missing workspace query parameter')
+    return
+  }
+
+  if (feature.projectScoped && ctx && !ctx.projectPath) {
+    sendError(res, 400, 'Missing project query parameter or project not found')
+    return
+  }
+
+  const result = await feature.getState(ctx ?? { workspaceId: '' })
+  sendEncryptedJson(res, result)
+}
+
+async function handleV2FeatureCommand(
+  featureId: string,
+  commandName: string,
+  req: http.IncomingMessage,
+  res: http.ServerResponse,
+): Promise<void> {
+  const feature = companionRegistry.get(featureId)
+  if (!feature) {
+    sendError(res, 404, `Feature not found: ${featureId}`)
+    return
+  }
+
+  const rawBody = await readBody(req)
+  const body = parseBodyJson(rawBody)
+  if (!body) {
+    sendError(res, 400, 'Invalid JSON body')
+    return
+  }
+
+  const ctx = buildContext(null, null, body)
+  if ((feature.workspaceScoped || feature.projectScoped) && !ctx) {
+    sendError(res, 400, 'Missing workspace in request body')
+    return
+  }
+
+  if (feature.projectScoped && ctx && !ctx.projectPath) {
+    sendError(res, 400, 'Missing project in request body or project not found')
+    return
+  }
+
+  const params = (body.params as Record<string, unknown>) ?? {}
+  const result = await feature.execute(commandName, params, ctx ?? { workspaceId: '' })
+  sendEncryptedJson(res, result)
+}
+
+// ---------------------------------------------------------------------------
+// Main request handler
+// ---------------------------------------------------------------------------
+
 function handleRequest(req: http.IncomingMessage, res: http.ServerResponse): void {
   // CORS headers for local dev
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type')
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
 
   if (req.method === 'OPTIONS') {
     res.writeHead(204)
@@ -112,6 +253,36 @@ function handleRequest(req: http.IncomingMessage, res: http.ServerResponse): voi
 
   const url = new URL(req.url ?? '/', `http://localhost:${state.port}`)
   const pathname = url.pathname
+
+  // -----------------------------------------------------------------------
+  // V2 API — Feature Registry
+  // -----------------------------------------------------------------------
+
+  // GET /api/v2/companion/features
+  if (req.method === 'GET' && pathname === '/api/v2/companion/features') {
+    handleV2Features(res).catch((err) => sendError(res, 500, String(err)))
+    return
+  }
+
+  // GET /api/v2/companion/features/:id/state
+  const stateMatch = pathname.match(/^\/api\/v2\/companion\/features\/([^/]+)\/state$/)
+  if (req.method === 'GET' && stateMatch) {
+    handleV2FeatureState(stateMatch[1]!, url, res).catch((err) => sendError(res, 500, String(err)))
+    return
+  }
+
+  // POST /api/v2/companion/features/:id/commands/:cmd
+  const cmdMatch = pathname.match(/^\/api\/v2\/companion\/features\/([^/]+)\/commands\/([^/]+)$/)
+  if (req.method === 'POST' && cmdMatch) {
+    handleV2FeatureCommand(cmdMatch[1]!, cmdMatch[2]!, req, res).catch((err) =>
+      sendError(res, 500, String(err)),
+    )
+    return
+  }
+
+  // -----------------------------------------------------------------------
+  // V1 API — Backward compatibility
+  // -----------------------------------------------------------------------
 
   // GET /api/v1/companion/workspaces
   if (req.method === 'GET' && pathname === '/api/v1/companion/workspaces') {

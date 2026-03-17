@@ -17,7 +17,7 @@ function getNotesFilePath(workspaceId: string): string {
   return path.join(NOTES_DIR, `${workspaceId}.json`)
 }
 
-function loadNotes(workspaceId: string): Note[] {
+export function loadNotes(workspaceId: string): Note[] {
   const filePath = getNotesFilePath(workspaceId)
   if (!fs.existsSync(filePath)) return []
   try {
@@ -28,7 +28,7 @@ function loadNotes(workspaceId: string): Note[] {
   }
 }
 
-function saveNotes(workspaceId: string, notes: Note[]): void {
+export function saveNotes(workspaceId: string, notes: Note[]): void {
   ensureNotesDir()
   const filePath = getNotesFilePath(workspaceId)
   fs.writeFileSync(filePath, JSON.stringify(notes, null, 2), 'utf-8')
