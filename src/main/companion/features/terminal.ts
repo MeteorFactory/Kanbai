@@ -1,4 +1,4 @@
-import { getTerminalSessionsInfo } from '../../ipc/terminal'
+import { getTerminalSessionsInfo, getTerminalOutput, writeTerminalInput } from '../../ipc/terminal'
 import type { CompanionFeature, CompanionContext, CompanionResult, CompanionCommandDef } from '../../../shared/types/companion'
 
 function formatElapsed(createdAt: number): string {
@@ -29,6 +29,9 @@ export const terminalFeature: CompanionFeature = {
       success: true,
       data: filtered.map((s) => ({
         id: s.id,
+        tabId: s.tabId,
+        taskId: s.taskId,
+        ticketNumber: s.ticketNumber,
         title: s.title,
         status: s.status,
         elapsed: formatElapsed(s.createdAt),
@@ -37,10 +40,43 @@ export const terminalFeature: CompanionFeature = {
   },
 
   getCommands(): CompanionCommandDef[] {
-    return []
+    return [
+      {
+        name: 'getOutput',
+        description: 'Get recent terminal output for a session',
+        params: {
+          sessionId: { type: 'string', required: true, description: 'Terminal session ID' },
+        },
+      },
+      {
+        name: 'sendInput',
+        description: 'Send input to a terminal session',
+        params: {
+          sessionId: { type: 'string', required: true, description: 'Terminal session ID' },
+          data: { type: 'string', required: true, description: 'Input data to send' },
+        },
+      },
+    ]
   },
 
-  async execute(command: string, _params: Record<string, unknown>, _ctx: CompanionContext): Promise<CompanionResult> {
+  async execute(command: string, params: Record<string, unknown>, _ctx: CompanionContext): Promise<CompanionResult> {
+    if (command === 'getOutput') {
+      const sessionId = params.sessionId as string
+      if (!sessionId) return { success: false, error: 'Missing sessionId' }
+      const output = getTerminalOutput(sessionId)
+      return { success: true, data: { output } }
+    }
+
+    if (command === 'sendInput') {
+      const sessionId = params.sessionId as string
+      const data = params.data as string
+      if (!sessionId) return { success: false, error: 'Missing sessionId' }
+      if (!data && data !== '') return { success: false, error: 'Missing data' }
+      const ok = writeTerminalInput(sessionId, data)
+      if (!ok) return { success: false, error: `Terminal session not found: ${sessionId}` }
+      return { success: true }
+    }
+
     return { success: false, error: `Unknown command: ${command}` }
   },
 }

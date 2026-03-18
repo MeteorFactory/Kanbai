@@ -1318,6 +1318,8 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
           set((state) => ({
             kanbanTabIds: { ...state.kanbanTabIds, [task.id]: tabId! },
           }))
+          // Inform main process of the task-terminal link for companion API
+          window.kanbai.terminal.setTaskInfo(tabId, task.id, ticketLabel)
         }
       }
     } catch {
