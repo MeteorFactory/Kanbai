@@ -1,14 +1,58 @@
 import type { IpcMain, BrowserWindow } from 'electron'
 import crypto from 'crypto'
+import fs from 'fs'
 import http from 'http'
+import os from 'os'
+import path from 'path'
 import { IPC_CHANNELS } from '../../shared/types'
 import { startCompanionServer, stopCompanionServer, getCompanionServerInfo } from '../services/companion-server'
 
 const API_HOST = process.env['KANBAI_API_HOST'] ?? 'localhost'
 const API_PORT = parseInt(process.env['KANBAI_API_PORT'] ?? '3847', 10)
+const COMPANION_STATE_FILE = path.join(os.homedir(), '.kanbai', 'companion-state.json')
 
 let currentToken: string | null = null
 let pollTimer: ReturnType<typeof setInterval> | null = null
+
+// --- Companion state persistence ---
+
+interface SavedCompanionState {
+  token: string
+  code: string
+  sessionId: string
+  workspaceId: string
+  savedAt: number
+}
+
+function saveCompanionState(token: string, code: string, sessionId: string, workspaceId: string): void {
+  try {
+    const dir = path.dirname(COMPANION_STATE_FILE)
+    fs.mkdirSync(dir, { recursive: true })
+    fs.writeFileSync(
+      COMPANION_STATE_FILE,
+      JSON.stringify({ token, code, sessionId, workspaceId, savedAt: Date.now() }),
+    )
+  } catch {
+    // Best-effort persistence
+  }
+}
+
+function loadCompanionState(): SavedCompanionState | null {
+  try {
+    const raw = fs.readFileSync(COMPANION_STATE_FILE, 'utf-8')
+    return JSON.parse(raw) as SavedCompanionState
+  } catch {
+    return null
+  }
+}
+
+function clearCompanionState(): void {
+  try {
+    fs.unlinkSync(COMPANION_STATE_FILE)
+  } catch {
+    // File may not exist
+  }
+}
 
 function apiRequest<T>(method: string, path: string, body?: unknown, token?: string): Promise<T> {
   return new Promise((resolve, reject) => {
@@ -77,6 +121,7 @@ function startPolling(code: string, getWindow: () => BrowserWindow | null): void
         stopPolling()
         stopCompanionServer()
         currentToken = null
+        clearCompanionState()
         win.webContents.send(IPC_CHANNELS.COMPANION_STATUS_CHANGED, 'disconnected')
       }
     } catch {
@@ -99,6 +144,7 @@ export function registerCompanionHandlers(ipcMain: IpcMain, getWindow: () => Bro
     )
 
     currentToken = result.token
+    saveCompanionState(result.token, code, result.sessionId, workspaceId)
     startPolling(code, getWindow)
 
     return { code }
@@ -115,6 +161,7 @@ export function registerCompanionHandlers(ipcMain: IpcMain, getWindow: () => Bro
       }
     }
     currentToken = null
+    clearCompanionState()
   })
 
   // No-op: sync is handled automatically via shared kanban.json file
@@ -135,6 +182,7 @@ export function registerCompanionHandlers(ipcMain: IpcMain, getWindow: () => Bro
       }
     }
     currentToken = null
+    clearCompanionState()
     const win = getWindow()
     if (win && !win.isDestroyed()) {
       win.webContents.send(IPC_CHANNELS.COMPANION_STATUS_CHANGED, 'disconnected')
@@ -175,16 +223,66 @@ export async function initDevCompanion(getWindow: () => BrowserWindow | null): P
   }
 }
 
+export async function tryReconnectCompanion(getWindow: () => BrowserWindow | null): Promise<void> {
+  const saved = loadCompanionState()
+  if (!saved) return
+
+  try {
+    const result = await apiRequest<{ valid: boolean; sessionId: string; workspaceId: string }>(
+      'POST',
+      '/api/v1/pair/reconnect',
+      undefined,
+      saved.token,
+    )
+
+    if (!result.valid) {
+      clearCompanionState()
+      return
+    }
+
+    currentToken = saved.token
+
+    // Check current pairing status
+    const status = await apiRequest<{ status: string; companionId?: string; companionName?: string }>(
+      'GET',
+      `/api/v1/pair/status/${saved.code}`,
+    )
+
+    if (status.status === 'connected') {
+      // Start data server and notify renderer
+      try {
+        const info = await startCompanionServer(currentToken)
+        const win = getWindow()
+        if (win && !win.isDestroyed()) {
+          win.webContents.send(IPC_CHANNELS.COMPANION_DATA_INFO, info)
+          win.webContents.send(IPC_CHANNELS.COMPANION_STATUS_CHANGED, 'connected', status.companionName ?? null)
+        }
+      } catch (err) {
+        console.error('[Companion] Failed to start data server on reconnect:', err)
+      }
+      // Start polling to detect disconnections
+      startPolling(saved.code, getWindow)
+    } else if (status.status === 'waiting') {
+      // Session exists but companion hasn't connected yet
+      startPolling(saved.code, getWindow)
+      const win = getWindow()
+      if (win && !win.isDestroyed()) {
+        win.webContents.send(IPC_CHANNELS.COMPANION_STATUS_CHANGED, 'waiting')
+      }
+    } else {
+      // Expired or unknown — clear saved state
+      clearCompanionState()
+      currentToken = null
+    }
+  } catch {
+    // API not reachable — don't clear state, might work on next launch
+    console.log('[Companion] Auto-reconnect failed (API not reachable), will retry on next launch')
+  }
+}
+
 export function cleanupCompanion(): void {
   stopPolling()
   stopCompanionServer()
-  if (currentToken) {
-    // Best-effort cleanup on quit — fire and forget
-    try {
-      apiRequest<unknown>('DELETE', '/api/v1/pair/unregister', undefined, currentToken).catch(() => {})
-    } catch {
-      // Ignore
-    }
-  }
+  // Don't unregister or clear saved state — session persists across restarts
   currentToken = null
 }
