@@ -32,7 +32,7 @@ Three-process Electron model:
 
 - **Main** (`src/main/`) — Node.js, IPC handlers in `ipc/` (32 handlers), services in `services/` (storage, healthCheck, notifications, appUpdateState, activityHooks, ai-cli, pixel-agents-service, pixel-agents-assets, companion-server [AES-256-GCM encrypted data server], database/ [connection, queries, backup, crypto, NL, drivers/], packages/ [analysis, NL])
 - **Preload** (`src/preload/`) — contextBridge, exposes `window.kanbai` API
-- **Renderer** (`src/renderer/`) — Feature-based architecture: `features/` with 26+ self-contained modules (terminal, workspace, claude, kanban, database, git, healthcheck, devops, packages, mcp, settings, skills-store, companion, notes, notifications, command-palette, prompts, search...). Each feature colocates components, hooks, and store. `shared/ui/` for base UI components, `shared/stores/` for shared stores, `shared/layout/` for layout components. `lib/stores/` for domain Zustand stores (14 stores)
+- **Renderer** (`src/renderer/`) — Feature-based architecture: `features/` with 26+ self-contained modules (terminal, workspace, claude, kanban, database, git, healthcheck, devops, packages, mcp, settings, skills-store, companion, notes, notifications, command-palette, prompts, search, ssh...). Each feature colocates components, hooks, and store. `shared/ui/` for base UI components, `shared/stores/` for shared stores, `shared/layout/` for layout components. `lib/stores/` for domain Zustand stores (14 stores)
 - **Shared** (`src/shared/`) — All types in `types/index.ts`, constants in `constants/`
 
 ## Security (Mandatory)
@@ -41,6 +41,7 @@ Three-process Electron model:
 - Never expose `ipcRenderer` directly — use contextBridge wrapper functions
 - Validate all inputs in main process handlers
 - No `shell.openExternal` without URL validation
+- CSP headers set via `session.defaultSession.webRequest.onHeadersReceived`
 
 ## IPC Patterns
 
@@ -81,6 +82,26 @@ Three-process Electron model:
 - Workspace notes
 - SSH remote connection management
 
+## AI Provider Integration
+
+4 AI coding assistants with consistent integration pattern:
+
+| Provider | Color | Config dir | Memory file |
+|----------|-------|------------|-------------|
+| Claude Code | #C15F3C (orange) | `.claude/` | `CLAUDE.md` |
+| Codex | #10a37f (green) | `.codex/` | `AGENTS.md` |
+| Copilot | #e2538a (pink) | `.copilot/` | `.github/copilot-instructions.md` (this file) |
+| Gemini CLI | #4285F4 (blue) | `.gemini/` | `GEMINI.md` |
+
+Each provider has activity hooks, settings UI with provider-colored accents, Pixel Agents visual integration, and terminal integration.
+
+## Kanban System
+
+- Data stored in `~/.kanbai/kanban/{workspaceId}.json`
+- Statuses: TODO, WORKING, DONE, FAILED, PENDING
+- Ticket reactivation: DONE->WORKING only on Enter (message submit), not on keystrokes
+- Labels system and comments on tickets with timestamps
+
 ## Code Conventions
 
 - TypeScript strict mode, explicit return types on exports
@@ -90,6 +111,7 @@ Three-process Electron model:
 - Small functions (< 30 lines), max 3 nesting levels
 - Conventional Commits in French
 - No Co-Authored-By trailers
+- CSS custom properties (no Tailwind, no CSS modules)
 
 ## Key Types (src/shared/types/index.ts)
 
@@ -111,10 +133,25 @@ Three-process Electron model:
 
 ## Data Persistence
 
-- `~/.kanbai/data.json` — main data store (workspaces, projects, settings, via StorageService singleton)
-- `.workspaces/kanban.json` — per-project Kanban tasks
-- `~/.kanbai/notes-workspace/{workspaceId}.json` — per-workspace notes
-- Session state saved/restored via StorageService
+| Path | Purpose |
+|------|---------|
+| `~/.kanbai/data.json` | Global persistence (workspaces, projects, settings, via StorageService) |
+| `~/.kanbai/kanban/{workspaceId}.json` | Kanban board data per workspace |
+| `.workspaces/kanban.json` | Per-project Kanban tasks |
+| `~/.kanbai/notes-workspace/{workspaceId}.json` | Per-workspace notes |
+| `~/.kanbai/envs/{Name}/` | Workspace environment root |
+
+## Key Architectural Decisions
+
+| Decision | Choice | Rejected alternatives |
+|----------|--------|-----------------------|
+| State management | Zustand | Redux, Context API |
+| Persistence | JSON files (StorageService) | SQLite, IndexedDB |
+| Dev server | Vite + vite-plugin-electron | electron-vite |
+| Packaging | electron-builder | Electron Forge |
+| Terminal backend | node-pty | — |
+| Code editor | Monaco Editor | CodeMirror |
+| CI/CD | GitHub Actions, auto-increment patch | Manual versioning |
 
 ## Commands
 

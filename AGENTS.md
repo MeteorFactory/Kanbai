@@ -9,6 +9,18 @@ Kanbai is an AI-enhanced desktop terminal built with Electron. It combines a ful
 - Code (variables, functions, comments): **English**
 - Git commits, PR descriptions: **French**
 
+## Execution Rules
+
+When executing kanban tickets or task files, start implementation immediately after reading the ticket. Limit exploration to 2-3 minutes max. Do NOT spend entire sessions planning — produce code changes early and iterate.
+
+## Testing
+
+After implementing any feature, always run the existing test suite before reporting completion. Fix any failing tests before marking work as done.
+
+## Code Patterns / Gotchas
+
+When generating shell scripts or wrapper scripts, never use heredoc syntax inside template literals. Write files using direct fs.writeFileSync or equivalent with properly escaped content.
+
 ## Tech Stack
 
 | Technology | Version | Purpose |
@@ -76,6 +88,7 @@ src/
       command-palette/ # Command palette
       prompts/       # Prompt templates
       search/        # Global search & TODO scanner
+      ssh/           # SSH connections
     shared/          # Shared renderer modules
       ui/            # Base UI components (ConfirmModal, ContextMenu, ErrorBoundary...)
       stores/        # Shared stores (notificationStore, viewStore)
@@ -110,6 +123,7 @@ Each feature module is self-contained with colocated components, hooks, and stor
 - Never expose `ipcRenderer` directly — wrap in contextBridge functions
 - Validate all inputs in main process IPC handlers
 - No `shell.openExternal` with unvalidated URLs
+- CSP headers set via `session.defaultSession.webRequest.onHeadersReceived`
 
 ## IPC Conventions
 
@@ -162,12 +176,53 @@ Feature-local stores are colocated in their feature directory (e.g., `features/t
 | Notes | notes.ts | notesStore | NotesPanel |
 | SSH | ssh.ts | — | — |
 
+## AI Provider Integration
+
+4 AI coding assistants with consistent integration pattern:
+
+| Provider | Color | Config dir | Memory file |
+|----------|-------|------------|-------------|
+| Claude Code | #C15F3C (orange) | `.claude/` | `CLAUDE.md` |
+| Codex | #10a37f (green) | `.codex/` | `AGENTS.md` |
+| Copilot | #e2538a (pink) | `.copilot/` | `.github/copilot-instructions.md` |
+| Gemini CLI | #4285F4 (blue) | `.gemini/` | `GEMINI.md` |
+
+Each provider has:
+- Config files synced to workspace env at workspace creation
+- Activity hooks (`kanbai-activity.sh`) for tracking in Kanban
+- Settings UI with provider-colored accents (toggles, tabs, borders)
+- Pixel Agents visual integration (animated character per active AI agent)
+- Terminal integration (double terminal: user + AI)
+
+## Pixel Agents
+
+Animated AI characters that visually represent active AI sessions:
+- Git submodule in `vendor/pixel-agents/`
+- **Buffer architecture**: events stored in buffer even when Pixel Agents pane is closed
+- Displays ticket number (e.g., T-10) above each character
+- Provider label (Claude/Codex/Copilot/Gemini) with brand color below character
+- Service in main process (`pixel-agents-service.ts`) with `attachEmitter`/`detachEmitter`
+
+## Kanban System
+
+- Data stored in `~/.kanbai/kanban/{workspaceId}.json`
+- Statuses: TODO, WORKING, DONE, FAILED, PENDING
+- Ticket reactivation: DONE->WORKING only on Enter (message submit), not on keystrokes
+- Auto-creation of "Refonte memoires IA" tickets every 10 tickets (configurable in Settings > Kanban)
+- Labels system (e.g., `ai-memory-refactor`, `maintenance`, `bug`)
+- Comments on tickets with timestamps
+
 ## Data Persistence
 
-- `~/.kanbai/data.json` — workspaces, projects, settings, templates (via StorageService singleton)
-- `.workspaces/kanban.json` — per-project Kanban tasks
-- `~/.kanbai/notes-workspace/{workspaceId}.json` — per-workspace notes
-- Session state saved/restored via StorageService
+| Path | Purpose |
+|------|---------|
+| `~/.kanbai/data.json` | Global persistence (workspaces, projects, settings, via StorageService) |
+| `~/.kanbai/kanban/{workspaceId}.json` | Kanban board data per workspace |
+| `.workspaces/kanban.json` | Per-project Kanban tasks |
+| `~/.kanbai/notes-workspace/{workspaceId}.json` | Per-workspace notes |
+| `~/.kanbai/envs/{Name}/` | Workspace environment root |
+| `~/.kanbai/hooks/` | Shared activity and automation hooks |
+| `src/shared/types/index.ts` | Main TypeScript type definitions |
 
 ## Code Conventions
 
@@ -177,7 +232,7 @@ Feature-local stores are colocated in their feature directory (e.g., `features/t
 - No Co-Authored-By trailers in commits
 - Files: `kebab-case.ts`, IPC handlers: `[namespace].ts`
 - Small functions (< 30 lines), max 3 levels nesting
-- CSS custom properties (no Tailwind)
+- CSS custom properties (no Tailwind, no CSS modules)
 
 ## Key Types
 
@@ -225,6 +280,20 @@ npm run rtk:update           # Update RTK
 - Integration: IPC round-trips with mocked Electron (`tests/integration/`)
 - Mock infrastructure: `tests/mocks/electron.ts`, `tests/helpers/storage.ts`
 - Always run tests before marking work as done
+
+## Key Architectural Decisions
+
+| Decision | Choice | Rejected alternatives |
+|----------|--------|-----------------------|
+| State management | Zustand | Redux, Context API |
+| Persistence | JSON files (StorageService) | SQLite, IndexedDB |
+| Dev server | Vite + vite-plugin-electron | electron-vite |
+| Packaging | electron-builder | Electron Forge |
+| Terminal backend | node-pty | No alternatives considered |
+| Code editor | Monaco Editor | CodeMirror |
+| Git panel | Multi-project dashboard | Single-project view |
+| Code analysis | Multi-project with parallel runs | Single-project |
+| CI/CD | GitHub Actions, auto-increment patch version | Manual versioning |
 
 ## Workflow
 
