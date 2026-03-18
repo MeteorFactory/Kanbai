@@ -40,7 +40,7 @@ function attachmentKey(projectPath: string, target: string): string {
 
 export function ProjectToolbar() {
   const { activeWorkspaceId, projects } = useWorkspaceStore()
-  const { tabs, createTab, setActiveTab } = useTerminalTabStore()
+  const { tabs, createTab, setActiveTab, renameTab } = useTerminalTabStore()
   const [projectInfos, setProjectInfos] = useState<ProjectMakeInfo[]>([])
   const attachmentsRef = useRef<Map<string, MakeAttachment>>(new Map())
 
@@ -130,11 +130,12 @@ export function ProjectToolbar() {
   )
 
   const runMakeTarget = useCallback(
-    async (projectPath: string, target: string) => {
+    async (projectName: string, projectPath: string, target: string) => {
       if (!activeWorkspaceId) return
 
       const key = attachmentKey(projectPath, target)
       const command = buildMakeCommand(projectPath, target)
+      const tabLabel = `${projectName} - ${target}`
       const existing = attachmentsRef.current.get(key)
 
       // Case 2: Button already attached to a terminal
@@ -155,6 +156,7 @@ export function ProjectToolbar() {
       const free = await findFreeTerminal()
       if (free) {
         attachmentsRef.current.set(key, free)
+        renameTab(free.tabId, tabLabel)
         window.kanbai.terminal.write(free.sessionId, command)
         setActiveTab(free.tabId)
         return
@@ -162,7 +164,7 @@ export function ProjectToolbar() {
 
       // Case 3: No terminal available — create a new tab
       const cwd = projectPath
-      const newTabId = createTab(activeWorkspaceId, cwd, `make ${target}`)
+      const newTabId = createTab(activeWorkspaceId, cwd, tabLabel)
       if (!newTabId) return
 
       // Wait for the terminal to be initialized (session ID gets set asynchronously)
@@ -198,7 +200,7 @@ export function ProjectToolbar() {
         window.kanbai.terminal.write(att.sessionId, command)
       }
     },
-    [activeWorkspaceId, tabs, buildMakeCommand, isAttachmentValid, findFreeTerminal, interruptAndRun, setActiveTab, createTab],
+    [activeWorkspaceId, tabs, buildMakeCommand, isAttachmentValid, findFreeTerminal, interruptAndRun, setActiveTab, createTab, renameTab],
   )
 
   /** Check if a button has an active attachment */
@@ -228,7 +230,7 @@ export function ProjectToolbar() {
                 <button
                   key={target}
                   className={`project-toolbar-btn${attached ? ' project-toolbar-btn--attached' : ''}`}
-                  onClick={() => runMakeTarget(pi.projectPath, target)}
+                  onClick={() => runMakeTarget(pi.projectName, pi.projectPath, target)}
                   title={`make ${target} (${pi.projectName})${attached ? ' — attached' : ''}`}
                 >
                   {target}
