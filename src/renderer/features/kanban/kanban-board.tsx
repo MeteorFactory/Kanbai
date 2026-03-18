@@ -10,6 +10,7 @@ import type { KanbanStatus, KanbanTask, KanbanTaskType, KanbanComment, AiDefault
 import { AI_PROVIDERS } from '../../../shared/types/ai-provider'
 import type { AiProviderId } from '../../../shared/types/ai-provider'
 import { resolveFeatureProvider } from '../../../shared/utils/ai-provider-resolver'
+import { renderPdfFirstPage } from './pdf-preview'
 import './kanban.css'
 
 interface PendingClipboardImage {
@@ -1591,8 +1592,9 @@ function TaskDetailPanel({
   const [conversationLoading, setConversationLoading] = useState(false)
   const [conversationError, setConversationError] = useState<string | null>(null)
   const [copiedResult, setCopiedResult] = useState(false)
-  const [lightboxImage, setLightboxImage] = useState<{ src: string; filename: string } | null>(null)
+  const [lightboxImage, setLightboxImage] = useState<{ src: string; filename: string; type?: 'image' | 'pdf' } | null>(null)
   const [attachmentPreviews, setAttachmentPreviews] = useState<Record<string, string>>({})
+  const [pdfDataUrls, setPdfDataUrls] = useState<Record<string, string>>({})
   const titleRef = useRef<HTMLInputElement>(null)
   const descRef = useRef<HTMLTextAreaElement>(null)
 
@@ -1618,13 +1620,18 @@ function TaskDetailPanel({
     const imageAttachments = (task.attachments ?? []).filter((att) =>
       att.mimeType.startsWith('image/')
     )
-    if (imageAttachments.length === 0) {
+    const pdfAttachments = (task.attachments ?? []).filter((att) =>
+      att.mimeType === 'application/pdf'
+    )
+    if (imageAttachments.length === 0 && pdfAttachments.length === 0) {
       setAttachmentPreviews({})
+      setPdfDataUrls({})
       return
     }
     let cancelled = false
     const loadPreviews = async (): Promise<void> => {
       const previews: Record<string, string> = {}
+      const pdfs: Record<string, string> = {}
       for (const att of imageAttachments) {
         if (cancelled) return
         const base64 = await window.kanbai.kanban.readAttachment(att.storedPath)
@@ -1632,7 +1639,22 @@ function TaskDetailPanel({
           previews[att.id] = `data:${att.mimeType};base64,${base64}`
         }
       }
-      if (!cancelled) setAttachmentPreviews(previews)
+      for (const att of pdfAttachments) {
+        if (cancelled) return
+        const base64 = await window.kanbai.kanban.readAttachment(att.storedPath)
+        if (base64 && !cancelled) {
+          const pdfDataUrl = `data:application/pdf;base64,${base64}`
+          pdfs[att.id] = pdfDataUrl
+          const thumbnail = await renderPdfFirstPage(pdfDataUrl, 256)
+          if (thumbnail && !cancelled) {
+            previews[att.id] = thumbnail
+          }
+        }
+      }
+      if (!cancelled) {
+        setAttachmentPreviews(previews)
+        setPdfDataUrls(pdfs)
+      }
     }
     loadPreviews()
     return () => { cancelled = true }
@@ -1866,38 +1888,48 @@ function TaskDetailPanel({
         <div className="kanban-detail-attachments">
           {task.attachments && task.attachments.length > 0 ? (
             <>
-              {/* Image thumbnails grid */}
+              {/* Image & PDF thumbnails grid */}
               {task.attachments.some((att) => attachmentPreviews[att.id]) && (
                 <div className="kanban-attachment-thumbnails">
-                  {task.attachments.filter((att) => attachmentPreviews[att.id]).map((att) => (
-                    <div
-                      key={att.id}
-                      className="kanban-attachment-thumbnail"
-                      onClick={() => setLightboxImage({ src: attachmentPreviews[att.id]!, filename: att.filename })}
-                      title={att.filename}
-                    >
-                      <img src={attachmentPreviews[att.id]} alt={att.filename} />
-                    </div>
-                  ))}
+                  {task.attachments.filter((att) => attachmentPreviews[att.id]).map((att) => {
+                    const isPdf = att.mimeType === 'application/pdf'
+                    const lightboxSrc = isPdf ? (pdfDataUrls[att.id] ?? attachmentPreviews[att.id]!) : attachmentPreviews[att.id]!
+                    return (
+                      <div
+                        key={att.id}
+                        className={`kanban-attachment-thumbnail${isPdf ? ' kanban-attachment-thumbnail--pdf' : ''}`}
+                        onClick={() => setLightboxImage({ src: lightboxSrc, filename: att.filename, type: isPdf ? 'pdf' : 'image' })}
+                        title={att.filename}
+                      >
+                        <img src={attachmentPreviews[att.id]} alt={att.filename} />
+                        {isPdf && <span className="kanban-attachment-pdf-badge">PDF</span>}
+                      </div>
+                    )
+                  })}
                 </div>
               )}
               {/* File list */}
-              {task.attachments.map((att) => (
-                <div key={att.id} className={`kanban-attachment-item${attachmentPreviews[att.id] ? ' kanban-attachment-item--image' : ''}`}>
-                  {attachmentPreviews[att.id] ? (
+              {task.attachments.map((att) => {
+                const isPdf = att.mimeType === 'application/pdf'
+                const hasPreview = !!attachmentPreviews[att.id]
+                const lightboxSrc = isPdf ? (pdfDataUrls[att.id] ?? attachmentPreviews[att.id]!) : attachmentPreviews[att.id]!
+                const lightboxType = isPdf ? 'pdf' as const : 'image' as const
+                return (
+                <div key={att.id} className={`kanban-attachment-item${hasPreview ? ' kanban-attachment-item--image' : ''}`}>
+                  {hasPreview ? (
                     <img
                       className="kanban-attachment-item-thumb"
                       src={attachmentPreviews[att.id]}
                       alt={att.filename}
-                      onClick={() => setLightboxImage({ src: attachmentPreviews[att.id]!, filename: att.filename })}
+                      onClick={() => setLightboxImage({ src: lightboxSrc, filename: att.filename, type: lightboxType })}
                     />
                   ) : (
                     <span className="kanban-attachment-item-icon">📄</span>
                   )}
                   <span
-                    className={`kanban-attachment-item-name${attachmentPreviews[att.id] ? ' kanban-attachment-item-name--clickable' : ''}`}
+                    className={`kanban-attachment-item-name${hasPreview ? ' kanban-attachment-item-name--clickable' : ''}`}
                     title={att.storedPath}
-                    onClick={attachmentPreviews[att.id] ? () => setLightboxImage({ src: attachmentPreviews[att.id]!, filename: att.filename }) : undefined}
+                    onClick={hasPreview ? () => setLightboxImage({ src: lightboxSrc, filename: att.filename, type: lightboxType }) : undefined}
                   >
                     {att.filename}
                   </span>
@@ -1912,7 +1944,8 @@ function TaskDetailPanel({
                     &times;
                   </button>
                 </div>
-              ))}
+                )
+              })}
             </>
           ) : (
             <span className="kanban-detail-empty-hint">{t('kanban.noAttachments')}</span>
@@ -1923,11 +1956,24 @@ function TaskDetailPanel({
         </button>
       </div>
 
-      {/* Image lightbox */}
+      {/* Image / PDF lightbox */}
       {lightboxImage && (
         <div className="kanban-lightbox-overlay" onClick={() => setLightboxImage(null)}>
-          <div className="kanban-lightbox-content" onClick={(e) => e.stopPropagation()}>
-            <img src={lightboxImage.src} alt={lightboxImage.filename} onClick={() => setLightboxImage(null)} />
+          <div
+            className={`kanban-lightbox-content${lightboxImage.type === 'pdf' ? ' kanban-lightbox-content--pdf' : ''}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {lightboxImage.type === 'pdf' ? (
+              <object
+                data={lightboxImage.src}
+                type="application/pdf"
+                className="kanban-lightbox-pdf"
+              >
+                <p>PDF preview unavailable</p>
+              </object>
+            ) : (
+              <img src={lightboxImage.src} alt={lightboxImage.filename} onClick={() => setLightboxImage(null)} />
+            )}
             <div className="kanban-lightbox-filename">{lightboxImage.filename}</div>
           </div>
           <button className="kanban-lightbox-close" onClick={() => setLightboxImage(null)}>&times;</button>

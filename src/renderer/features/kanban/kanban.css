@@ -2312,6 +2312,24 @@
   object-fit: cover;
 }
 
+.kanban-attachment-thumbnail--pdf {
+  position: relative;
+}
+
+.kanban-attachment-pdf-badge {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  font-size: 8px;
+  font-weight: 700;
+  color: #fff;
+  background: #e74c3c;
+  padding: 1px 4px;
+  border-radius: 3px;
+  line-height: 1.2;
+  letter-spacing: 0.5px;
+}
+
 /* Image attachment item with mini thumb */
 .kanban-attachment-item--image {
   cursor: default;
@@ -2402,6 +2420,20 @@
 .kanban-lightbox-close:hover {
   background: rgba(255, 255, 255, 0.2);
   color: white;
+}
+
+/* PDF lightbox */
+.kanban-lightbox-content--pdf {
+  width: 80vw;
+  height: 90vh;
+}
+
+.kanban-lightbox-pdf {
+  width: 100%;
+  height: calc(100% - 30px);
+  border: none;
+  border-radius: 8px;
+  background: #fff;
 }
 
 /* Card attachment badge */
