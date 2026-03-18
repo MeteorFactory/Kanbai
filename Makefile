@@ -5,73 +5,17 @@ endif
 SHELL ?= /bin/bash
 .SHELLFLAGS := -c
 
-.PHONY: dev build clean install lint format test typecheck build-app app app-win check web
+.PHONY: dev check
 
 STAMP = node_modules/.install-stamp
-
-# Développement
-dev: $(STAMP)
-	npm run dev
-
-# Installation des dépendances
-install:
-	npm install
 
 $(STAMP): package.json
 	npm install
 	@node -e "require('fs').writeFileSync('node_modules/.install-stamp','')"
 
-# Build Vite (main + preload + renderer)
-build: $(STAMP)
-	npm run build
+dev: $(STAMP)
+	npm run dev
 
-# Package app
-ifeq ($(OS),Windows_NT)
-app: build
-	npx electron-builder --win --publish never
-else
-app: build
-	npx electron-builder --mac --publish never
-endif
-
-app-win: build
-	npx electron-builder --win --publish never
-
-build-app: app
-
-# Qualité
-lint: $(STAMP)
-	npm run lint
-
-lint-fix: $(STAMP)
-	npm run lint:fix
-
-format: $(STAMP)
-	npm run format
-
-typecheck: $(STAMP)
-	npm run typecheck
-
-# Tests
-test: $(STAMP)
-	npm run test
-
-test-watch: $(STAMP)
-	npm run test:watch
-
-test-coverage: $(STAMP)
-	npm run test:coverage
-
-# Website local server
-web:
-	@echo "Serving website at http://localhost:8080"
-	cd website && python3 -m http.server 8080
-
-# Nettoyage
-clean:
-	rm -rf dist release .vite
-
-# Pre-deploy check — runs the 4 CI conditions and prints a report
 check: $(STAMP)
 	@echo ""
 	@echo "══════════════════════════════════════"
