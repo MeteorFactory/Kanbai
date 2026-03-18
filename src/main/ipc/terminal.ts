@@ -20,6 +20,8 @@ interface ManagedTerminal {
   workspaceId: string | null
   tabId: string | null
   label: string | null
+  taskId: string | null
+  ticketNumber: string | null
   createdAt: number
   disposables: Array<{ dispose(): void }>
 }
@@ -30,12 +32,28 @@ export interface TerminalSessionInfo {
   cwd: string
   workspaceId: string | null
   tabId: string | null
+  taskId: string | null
+  ticketNumber: string | null
   title: string
   status: 'working' | 'idle'
   createdAt: number
 }
 
 const terminals = new Map<string, ManagedTerminal>()
+
+/**
+ * Ring buffer per terminal — stores the last OUTPUT_BUFFER_MAX_SIZE bytes of
+ * PTY output so the companion app can display recent terminal content.
+ */
+const OUTPUT_BUFFER_MAX_SIZE = 64 * 1024 // 64 KB per session
+const outputBuffers = new Map<string, string>()
+
+/**
+ * Pending input commands written by external processes (KanbaiApi relay).
+ * The Desktop app polls this file and feeds data to the matching PTY.
+ */
+const INPUT_QUEUE_PATH = path.join(os.homedir(), '.kanbai', 'terminal-input-queue.json')
+const OUTPUT_DIR = path.join(os.homedir(), '.kanbai', 'terminal-output')
 
 /**
  * Dispose listeners BEFORE killing the pty process.
@@ -122,6 +140,8 @@ export function getTerminalSessionsInfo(): TerminalSessionInfo[] {
     cwd: t.cwd,
     workspaceId: t.workspaceId,
     tabId: t.tabId,
+    taskId: t.taskId,
+    ticketNumber: t.ticketNumber,
     title: t.label || path.basename(t.cwd) || 'Terminal',
     status: 'idle' as const,
     createdAt: t.createdAt,
@@ -145,6 +165,82 @@ export function updateTerminalLabel(sessionId: string, label: string): void {
   if (terminal) {
     terminal.label = label
     persistTerminalSessions()
+  }
+}
+
+/** Link a terminal session to a kanban task (called from renderer after tab creation) */
+export function setTerminalTaskInfo(tabId: string, taskId: string, ticketNumber: string): void {
+  for (const terminal of terminals.values()) {
+    if (terminal.tabId === tabId) {
+      terminal.taskId = taskId
+      terminal.ticketNumber = ticketNumber
+      persistTerminalSessions()
+      return
+    }
+  }
+}
+
+/** Return buffered output for a terminal session */
+export function getTerminalOutput(sessionId: string): string {
+  return outputBuffers.get(sessionId) ?? ''
+}
+
+/** Write input to a terminal session (used by companion feature) */
+export function writeTerminalInput(sessionId: string, data: string): boolean {
+  const terminal = terminals.get(sessionId)
+  if (!terminal) return false
+  terminal.pty.write(data)
+  return true
+}
+
+/** Append PTY output to the ring buffer and persist to disk */
+function appendOutputBuffer(sessionId: string, data: string): void {
+  let buffer = outputBuffers.get(sessionId) ?? ''
+  buffer += data
+  if (buffer.length > OUTPUT_BUFFER_MAX_SIZE) {
+    buffer = buffer.slice(buffer.length - OUTPUT_BUFFER_MAX_SIZE)
+  }
+  outputBuffers.set(sessionId, buffer)
+
+  // Persist to file for KanbaiApi access
+  try {
+    if (!fs.existsSync(OUTPUT_DIR)) fs.mkdirSync(OUTPUT_DIR, { recursive: true })
+    fs.writeFileSync(path.join(OUTPUT_DIR, `${sessionId}.log`), buffer, 'utf-8')
+  } catch {
+    // Best-effort
+  }
+}
+
+/** Process pending input commands from the relay queue file */
+function processInputQueue(): void {
+  try {
+    if (!fs.existsSync(INPUT_QUEUE_PATH)) return
+    const raw = fs.readFileSync(INPUT_QUEUE_PATH, 'utf-8')
+    if (!raw.trim()) return
+    const commands = JSON.parse(raw) as Array<{ sessionId: string; data: string }>
+    // Clear queue immediately to avoid double-processing
+    fs.writeFileSync(INPUT_QUEUE_PATH, '[]', 'utf-8')
+    for (const cmd of commands) {
+      writeTerminalInput(cmd.sessionId, cmd.data)
+    }
+  } catch {
+    // Malformed or locked — skip this cycle
+  }
+}
+
+let inputQueueInterval: ReturnType<typeof setInterval> | null = null
+
+/** Start polling for external input commands (called once at registration) */
+function startInputQueuePolling(): void {
+  if (inputQueueInterval) return
+  inputQueueInterval = setInterval(processInputQueue, 500)
+}
+
+/** Stop input queue polling (called on cleanup) */
+function stopInputQueuePolling(): void {
+  if (inputQueueInterval) {
+    clearInterval(inputQueueInterval)
+    inputQueueInterval = null
   }
 }
 
@@ -212,17 +308,20 @@ export function registerTerminalHandlers(ipcMain: IpcMain): void {
         workspaceId: options.workspaceId ?? null,
         tabId: options.tabId ?? null,
         label: options.label ?? null,
+        taskId: null,
+        ticketNumber: null,
         createdAt: Date.now(),
         disposables: [],
       }
       terminals.set(id, managed)
       persistTerminalSessions()
 
-      // Forward output to renderer (try-catch guards against render frame disposal during reload)
+      // Forward output to renderer and capture in ring buffer for companion API
       managed.disposables.push(
         pty.onData((data: string) => {
           // Guard: ignore callbacks for terminals already removed from the map
           if (!terminals.has(id)) return
+          appendOutputBuffer(id, data)
           for (const win of BrowserWindow.getAllWindows()) {
             try {
               if (!win.isDestroyed() && !win.webContents.isDestroyed()) {
@@ -236,6 +335,9 @@ export function registerTerminalHandlers(ipcMain: IpcMain): void {
       managed.disposables.push(
         pty.onExit(({ exitCode, signal }) => {
           terminals.delete(id)
+          outputBuffers.delete(id)
+          // Clean up output file
+          try { fs.unlinkSync(path.join(OUTPUT_DIR, `${id}.log`)) } catch { /* ignore */ }
           persistTerminalSessions()
           for (const win of BrowserWindow.getAllWindows()) {
             try {
@@ -292,6 +394,17 @@ export function registerTerminalHandlers(ipcMain: IpcMain): void {
     updateTerminalLabel(id, label)
   })
 
+  ipcMain.on(IPC_CHANNELS.TERMINAL_SET_TASK_INFO, (_event, { tabId, taskId, ticketNumber }: { tabId: string; taskId: string; ticketNumber: string }) => {
+    setTerminalTaskInfo(tabId, taskId, ticketNumber)
+  })
+
+  ipcMain.handle(IPC_CHANNELS.TERMINAL_GET_OUTPUT, async (_event, { id }: { id: string }): Promise<string> => {
+    return getTerminalOutput(id)
+  })
+
+  // Start input queue polling for companion relay
+  startInputQueuePolling()
+
   ipcMain.handle(IPC_CHANNELS.TERMINAL_CLOSE, async (_event, { id }: { id: string }) => {
     const terminal = terminals.get(id)
     if (terminal) {
@@ -311,9 +424,11 @@ export function registerTerminalHandlers(ipcMain: IpcMain): void {
 }
 
 export function cleanupTerminals(): void {
+  stopInputQueuePolling()
   for (const [, terminal] of terminals) {
     disposeTerminal(terminal)
   }
   terminals.clear()
+  outputBuffers.clear()
   persistTerminalSessions()
 }

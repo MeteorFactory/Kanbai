@@ -21,6 +21,10 @@ const api = {
       ipcRenderer.invoke(IPC_CHANNELS.TERMINAL_CHECK_BUSY, { id }),
     updateLabel: (id: string, label: string) =>
       ipcRenderer.send(IPC_CHANNELS.TERMINAL_UPDATE_LABEL, { id, label }),
+    setTaskInfo: (tabId: string, taskId: string, ticketNumber: string) =>
+      ipcRenderer.send(IPC_CHANNELS.TERMINAL_SET_TASK_INFO, { tabId, taskId, ticketNumber }),
+    getOutput: (id: string): Promise<string> =>
+      ipcRenderer.invoke(IPC_CHANNELS.TERMINAL_GET_OUTPUT, { id }),
     onData: (callback: (data: { id: string; data: string }) => void) => {
       const listener = (_event: Electron.IpcRendererEvent, payload: { id: string; data: string }) =>
         callback(payload)
