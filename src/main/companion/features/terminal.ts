@@ -25,17 +25,59 @@ export const terminalFeature: CompanionFeature = {
       ? sessions.filter((s) => s.workspaceId === ctx.workspaceId || !s.workspaceId)
       : sessions
 
+    // Group sessions by tabId so split-pane tabs appear as a single entry.
+    // Sessions without a tabId are kept individually.
+    const tabMap = new Map<string, typeof filtered>()
+    const orphans: typeof filtered = []
+    for (const s of filtered) {
+      if (s.tabId) {
+        const group = tabMap.get(s.tabId)
+        if (group) {
+          group.push(s)
+        } else {
+          tabMap.set(s.tabId, [s])
+        }
+      } else {
+        orphans.push(s)
+      }
+    }
+
+    const tabEntries = Array.from(tabMap.values()).flatMap((group) => {
+      // Use the first session as representative for the tab
+      const representative = group[0]
+      if (!representative) return []
+      // A tab is "working" if any of its sessions is working
+      const status = group.some((s) => s.status === 'working') ? 'working' : 'idle'
+      // Use the earliest createdAt for elapsed time
+      const earliestCreatedAt = Math.min(...group.map((s) => s.createdAt))
+      // Collect all session IDs so the mobile app can still interact with individual sessions
+      const sessionIds = group.map((s) => s.id)
+      return {
+        id: representative.id,
+        tabId: representative.tabId,
+        taskId: representative.taskId,
+        ticketNumber: representative.ticketNumber,
+        title: representative.title,
+        status,
+        elapsed: formatElapsed(earliestCreatedAt),
+        sessionIds,
+      }
+    })
+
+    const orphanEntries = orphans.map((s) => ({
+      id: s.id,
+      tabId: s.tabId,
+      taskId: s.taskId,
+      ticketNumber: s.ticketNumber,
+      title: s.title,
+      status: s.status,
+      elapsed: formatElapsed(s.createdAt),
+      sessionIds: [s.id],
+    }))
+
     return {
       success: true,
-      data: filtered.map((s) => ({
-        id: s.id,
-        tabId: s.tabId,
-        taskId: s.taskId,
-        ticketNumber: s.ticketNumber,
-        title: s.title,
-        status: s.status,
-        elapsed: formatElapsed(s.createdAt),
-      })),
+      data: [...tabEntries, ...orphanEntries],
     }
   },
 
