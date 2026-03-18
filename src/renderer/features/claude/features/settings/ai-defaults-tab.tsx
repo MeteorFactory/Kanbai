@@ -6,7 +6,8 @@ import type { AiDefaults } from '../../../../../shared/types'
 import { useWorkspaceStore } from '../../../../lib/stores/workspaceStore'
 
 interface Props {
-  projectId: string
+  projectId?: string
+  workspaceId?: string
 }
 
 type DefaultsScope = 'project' | 'workspace'
@@ -48,40 +49,73 @@ function ProviderSelector({
   )
 }
 
-export function AiDefaultsTab({ projectId }: Props) {
+export function AiDefaultsTab({ projectId, workspaceId }: Props) {
   const { t } = useI18n()
   const [defaults, setDefaults] = useState<AiDefaults>({})
   const [wsDefaults, setWsDefaults] = useState<AiDefaults>({})
   const [loading, setLoading] = useState(true)
   const [scope, setScope] = useState<DefaultsScope>('project')
   const [propagating, setPropagating] = useState(false)
+  const [propagated, setPropagated] = useState(false)
+
+  const isWorkspaceMode = !projectId && !!workspaceId
 
   const { projects, workspaces } = useWorkspaceStore()
   const project = projects.find((p) => p.id === projectId)
-  const workspace = workspaces.find((w) => w.id === project?.workspaceId)
+  const resolvedWorkspaceId = workspaceId ?? project?.workspaceId
+  const workspace = workspaces.find((w) => w.id === resolvedWorkspaceId)
 
   useEffect(() => {
     setLoading(true)
-    const promises: Promise<void>[] = [
-      window.kanbai.aiDefaults.get(projectId).then((d: AiDefaults) => {
+    if (isWorkspaceMode && workspaceId) {
+      // Workspace-only mode
+      window.kanbai.aiDefaults.getWorkspace(workspaceId).then((d: AiDefaults) => {
         setDefaults(d ?? {})
-      }).catch(() => { /* ignore */ }),
-    ]
-    if (workspace) {
-      promises.push(
-        window.kanbai.aiDefaults.getWorkspace(workspace.id).then((d: AiDefaults) => {
-          setWsDefaults(d ?? {})
+        setLoading(false)
+      }).catch(() => setLoading(false))
+    } else if (projectId) {
+      // Project mode: load project defaults + workspace defaults
+      const promises: Promise<void>[] = [
+        window.kanbai.aiDefaults.get(projectId).then((d: AiDefaults) => {
+          setDefaults(d ?? {})
         }).catch(() => { /* ignore */ }),
-      )
+      ]
+      if (workspace) {
+        promises.push(
+          window.kanbai.aiDefaults.getWorkspace(workspace.id).then((d: AiDefaults) => {
+            setWsDefaults(d ?? {})
+          }).catch(() => { /* ignore */ }),
+        )
+      }
+      Promise.all(promises).then(() => setLoading(false))
+    } else {
+      setLoading(false)
     }
-    Promise.all(promises).then(() => setLoading(false))
-  }, [projectId, workspace])
+  }, [projectId, workspaceId, isWorkspaceMode, workspace])
 
   const save = useCallback(async (next: AiDefaults) => {
-    if (scope === 'workspace' && workspace) {
+    setPropagated(false)
+
+    if (isWorkspaceMode && workspaceId) {
+      // Workspace-only mode: save and propagate to all projects
+      setDefaults(next)
+      await window.kanbai.aiDefaults.setWorkspace(workspaceId, next as unknown as Record<string, unknown>)
+      const { workspaces: currentWs, projects: currentProjects } = useWorkspaceStore.getState()
+      const updatedWs = currentWs.map((w) =>
+        w.id === workspaceId ? { ...w, aiDefaults: next } : w,
+      )
+      const updatedProjects = currentProjects.map((p) => {
+        if (p.workspaceId === workspaceId) {
+          return { ...p, aiDefaults: { ...next, ...(p.aiDefaults ?? {}) } }
+        }
+        return p
+      })
+      useWorkspaceStore.setState({ workspaces: updatedWs, projects: updatedProjects })
+      setPropagated(true)
+      setTimeout(() => setPropagated(false), 2000)
+    } else if (scope === 'workspace' && workspace) {
       setWsDefaults(next)
       await window.kanbai.aiDefaults.setWorkspace(workspace.id, next as unknown as Record<string, unknown>)
-      // Reload projects to reflect auto-propagated values
       const allProjects = await window.kanbai.project.list()
       useWorkspaceStore.setState((state) => ({
         workspaces: state.workspaces.map((w) =>
@@ -89,7 +123,9 @@ export function AiDefaultsTab({ projectId }: Props) {
         ),
         projects: allProjects,
       }))
-    } else {
+      setPropagated(true)
+      setTimeout(() => setPropagated(false), 2000)
+    } else if (projectId) {
       setDefaults(next)
       await window.kanbai.aiDefaults.set(projectId, next as unknown as Record<string, unknown>)
       useWorkspaceStore.setState((state) => ({
@@ -98,14 +134,13 @@ export function AiDefaultsTab({ projectId }: Props) {
         ),
       }))
     }
-  }, [projectId, scope, workspace])
+  }, [projectId, workspaceId, scope, workspace, isWorkspaceMode])
 
   const handlePropagate = useCallback(async () => {
     if (!workspace) return
     setPropagating(true)
     try {
       await window.kanbai.aiDefaults.propagateWorkspace(workspace.id)
-      // Reload all projects to reflect propagated values
       const allProjects = await window.kanbai.project.list()
       useWorkspaceStore.setState({ projects: allProjects })
     } catch { /* ignore */ }
@@ -138,7 +173,14 @@ export function AiDefaultsTab({ projectId }: Props) {
 
   return (
     <div className="cs-general-tab">
-      {workspace && (
+      {isWorkspaceMode && (
+        <div className="cs-general-section">
+          <div className="cs-general-card" style={{ padding: '8px 12px', background: 'var(--bg-tertiary)', borderRadius: 6, fontSize: 13, color: 'var(--text-secondary)' }}>
+            {t('ai.defaults.workspaceMode')}
+          </div>
+        </div>
+      )}
+      {!isWorkspaceMode && workspace && (
         <div className="cs-general-section">
           <div className="ai-defaults-scope-toggle">
             <button
@@ -216,6 +258,12 @@ export function AiDefaultsTab({ projectId }: Props) {
           />
         </div>
       </div>
+
+      {propagated && (
+        <div style={{ position: 'fixed', bottom: 20, right: 20, background: 'var(--green)', color: '#fff', padding: '8px 16px', borderRadius: 8, fontSize: 13, zIndex: 9999 }}>
+          {t('ai.defaults.propagated')}
+        </div>
+      )}
     </div>
   )
 }

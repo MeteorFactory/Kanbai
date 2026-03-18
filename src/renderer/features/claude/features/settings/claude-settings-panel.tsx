@@ -46,9 +46,9 @@ const SIDEBAR_ITEMS: { key: SidebarSection; providerId?: AiProviderId }[] = [
 
 export function ClaudeSettingsPanel() {
   const { t } = useI18n()
-  const { activeProjectId, projects, workspaces } = useWorkspaceStore()
+  const { activeProjectId, activeWorkspaceId, projects, workspaces } = useWorkspaceStore()
   const activeProject = projects.find((p) => p.id === activeProjectId)
-  const activeWorkspace = workspaces.find((w) => w.id === activeProject?.workspaceId)
+  const activeWorkspace = workspaces.find((w) => w.id === (activeProject?.workspaceId ?? activeWorkspaceId))
 
   const [section, setSection] = useState<SidebarSection>('general')
   const [claudeSubTab, setClaudeSubTab] = useState<ClaudeSubTab>('general')
@@ -206,6 +206,46 @@ export function ClaudeSettingsPanel() {
   void setSettingsTarget
 
   if (!activeProject) {
+    // Workspace-only mode: show AI defaults at workspace level
+    if (activeWorkspace) {
+      return (
+        <div className="claude-rules-panel">
+          <div className="ai-panel-body">
+            <div className="ai-sidebar">
+              <div className="ai-sidebar-header">
+                <h3>{t('ai.sidebar.title')}</h3>
+              </div>
+              <div className="ai-sidebar-content">
+                <button className="ai-sidebar-item ai-sidebar-item--active">
+                  <span className="ai-sidebar-icon">&#9881;</span>
+                  <span className="ai-sidebar-item-label">{t('ai.sidebar.general')}</span>
+                </button>
+                {SIDEBAR_ITEMS.filter((i) => i.providerId).map((item) => (
+                  <button
+                    key={item.key}
+                    className="ai-sidebar-item"
+                    style={{ opacity: 0.5, cursor: 'not-allowed' }}
+                    disabled
+                    title={t('claude.noActiveProject')}
+                  >
+                    <span
+                      className="ai-sidebar-dot"
+                      style={{ background: AI_PROVIDERS[item.providerId!].detectionColor }}
+                    />
+                    <span className="ai-sidebar-item-label">
+                      {AI_PROVIDERS[item.providerId!].displayName}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="ai-panel-content">
+              <AiDefaultsTab workspaceId={activeWorkspace.id} />
+            </div>
+          </div>
+        </div>
+      )
+    }
     return <div className="file-viewer-empty">{t('claude.noActiveProject')}</div>
   }
   if (loading) {
@@ -261,7 +301,7 @@ export function ClaudeSettingsPanel() {
 
         <div className="ai-panel-content">
           {section === 'general' && (
-            <AiDefaultsTab projectId={activeProject.id} />
+            <AiDefaultsTab projectId={activeProject.id} workspaceId={activeWorkspace?.id} />
           )}
 
           {section === 'claude' && (

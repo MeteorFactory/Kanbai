@@ -185,7 +185,71 @@ export function registerAiProviderHandlers(ipcMain: IpcMain): void {
     },
   )
 
-  // Set AI defaults at workspace level
+  // Get workspace AI defaults (merged with global)
+  ipcMain.handle(
+    IPC_CHANNELS.AI_DEFAULTS_GET_WORKSPACE,
+    async (_event, { workspaceId }: { workspaceId: string }) => {
+      if (typeof workspaceId !== 'string') throw new Error('Invalid workspace ID')
+
+      const globalDefaults = readGlobalAiDefaults()
+      const workspace = storage.getWorkspace(workspaceId)
+      const workspaceDefaults = workspace?.aiDefaults ?? {}
+
+      return { ...globalDefaults, ...workspaceDefaults }
+    },
+  )
+
+  // Also register under the HEAD channel name for backward compatibility
+  ipcMain.handle(
+    IPC_CHANNELS.AI_WORKSPACE_DEFAULTS_GET,
+    async (_event, { workspaceId }: { workspaceId: string }) => {
+      if (typeof workspaceId !== 'string') throw new Error('Invalid workspace ID')
+
+      const workspace = storage.getWorkspace(workspaceId)
+      if (!workspace) {
+        return {}
+      }
+
+      const globalDefaults = readGlobalAiDefaults()
+      const workspaceDefaults = workspace.aiDefaults ?? {}
+      return { ...globalDefaults, ...workspaceDefaults }
+    },
+  )
+
+  // Set AI defaults at workspace level and propagate to projects
+  ipcMain.handle(
+    IPC_CHANNELS.AI_DEFAULTS_SET_WORKSPACE,
+    async (_event, { workspaceId, defaults }: { workspaceId: string; defaults: AiDefaults }) => {
+      if (typeof workspaceId !== 'string') throw new Error('Invalid workspace ID')
+
+      const workspace = storage.getWorkspace(workspaceId)
+      if (!workspace) {
+        return { success: false, error: 'Workspace not found' }
+      }
+
+      // Save workspace-level defaults
+      workspace.aiDefaults = defaults
+      workspace.updatedAt = Date.now()
+      storage.updateWorkspace(workspace)
+
+      // Propagate to all projects in the workspace (fill-in-gaps, not overwrite)
+      const projects = storage.getProjects(workspaceId)
+      let updatedCount = 0
+      for (const project of projects) {
+        const merged = { ...defaults, ...(project.aiDefaults ?? {}) }
+        const hasChanges = JSON.stringify(merged) !== JSON.stringify(project.aiDefaults ?? {})
+        if (hasChanges) {
+          project.aiDefaults = merged
+          storage.updateProject(project)
+          updatedCount++
+        }
+      }
+
+      return { success: true, updatedCount, propagatedCount: projects.length }
+    },
+  )
+
+  // Also register under the HEAD channel name for backward compatibility
   ipcMain.handle(
     IPC_CHANNELS.AI_WORKSPACE_DEFAULTS_SET,
     async (_event, { workspaceId, defaults }: { workspaceId: string; defaults: AiDefaults }) => {
@@ -200,7 +264,6 @@ export function registerAiProviderHandlers(ipcMain: IpcMain): void {
       workspace.updatedAt = Date.now()
       storage.updateWorkspace(workspace)
 
-      // Auto-propagate defaults to projects (fill-in-gaps, not overwrite)
       const projects = storage.getProjects(workspaceId)
       let updatedCount = 0
       for (const project of projects) {
@@ -214,23 +277,6 @@ export function registerAiProviderHandlers(ipcMain: IpcMain): void {
       }
 
       return { success: true, updatedCount }
-    },
-  )
-
-  // Get workspace AI defaults
-  ipcMain.handle(
-    IPC_CHANNELS.AI_WORKSPACE_DEFAULTS_GET,
-    async (_event, { workspaceId }: { workspaceId: string }) => {
-      if (typeof workspaceId !== 'string') throw new Error('Invalid workspace ID')
-
-      const workspace = storage.getWorkspace(workspaceId)
-      if (!workspace) {
-        return {}
-      }
-
-      const globalDefaults = readGlobalAiDefaults()
-      const workspaceDefaults = workspace.aiDefaults ?? {}
-      return { ...globalDefaults, ...workspaceDefaults }
     },
   )
 

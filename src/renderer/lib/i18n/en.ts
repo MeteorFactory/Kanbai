@@ -663,6 +663,8 @@ export const en = {
   'ai.defaults.databaseDesc': 'AI used for natural language queries on databases',
   'ai.defaults.databaseModelDesc': 'Codex model for databases (lightweight and fast recommended)',
   'ai.defaults.modelLabel': 'Model',
+  'ai.defaults.workspaceMode': 'Workspace mode — changes will be propagated to all projects in this workspace.',
+  'ai.defaults.propagated': 'Changes propagated to all workspace projects',
 
   // Codex tabs
   'codex.rulesTab': 'Rules',
