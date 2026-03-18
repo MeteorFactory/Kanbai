@@ -137,13 +137,13 @@ function buildContext(
   projectParam: string | null,
   body?: Record<string, unknown>,
 ): CompanionContext | null {
-  const wsQuery = workspaceParam ?? (body?.workspace as string | undefined) ?? null
+  const wsQuery = workspaceParam ?? (body?.workspace as string | undefined) ?? (body?.workspaceId as string | undefined) ?? null
   if (!wsQuery) return null
 
   const workspaceId = resolveWorkspaceId(wsQuery)
   if (!workspaceId) return null
 
-  const projectId = projectParam ?? (body?.project as string | undefined) ?? undefined
+  const projectId = projectParam ?? (body?.project as string | undefined) ?? (body?.projectId as string | undefined) ?? undefined
   let projectPath: string | undefined
   if (projectId) {
     const storage = new StorageService()
@@ -177,8 +177,8 @@ async function handleV2FeatureState(
   }
 
   const ctx = buildContext(
-    url.searchParams.get('workspace'),
-    url.searchParams.get('project'),
+    url.searchParams.get('workspace') ?? url.searchParams.get('workspaceId'),
+    url.searchParams.get('project') ?? url.searchParams.get('projectId'),
   )
 
   if ((feature.workspaceScoped || feature.projectScoped) && !ctx) {
@@ -275,6 +275,32 @@ function handleRequest(req: http.IncomingMessage, res: http.ServerResponse): voi
   const cmdMatch = pathname.match(/^\/api\/v2\/companion\/features\/([^/]+)\/commands\/([^/]+)$/)
   if (req.method === 'POST' && cmdMatch) {
     handleV2FeatureCommand(cmdMatch[1]!, cmdMatch[2]!, req, res).catch((err) =>
+      sendError(res, 500, String(err)),
+    )
+    return
+  }
+
+  // -----------------------------------------------------------------------
+  // V1 Feature aliases — maps v1 paths to v2 handlers for mobile compat
+  // -----------------------------------------------------------------------
+
+  // GET /api/v1/features
+  if (req.method === 'GET' && pathname === '/api/v1/features') {
+    handleV2Features(res).catch((err) => sendError(res, 500, String(err)))
+    return
+  }
+
+  // GET /api/v1/features/:id/state
+  const v1StateMatch = pathname.match(/^\/api\/v1\/features\/([^/]+)\/state$/)
+  if (req.method === 'GET' && v1StateMatch) {
+    handleV2FeatureState(v1StateMatch[1]!, url, res).catch((err) => sendError(res, 500, String(err)))
+    return
+  }
+
+  // POST /api/v1/features/:id/commands/:cmd
+  const v1CmdMatch = pathname.match(/^\/api\/v1\/features\/([^/]+)\/commands\/([^/]+)$/)
+  if (req.method === 'POST' && v1CmdMatch) {
+    handleV2FeatureCommand(v1CmdMatch[1]!, v1CmdMatch[2]!, req, res).catch((err) =>
       sendError(res, 500, String(err)),
     )
     return
