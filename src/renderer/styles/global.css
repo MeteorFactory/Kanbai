@@ -221,6 +221,20 @@ body {
   gap: 2px;
   flex: 1;
   -webkit-app-region: no-drag;
+  position: relative;
+}
+
+.titlebar-indicator {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  height: 32px;
+  transform: translateY(-50%);
+  background: var(--nav-active-bg);
+  border-radius: 10px;
+  box-shadow: 0 0 8px rgba(151, 71, 255, 0.08);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .titlebar-title {
@@ -1004,9 +1018,11 @@ body {
   font-family: inherit;
   color: var(--text-muted);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: color 0.2s ease, font-weight 0.2s ease;
   white-space: nowrap;
   flex-shrink: 0;
+  position: relative;
+  z-index: 1;
 }
 
 .view-btn:hover {
@@ -1015,10 +1031,13 @@ body {
 }
 
 .view-btn--active {
-  background: var(--nav-active-bg);
+  background: transparent;
   color: var(--accent);
   font-weight: 600;
-  box-shadow: 0 0 8px rgba(151, 71, 255, 0.08);
+}
+
+.view-btn--active:hover {
+  background: transparent;
 }
 
 .view-content {

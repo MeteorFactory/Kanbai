@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
+import { useState, useRef, useEffect, useCallback, useMemo, useLayoutEffect } from 'react'
 import { NotificationCenter } from '../ui/notification-center'
 import { CompanionIndicator } from '../../features/companion'
 import { UpdateCenter } from '../../features/updates/update-center'
@@ -169,6 +169,30 @@ export function TitleBar(_props: TitleBarProps) {
     setSearchFocused(false)
   }, [])
 
+  // Sliding indicator
+  const tabsRef = useRef<HTMLDivElement>(null)
+  const [indicator, setIndicator] = useState<{ left: number; width: number } | null>(null)
+  const [hasAnimated, setHasAnimated] = useState(false)
+
+  useLayoutEffect(() => {
+    const container = tabsRef.current
+    if (!container) return
+    const activeBtn = container.querySelector('.view-btn--active') as HTMLElement | null
+    if (activeBtn) {
+      const containerRect = container.getBoundingClientRect()
+      const btnRect = activeBtn.getBoundingClientRect()
+      setIndicator({
+        left: btnRect.left - containerRect.left,
+        width: btnRect.width,
+      })
+      if (!hasAnimated) {
+        requestAnimationFrame(() => setHasAnimated(true))
+      }
+    } else {
+      setIndicator(null)
+    }
+  }, [viewMode, hasAnimated])
+
   return (
     <div className="titlebar">
       <div className="titlebar-drag" />
@@ -188,7 +212,17 @@ export function TitleBar(_props: TitleBarProps) {
         </>
       )}
 
-      <div className="titlebar-tabs">
+      <div className="titlebar-tabs" ref={tabsRef}>
+        {indicator && (
+          <div
+            className="titlebar-indicator"
+            style={{
+              transform: `translateX(${indicator.left}px)`,
+              width: `${indicator.width}px`,
+              transition: hasAnimated ? 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1)' : 'none',
+            }}
+          />
+        )}
         {isTabVisible('kanban') && (
           <button
             className={`view-btn${viewMode === 'kanban' ? ' view-btn--active' : ''}`}
