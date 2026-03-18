@@ -183,13 +183,13 @@
   flex-shrink: 0;
 }
 
-.devops-dot--succeeded { background: var(--success, #3DD68C); }
-.devops-dot--failed { background: var(--danger, #F47067); }
+.devops-dot--succeeded { background: var(--success, #20D4A0); }
+.devops-dot--failed { background: var(--danger, #F4585B); }
 .devops-dot--canceled { background: var(--warning, #F5A623); }
 .devops-dot--running { background: var(--info, #58A6FF); animation: devops-dot-pulse 1.5s ease-in-out infinite; }
-.devops-dot--notStarted { background: var(--text-muted, #565C66); }
+.devops-dot--notStarted { background: var(--text-muted, #6B6A65); }
 .devops-dot--pending { background: var(--warning, #F5A623); animation: devops-dot-pulse 2s ease-in-out infinite; }
-.devops-dot--unknown { background: var(--text-muted, #565C66); }
+.devops-dot--unknown { background: var(--text-muted, #6B6A65); }
 
 @keyframes devops-dot-pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
@@ -222,14 +222,14 @@
 }
 
 /* Status-colored left bar */
-.devops-pipeline-card[data-status="succeeded"] { border-left-color: var(--success, #3DD68C); }
-.devops-pipeline-card[data-status="failed"] { border-left-color: var(--danger, #F47067); }
+.devops-pipeline-card[data-status="succeeded"] { border-left-color: var(--success, #20D4A0); }
+.devops-pipeline-card[data-status="failed"] { border-left-color: var(--danger, #F4585B); }
 .devops-pipeline-card[data-status="running"] { border-left-color: var(--info, #58A6FF); }
 .devops-pipeline-card[data-status="canceled"] { border-left-color: var(--warning, #F5A623); }
-.devops-pipeline-card[data-status="notStarted"] { border-left-color: var(--text-muted, #565C66); }
+.devops-pipeline-card[data-status="notStarted"] { border-left-color: var(--text-muted, #6B6A65); }
 
-.devops-pipeline-card--selected[data-status="succeeded"] { border-left-color: var(--success, #3DD68C); }
-.devops-pipeline-card--selected[data-status="failed"] { border-left-color: var(--danger, #F47067); }
+.devops-pipeline-card--selected[data-status="succeeded"] { border-left-color: var(--success, #20D4A0); }
+.devops-pipeline-card--selected[data-status="failed"] { border-left-color: var(--danger, #F4585B); }
 .devops-pipeline-card--selected[data-status="running"] { border-left-color: var(--info, #58A6FF); }
 .devops-pipeline-card--selected[data-status="canceled"] { border-left-color: var(--warning, #F5A623); }
 
@@ -284,7 +284,7 @@
   background: var(--bg-surface);
   padding: 1px 6px;
   border-radius: 3px;
-  font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
   color: var(--text-secondary);
 }
@@ -311,12 +311,12 @@
   line-height: 1;
 }
 
-.devops-status--succeeded { color: var(--success, #3DD68C); }
-.devops-status--failed { color: var(--danger, #F47067); }
+.devops-status--succeeded { color: var(--success, #20D4A0); }
+.devops-status--failed { color: var(--danger, #F4585B); }
 .devops-status--canceled { color: var(--warning, #F5A623); }
 .devops-status--running { color: var(--info, #58A6FF); }
-.devops-status--notStarted { color: var(--text-muted, #565C66); }
-.devops-status--unknown { color: var(--text-muted, #565C66); }
+.devops-status--notStarted { color: var(--text-muted, #6B6A65); }
+.devops-status--unknown { color: var(--text-muted, #6B6A65); }
 .devops-status--pending { color: var(--warning, #F5A623); }
 
 /* ──────────────────────────────────
@@ -560,8 +560,8 @@
 }
 
 .devops-badge--error {
-  color: var(--danger, #F47067);
-  background: rgba(244, 112, 103, 0.12);
+  color: var(--danger, #F4585B);
+  background: rgba(244, 88, 91, 0.12);
 }
 
 .devops-badge--warning {
@@ -572,14 +572,14 @@
 .devops-stage-datetime {
   font-size: 11px;
   color: var(--text-secondary);
-  font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+  font-family: var(--font-mono);
   flex-shrink: 0;
 }
 
 .devops-stage-duration {
   font-size: 11px;
   color: var(--text-muted);
-  font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+  font-family: var(--font-mono);
   flex-shrink: 0;
 }
 
@@ -595,7 +595,7 @@
 
 /* Failed stage highlight */
 .devops-stage-row--failed {
-  border-left: 3px solid var(--danger, #F47067);
+  border-left: 3px solid var(--danger, #F4585B);
 }
 
 /* ──────────────────────────────────
@@ -635,7 +635,7 @@
 .devops-job-duration {
   font-size: 11px;
   color: var(--text-muted);
-  font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+  font-family: var(--font-mono);
   flex-shrink: 0;
 }
 
@@ -661,7 +661,7 @@
 }
 
 .devops-job-item--failed {
-  border-left: 2px solid rgba(244, 112, 103, 0.4);
+  border-left: 2px solid rgba(244, 88, 91, 0.4);
 }
 
 .devops-job-expand-icon {
@@ -697,7 +697,7 @@
 }
 
 .devops-task-item--failed {
-  border-left: 2px solid rgba(244, 112, 103, 0.3);
+  border-left: 2px solid rgba(244, 88, 91, 0.3);
 }
 
 .devops-task-row {
@@ -733,7 +733,7 @@
 .devops-task-duration {
   font-size: 10px;
   color: var(--text-muted);
-  font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+  font-family: var(--font-mono);
   flex-shrink: 0;
 }
 
@@ -765,7 +765,7 @@
 }
 
 .devops-issue--error {
-  background: rgba(244, 112, 103, 0.08);
+  background: rgba(244, 88, 91, 0.08);
   color: #ef9a9a;
 }
 
@@ -782,7 +782,7 @@
 
 .devops-issue-message {
   word-break: break-word;
-  font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   flex: 1;
 }
@@ -813,8 +813,8 @@
 
 /* Error summary */
 .devops-error-summary {
-  background: rgba(244, 112, 103, 0.06);
-  border: 1px solid rgba(244, 112, 103, 0.2);
+  background: rgba(244, 88, 91, 0.06);
+  border: 1px solid rgba(244, 88, 91, 0.2);
   border-radius: 6px;
   padding: 8px 12px;
   margin-bottom: 8px;
@@ -827,7 +827,7 @@
   margin-bottom: 6px;
   font-weight: 600;
   font-size: 12px;
-  color: var(--danger, #F47067);
+  color: var(--danger, #F4585B);
 }
 
 .devops-error-summary-icon {
@@ -871,7 +871,7 @@
 
 .devops-error-summary-message {
   color: #ef9a9a;
-  font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+  font-family: var(--font-mono);
   word-break: break-word;
 }
 
@@ -910,11 +910,11 @@
 }
 
 .devops-approval-assignee--approved {
-  color: var(--success, #3DD68C);
+  color: var(--success, #20D4A0);
 }
 
 .devops-approval-assignee--rejected {
-  color: var(--danger, #F47067);
+  color: var(--danger, #F4585B);
 }
 
 .devops-approval-actions {
@@ -942,7 +942,7 @@
   padding: 5px 14px;
   font-size: 12px;
   font-weight: 600;
-  background: var(--success, #3DD68C);
+  background: var(--success, #20D4A0);
   color: var(--bg-primary);
   border-radius: 6px;
 }
@@ -955,7 +955,7 @@
   padding: 5px 14px;
   font-size: 12px;
   font-weight: 600;
-  background: var(--danger, #F47067);
+  background: var(--danger, #F4585B);
   color: #fff;
   border-radius: 6px;
 }
@@ -975,7 +975,7 @@
   background: var(--bg-surface);
   padding: 1px 6px;
   border-radius: 3px;
-  font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   color: var(--text-secondary);
 }
@@ -1030,7 +1030,7 @@
 }
 
 .devops-btn--primary:hover:not(:disabled) {
-  background: var(--accent-hover, #5A7AFF);
+  background: var(--accent-hover, #B78AFF);
 }
 
 .devops-btn--secondary {
@@ -1095,15 +1095,15 @@
 }
 
 .devops-test-result--success {
-  background: rgba(61, 214, 140, 0.12);
-  color: var(--success, #3DD68C);
-  border: 1px solid rgba(61, 214, 140, 0.25);
+  background: rgba(32, 212, 160, 0.12);
+  color: var(--success, #20D4A0);
+  border: 1px solid rgba(32, 212, 160, 0.25);
 }
 
 .devops-test-result--error {
-  background: rgba(244, 112, 103, 0.12);
-  color: var(--danger, #F47067);
-  border: 1px solid rgba(244, 112, 103, 0.25);
+  background: rgba(244, 88, 91, 0.12);
+  color: var(--danger, #F4585B);
+  border: 1px solid rgba(244, 88, 91, 0.25);
 }
 
 /* ──────────────────────────────────
@@ -1121,7 +1121,7 @@
 }
 
 .devops-error {
-  color: var(--danger, #F47067);
+  color: var(--danger, #F4585B);
 }
 
 /* Empty state (no connections) */
@@ -1314,7 +1314,7 @@
 }
 
 .devops-modal-btn--primary:hover:not(:disabled) {
-  background: var(--accent-hover, #5A7AFF);
+  background: var(--accent-hover, #B78AFF);
 }
 
 .devops-modal-btn--secondary {
@@ -1448,7 +1448,7 @@
 .devops-field-textarea {
   resize: vertical;
   min-height: 80px;
-  font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+  font-family: var(--font-mono);
   font-size: 12px;
 }
 
@@ -1474,7 +1474,7 @@
   margin: 0;
   padding: 12px;
   font-size: 11px;
-  font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+  font-family: var(--font-mono);
   line-height: 1.5;
   overflow-x: auto;
   max-height: 400px;
@@ -1490,7 +1490,7 @@
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  color: var(--danger, #F47067);
+  color: var(--danger, #F4585B);
 }
 
 .devops-job-log-error span {

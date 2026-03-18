@@ -57,7 +57,7 @@
   width: 100%;
   padding: 8px;
   font-size: 12px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   background: var(--bg-secondary);
   color: var(--text-primary);
   border: 1px solid var(--border);
@@ -208,7 +208,7 @@
 .claude-session-label {
   font-size: 11px;
   color: var(--text-secondary);
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
 }
 
 .claude-stop-btn {
@@ -305,7 +305,7 @@
   padding: 10px;
   margin-bottom: 8px;
   font-size: 11px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   color: var(--text-secondary);
   max-height: 200px;
   overflow-y: auto;

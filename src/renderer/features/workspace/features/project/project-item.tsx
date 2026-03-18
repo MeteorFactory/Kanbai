@@ -70,7 +70,7 @@ export function ProjectItem({ project, isActive }: ProjectItemProps) {
     const initCommand = `unset CLAUDECODE CLAUDE_CODE_ENTRYPOINT && claude --dangerously-skip-permissions -p "Lis et execute les instructions du fichier .claude/.init-prompt.md puis supprime ce fichier."`
     const tabId = termStore.createTab(activeWorkspaceId, projectPath, `[Init] ${project.name}`, initCommand)
     if (tabId) {
-      termStore.setTabColor(tabId, '#6C8CFF')
+      termStore.setTabColor(tabId, '#9747FF')
       useViewStore.getState().setViewMode('terminal')
     }
   }, [project.name])

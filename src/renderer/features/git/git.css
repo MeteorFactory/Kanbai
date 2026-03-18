@@ -507,7 +507,7 @@
 }
 
 .git-sidebar-branch-hash {
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   font-size: 9px;
   color: var(--text-muted);
   flex-shrink: 0;
@@ -544,7 +544,7 @@
 }
 
 .git-sidebar-stash-ref {
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
   color: var(--accent);
 }
@@ -721,7 +721,7 @@
 }
 
 .git-graph-hash {
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
   color: var(--accent);
   width: 56px;
@@ -749,7 +749,7 @@
 }
 
 .git-commit-detail-hash {
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   color: var(--accent);
   background: rgba(108, 140, 255, 0.1);
@@ -794,7 +794,7 @@
 }
 
 .git-commit-detail-parents {
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
 }
 
@@ -835,7 +835,7 @@
 .git-commit-file--selected { background: rgba(108, 140, 255, 0.15) !important; }
 
 .git-commit-file-name {
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
   color: var(--text-secondary);
   overflow: hidden;
@@ -949,7 +949,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   color: var(--text-secondary);
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
 }
 
@@ -1033,7 +1033,7 @@
   padding: 4px 10px;
   background: var(--bg-secondary);
   font-size: 11px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   color: var(--text-secondary);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
@@ -1058,7 +1058,7 @@
 .git-diff-viewer {
   flex: 1;
   overflow: auto;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   line-height: 1.5;
 }
@@ -1245,7 +1245,7 @@
 }
 
 .git-sidebar-remote-url {
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   font-size: 9px;
   color: var(--text-muted);
   overflow: hidden;
@@ -1302,7 +1302,7 @@
 }
 
 .git-branch-compare-output {
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   color: var(--text-secondary);
   line-height: 1.5;
@@ -1323,7 +1323,7 @@
 .git-blame-scroll {
   flex: 1;
   overflow: auto;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   line-height: 1.6;
 }

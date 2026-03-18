@@ -149,7 +149,7 @@ describe('useWorkspaceStore', () => {
 
       expect(mockWorkspaceApi.create).toHaveBeenCalledWith({
         name: 'Test',
-        color: '#6C8CFF',
+        color: '#9747FF',
       })
     })
   })

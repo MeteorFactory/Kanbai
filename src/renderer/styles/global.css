@@ -3,40 +3,41 @@
   --titlebar-height: 52px;
   --sidebar-width: 260px;
   --tab-height: 36px;
+  --font-mono: 'SF Mono', 'JetBrains Mono', 'Fira Code', monospace;
 }
 
-/* Default dark theme */
+/* Default dark theme — Kanbai Brand Identity v1.0 */
 :root,
 [data-theme="dark"] {
-  --bg-primary: #0B0D0F;
-  --bg-secondary: #0F1114;
-  --bg-tertiary: #0F1114;
-  --bg-surface: #1A1D22;
-  --bg-card: #13161A;
-  --bg-card-hover: #1A1D22;
-  --bg-input: #1A1D22;
-  --bg-elevated: #1A1D22;
-  --text-primary: #F0F2F4;
-  --text-secondary: #8B929A;
-  --text-muted: #565C66;
-  --accent: #6C8CFF;
-  --accent-hover: #5A7AFF;
-  --accent-soft: #6C8CFF18;
-  --claude-color: #C15F3C;
-  --border: #1F2328;
-  --border-subtle: #16191D;
-  --danger: #F47067;
-  --success: #3DD68C;
+  --bg-primary: #0E0D0B;
+  --bg-secondary: #181715;
+  --bg-tertiary: #181715;
+  --bg-surface: #201F1C;
+  --bg-card: #181715;
+  --bg-card-hover: #282724;
+  --bg-input: #201F1C;
+  --bg-elevated: #282724;
+  --text-primary: #E0DCE8;
+  --text-secondary: #A5A49E;
+  --text-muted: #6B6A65;
+  --accent: #9747FF;
+  --accent-hover: #B78AFF;
+  --accent-soft: #9747FF18;
+  --claude-color: #D4A574;
+  --border: #201F1C;
+  --border-subtle: #181715;
+  --danger: #F4585B;
+  --success: #20D4A0;
   --warning: #F5A623;
-  --info: #58A6FF;
-  --error-soft: #F4706718;
-  --success-soft: #3DD68C18;
+  --info: #4B9CFF;
+  --error-soft: #F4585B18;
+  --success-soft: #20D4A018;
   --warning-soft: #F5A62318;
-  --info-soft: #58A6FF18;
-  --nav-active-bg: #6C8CFF15;
-  --nav-active-text: #6C8CFF;
-  --tab-active-bg: #1A1D22;
-  --badge-bg: #1A1D22;
+  --info-soft: #4B9CFF18;
+  --nav-active-bg: #9747FF15;
+  --nav-active-text: #9747FF;
+  --tab-active-bg: #282724;
+  --badge-bg: #282724;
 }
 
 /* Light theme */
@@ -117,7 +118,7 @@ html, body, #root {
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', system-ui, sans-serif;
   background: var(--bg-primary);
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
@@ -701,7 +702,7 @@ body {
 .notification-item-version {
   font-size: 11px;
   color: var(--text-muted);
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
 }
 
 .notification-item-latest {
@@ -1522,7 +1523,7 @@ body {
   color: var(--accent);
   background: transparent;
   border: 1px solid var(--accent);
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
 }
 
 .workspace-ia-tag--cto {
@@ -1558,7 +1559,7 @@ body {
 .workspace-working-tooltip-item {
   font-size: 10px;
   font-weight: 600;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   color: var(--accent);
   letter-spacing: 0.3px;
 }
@@ -2027,7 +2028,7 @@ body {
   font-size: 11px;
   line-height: 1.5;
   color: var(--text-secondary);
-  font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+  font-family: var(--font-mono);
   white-space: pre-wrap;
   word-break: break-word;
   margin: 0;
@@ -2139,7 +2140,7 @@ body {
 
 .claude-info-tool {
   font-size: 9px;
-  font-family: 'Menlo', 'Monaco', monospace;
+  font-family: var(--font-mono);
   padding: 1px 5px;
   border-radius: 2px;
 }
@@ -2568,7 +2569,7 @@ body {
   justify-content: center;
   font-size: 11px;
   font-weight: 600;
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   color: var(--text-muted);
   background: var(--bg-tertiary);
   border-radius: 5px;
@@ -2746,7 +2747,7 @@ body {
   border: 1px solid var(--border);
   border-radius: 4px;
   font-size: 10px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -3008,7 +3009,7 @@ body {
 
 .session-modal-tab-path {
   color: var(--text-muted);
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -3086,7 +3087,7 @@ body {
 .file-viewer-path {
   font-size: 11px;
   color: var(--text-muted);
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -3220,7 +3221,7 @@ body {
 .file-viewer-chunk-info {
   font-size: 11px;
   color: var(--text-muted);
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
 }
 
 .file-viewer-chunk-separator {
@@ -3239,7 +3240,7 @@ body {
   border: 1px solid var(--border);
   border-radius: 4px;
   font-size: 11px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   outline: none;
 }
 
@@ -3430,7 +3431,7 @@ body {
   font-size: 12px;
   font-weight: 500;
   color: var(--text-primary);
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -3457,7 +3458,7 @@ body {
 
 .npm-package-current {
   font-size: 11px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   color: var(--text-muted);
 }
 
@@ -3468,7 +3469,7 @@ body {
 
 .npm-package-latest {
   font-size: 11px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   color: var(--success);
   font-weight: 600;
 }
@@ -4026,7 +4027,7 @@ body {
   font-size: 12px;
   font-weight: 500;
   color: var(--text-primary);
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -4077,7 +4078,7 @@ body {
 
 .packages-row-current {
   font-size: 11px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   color: var(--text-muted);
 }
 
@@ -4088,7 +4089,7 @@ body {
 
 .packages-row-latest {
   font-size: 11px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   color: var(--success);
   font-weight: 600;
 }
@@ -4430,7 +4431,7 @@ body {
   font-size: 12px;
   font-weight: 600;
   color: var(--text-primary);
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
 }
 
 .file-diff-vs {
@@ -4650,7 +4651,7 @@ body {
 .claude-settings-error-detail {
   font-size: 11px;
   color: var(--text-muted);
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   word-break: break-all;
 }
 .claude-settings-fix-btn {
@@ -4779,7 +4780,7 @@ body {
   padding: 3px 8px;
   border-radius: 4px;
   font-size: 11px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   font-weight: 500;
 }
 
@@ -4820,7 +4821,7 @@ body {
   border: 1px dashed var(--border);
   border-radius: 4px;
   font-size: 10px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   color: var(--text-muted);
   cursor: pointer;
   transition: all 0.15s ease;
@@ -4859,7 +4860,7 @@ body {
   font-size: 12px;
   font-weight: 600;
   color: var(--text-primary);
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
 }
 
 .claude-rules-editor {
@@ -4920,7 +4921,7 @@ body {
   font-size: 11px;
   line-height: 1.6;
   color: var(--text-secondary);
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   white-space: pre-wrap;
   word-break: break-word;
   margin: 0;
@@ -5005,7 +5006,7 @@ body {
   font-size: 12px;
   font-weight: 500;
   color: var(--text-primary);
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
 }
 
 .claude-profile-file-action {
@@ -5077,7 +5078,7 @@ body {
   display: inline-block;
   padding: 6px 10px;
   font-size: 13px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   background: var(--bg-secondary);
   color: var(--text-primary);
   border: 1px solid var(--border);
@@ -5094,14 +5095,14 @@ body {
   margin-left: 4px;
   font-size: 12px;
   color: var(--text-muted);
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
 }
 
 .claude-profile-editor-textarea {
   width: 100%;
   padding: 10px;
   font-size: 12px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   line-height: 1.6;
   background: var(--bg-secondary);
   color: var(--text-primary);
@@ -5330,7 +5331,7 @@ body {
   white-space: nowrap;
 }
 .cs-file-hierarchy-path {
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   color: var(--text-secondary);
 }
 .cs-file-hierarchy-badge {
@@ -5375,7 +5376,7 @@ body {
   flex: 1;
   padding: 5px 10px;
   font-size: 12px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   background: var(--bg-secondary);
   color: var(--text-primary);
   border: 1px solid var(--border);
@@ -5420,7 +5421,7 @@ body {
 .cs-dirs-path {
   flex: 1;
   font-size: 12px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   color: var(--text-secondary);
 }
 .cs-dirs-remove {
@@ -5461,7 +5462,7 @@ body {
 .cs-model-chip {
   padding: 4px 12px;
   font-size: 11px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   background: var(--bg-surface);
   color: var(--text-muted);
   border: 1px solid var(--border);
@@ -5520,7 +5521,7 @@ body {
 .cs-env-key {
   min-width: 120px;
   font-size: 12px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   font-weight: 600;
   color: var(--text-secondary);
 }
@@ -5528,7 +5529,7 @@ body {
   flex: 1;
   padding: 4px 8px;
   font-size: 12px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   background: var(--bg-secondary);
   color: var(--text-primary);
   border: 1px solid var(--border);
@@ -5562,7 +5563,7 @@ body {
   flex: 1;
   padding: 5px 8px;
   font-size: 12px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   background: var(--bg-secondary);
   color: var(--text-primary);
   border: 1px solid var(--border);
@@ -5653,7 +5654,7 @@ body {
   font-size: 13px;
   font-weight: 600;
   color: var(--text-primary);
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
 }
 .cs-agent-card-desc {
   font-size: 11px;
@@ -5673,7 +5674,7 @@ body {
 .cs-agent-card-tool-chip {
   padding: 1px 6px;
   font-size: 9px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   background: rgba(124, 58, 237, 0.08);
   color: var(--claude-color);
   border-radius: 3px;
@@ -6829,7 +6830,7 @@ body {
 
 .settings-value {
   font-size: 12px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   color: var(--text-secondary);
   min-width: 36px;
 }
@@ -6860,7 +6861,7 @@ body {
   border: 1px solid var(--border);
   border-radius: 6px;
   font-size: 12px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   outline: none;
 }
 
@@ -6998,7 +6999,7 @@ body {
   border: 1px solid var(--border);
   border-radius: 6px;
   font-size: 12px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   outline: none;
 }
 .ssh-input:focus {
@@ -7012,7 +7013,7 @@ body {
   border: 1px solid var(--border);
   border-radius: 6px;
   font-size: 11px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   outline: none;
   resize: vertical;
   min-height: 60px;
@@ -7098,7 +7099,7 @@ body {
   font-size: 13px;
   font-weight: 600;
   color: var(--text-primary);
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
 }
 
 .ssh-key-type {
@@ -7127,7 +7128,7 @@ body {
 
 .ssh-key-fingerprint {
   font-size: 10px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   color: var(--text-muted);
   opacity: 0.7;
   overflow: hidden;
@@ -7330,7 +7331,7 @@ body {
 
 .command-palette-item-shortcut {
   font-size: 11px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   color: var(--text-muted);
   background: var(--bg-tertiary);
   padding: 2px 6px;
@@ -7475,7 +7476,7 @@ body {
   font-size: 12px;
   font-weight: 600;
   color: var(--text-primary);
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -7516,7 +7517,7 @@ body {
 
 .global-search-match-line {
   font-size: 10px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   color: var(--accent);
   min-width: 32px;
   text-align: right;
@@ -7525,7 +7526,7 @@ body {
 
 .global-search-match-text {
   font-size: 12px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   color: var(--text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -7691,7 +7692,7 @@ body {
   font-size: 12px;
   font-weight: 500;
   color: var(--text-primary);
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -7743,7 +7744,7 @@ body {
 .todo-scanner-line {
   font-size: 10px;
   color: var(--text-muted);
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   flex-shrink: 0;
 }
 
@@ -7986,7 +7987,7 @@ body {
 
 .shortcuts-keys {
   font-size: 11px;
-  font-family: 'Menlo', 'Monaco', monospace;
+  font-family: var(--font-mono);
   padding: 2px 8px;
   background: var(--bg-surface);
   border: 1px solid var(--border);
@@ -8100,7 +8101,7 @@ body {
   font-size: 24px;
   font-weight: 700;
   color: var(--accent);
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
 }
 
 .project-stats-card-label {
@@ -8141,7 +8142,7 @@ body {
 
 .project-stats-bar-label {
   font-size: 11px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   color: var(--text-secondary);
   width: 70px;
   flex-shrink: 0;
@@ -8198,7 +8199,7 @@ body {
 
 .project-stats-file-path {
   font-size: 11px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   color: var(--text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -8209,14 +8210,14 @@ body {
 
 .project-stats-file-size {
   font-size: 10px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   color: var(--warning);
   flex-shrink: 0;
 }
 
 .project-stats-file-lines {
   font-size: 10px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   color: var(--text-muted);
   flex-shrink: 0;
 }
@@ -8286,7 +8287,7 @@ body {
   border-bottom: 1px solid rgba(244, 112, 103, 0.3);
   color: var(--danger);
   font-size: 11px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
 }
 
 /* Markdown preview */
@@ -8337,7 +8338,7 @@ body {
   padding: 12px 16px;
   margin: 12px 0;
   overflow-x: auto;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   font-size: 12px;
   line-height: 1.5;
   color: var(--success);
@@ -8348,7 +8349,7 @@ body {
   background: var(--bg-surface);
   padding: 2px 6px;
   border-radius: 3px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   font-size: 12px;
   color: var(--success);
 }
@@ -8419,7 +8420,7 @@ body {
   border: none;
   border-radius: 3px;
   cursor: pointer;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   color: var(--text-secondary);
   text-align: left;
@@ -8462,7 +8463,7 @@ body {
   border: none;
   border-top: 1px solid var(--border);
   color: var(--text-primary);
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   resize: vertical;
   min-height: 60px;
@@ -8576,7 +8577,7 @@ body {
 
 .session-duration {
   font-size: 11px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   color: var(--text-muted);
   flex-shrink: 0;
 }
@@ -8896,7 +8897,7 @@ body {
   border: 1px solid var(--border);
   border-radius: 8px;
   font-size: 13px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   color: var(--text-primary);
   line-height: 1.6;
   resize: none;
@@ -9026,7 +9027,7 @@ body {
   border: 1px solid var(--border);
   border-radius: 6px;
   font-size: 13px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   color: var(--text-primary);
   line-height: 1.6;
   resize: none;
@@ -9195,7 +9196,7 @@ body {
 .claude-mcp-form-input {
   padding: 6px 10px;
   font-size: 13px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   background: var(--bg-primary);
   color: var(--text-primary);
   border: 1px solid var(--border);
@@ -9210,7 +9211,7 @@ body {
 .claude-mcp-form-textarea {
   padding: 6px 10px;
   font-size: 12px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   line-height: 1.5;
   background: var(--bg-primary);
   color: var(--text-primary);
@@ -9265,7 +9266,7 @@ body {
 
 .claude-mcp-server-command {
   font-size: 11px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   color: var(--text-muted);
   margin-top: 2px;
   overflow: hidden;
@@ -9284,7 +9285,7 @@ body {
   display: inline-block;
   padding: 1px 6px;
   font-size: 10px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   background: var(--bg-primary);
   color: var(--text-muted);
   border-radius: 4px;
@@ -9354,7 +9355,7 @@ body {
   padding: 1px 5px;
   font-size: 9px;
   font-weight: 600;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   background: var(--accent);
   color: var(--bg-primary);
   border-radius: 4px;
@@ -9367,7 +9368,7 @@ body {
   padding: 1px 5px;
   font-size: 9px;
   font-weight: 600;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   background: var(--green, #22c55e);
   color: var(--bg-primary);
   border-radius: 4px;
@@ -9619,7 +9620,7 @@ body {
   display: inline-block;
   padding: 1px 6px;
   font-size: 10px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   background: var(--bg-primary);
   color: var(--text-muted);
   border-radius: 4px;
@@ -10285,7 +10286,7 @@ body {
   border: 1px solid var(--border);
   border-radius: 6px;
   font-size: 12px;
-  font-family: 'Menlo', 'Monaco', monospace;
+  font-family: var(--font-mono);
   outline: none;
 }
 
@@ -10385,7 +10386,7 @@ body {
   border: 1px solid var(--border);
   border-radius: 4px;
   font-size: 11px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   outline: none;
 }
 
@@ -10478,7 +10479,7 @@ body {
   border: 1px solid var(--border);
   border-radius: 6px;
   font-size: 12px;
-  font-family: 'Menlo', 'Monaco', monospace;
+  font-family: var(--font-mono);
   line-height: 1.5;
   resize: vertical;
   outline: none;
@@ -10526,7 +10527,7 @@ body {
   border: 1px solid var(--border);
   border-radius: 4px;
   font-size: 11px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   outline: none;
 }
 
@@ -10569,7 +10570,7 @@ body {
   border-radius: 4px;
   font-size: 11px;
   font-weight: 700;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
 }
 
 .api-status-badge--2xx {
@@ -10600,7 +10601,7 @@ body {
 .api-response-meta {
   font-size: 10px;
   color: var(--text-muted);
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
 }
 
 .api-response-body {
@@ -10611,7 +10612,7 @@ body {
 
 .api-response-body pre {
   font-size: 11px;
-  font-family: 'Menlo', 'Monaco', monospace;
+  font-family: var(--font-mono);
   line-height: 1.5;
   white-space: pre-wrap;
   word-break: break-all;
@@ -10680,13 +10681,13 @@ body {
 .api-test-result-expected {
   font-size: 11px;
   color: var(--text-muted);
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
 }
 
 .api-test-result-actual {
   font-size: 11px;
   color: var(--text-muted);
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   margin-left: auto;
 }
 
@@ -10714,13 +10715,13 @@ body {
 
 .api-response-headers-table td:first-child {
   color: var(--accent);
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   white-space: nowrap;
 }
 
 .api-response-headers-table td:last-child {
   color: var(--text-primary);
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   word-break: break-all;
 }
 
@@ -10857,7 +10858,7 @@ body {
   border: 1px solid var(--border);
   border-radius: 4px;
   font-size: 11px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   outline: none;
 }
 
@@ -10984,7 +10985,7 @@ body {
   border: 1px solid var(--border);
   border-radius: 3px;
   font-size: 10px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   outline: none;
   flex: 1;
 }
@@ -13229,7 +13230,7 @@ body {
   font-size: 14px;
   font-weight: 600;
   color: var(--text-primary);
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
 }
 
 .cs-memory-empty-file-desc {

@@ -21,7 +21,7 @@ export const AI_PROVIDERS: Record<AiProviderId, AiProviderConfig> = {
     cliCommand: 'claude',
     npmPackage: '@anthropic-ai/claude-code',
     configDir: '.claude',
-    detectionColor: '#C15F3C',
+    detectionColor: '#D4A574',
     interactiveArgs: ['--dangerously-skip-permissions'],
     nonInteractiveArgs: ['--dangerously-skip-permissions', '--print'],
     nlQueryArgs: ['-p', '--model', 'claude-haiku-4-5-20251001', '--output-format', 'json'],

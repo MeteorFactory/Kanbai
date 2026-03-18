@@ -69,7 +69,7 @@ describe('DEFAULT_SETTINGS', () => {
     expect(DEFAULT_SETTINGS.fontSize).toBe(14)
     expect(DEFAULT_SETTINGS.fontFamily).toContain('Menlo')
     expect(DEFAULT_SETTINGS.scrollbackLines).toBe(10000)
-    expect(DEFAULT_SETTINGS.claudeDetectionColor).toBe('#C15F3C')
+    expect(DEFAULT_SETTINGS.claudeDetectionColor).toBe('#D4A574')
     expect(DEFAULT_SETTINGS.autoClauderEnabled).toBe(false)
     expect(DEFAULT_SETTINGS.notificationSound).toBe(true)
     expect(DEFAULT_SETTINGS.checkUpdatesOnLaunch).toBe(true)

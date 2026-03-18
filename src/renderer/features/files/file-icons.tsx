@@ -18,7 +18,7 @@ function BaseFileIcon({ stroke, children, size = ICON_SIZE }: IconProps & { stro
 
 function CodeIcon({ size }: IconProps) {
   return (
-    <BaseFileIcon stroke="#6C8CFF" size={size}>
+    <BaseFileIcon stroke="#9747FF" size={size}>
       <path d="M10 12L8 14l2 2" />
       <path d="M14 12l2 2-2 2" />
     </BaseFileIcon>
@@ -159,7 +159,7 @@ function ArchiveIcon({ size }: IconProps) {
 
 function DefaultFileIcon({ size }: IconProps) {
   return (
-    <svg width={size ?? ICON_SIZE} height={size ?? ICON_SIZE} viewBox="0 0 24 24" fill="none" stroke="#565C66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width={size ?? ICON_SIZE} height={size ?? ICON_SIZE} viewBox="0 0 24 24" fill="none" stroke="#6B6A65" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
       <path d="M14 2v4a2 2 0 0 0 2 2h4" />
     </svg>
@@ -428,7 +428,7 @@ export function getFileIcon(filename: string, size?: number): React.ReactElement
 
 export function FolderIcon({ size = ICON_SIZE }: IconProps) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="#6C8CFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="#9747FF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" />
     </svg>
   )

@@ -28,8 +28,8 @@ function ErrorFallback({ error, onReset }: { error: Error | null; onReset: () =>
   return (
     <div style={{
       padding: 32,
-      color: '#F0F2F4',
-      background: '#0B0D0F',
+      color: '#E0DCE8',
+      background: '#0E0D0B',
       height: '100%',
       display: 'flex',
       flexDirection: 'column',
@@ -37,21 +37,21 @@ function ErrorFallback({ error, onReset }: { error: Error | null; onReset: () =>
       justifyContent: 'center',
       gap: 16,
     }}>
-      <p style={{ fontSize: 16, color: '#F47067', fontWeight: 600 }}>
+      <p style={{ fontSize: 16, color: '#F4585B', fontWeight: 600 }}>
         Une erreur est survenue
       </p>
 
       <pre style={{
         fontSize: 11,
         fontFamily: 'SF Mono, Menlo, monospace',
-        color: '#8B929A',
+        color: '#A5A49E',
         maxWidth: '80%',
         maxHeight: '50vh',
         overflow: 'auto',
         padding: 16,
-        background: '#0F1114',
+        background: '#181715',
         borderRadius: 8,
-        border: '1px solid #1A1D22',
+        border: '1px solid #201F1C',
         whiteSpace: 'pre-wrap',
         wordBreak: 'break-word',
         userSelect: 'text',
@@ -66,9 +66,9 @@ function ErrorFallback({ error, onReset }: { error: Error | null; onReset: () =>
           onClick={handleCopy}
           style={{
             padding: '8px 16px',
-            background: '#1A1D22',
-            color: '#F0F2F4',
-            border: '1px solid #1F2328',
+            background: '#201F1C',
+            color: '#E0DCE8',
+            border: '1px solid #201F1C',
             borderRadius: 6,
             cursor: 'pointer',
             fontSize: 13,
@@ -80,8 +80,8 @@ function ErrorFallback({ error, onReset }: { error: Error | null; onReset: () =>
           onClick={onReset}
           style={{
             padding: '8px 16px',
-            background: '#1F2328',
-            color: '#F0F2F4',
+            background: '#201F1C',
+            color: '#E0DCE8',
             border: '1px solid #585b70',
             borderRadius: 6,
             cursor: 'pointer',
@@ -94,8 +94,8 @@ function ErrorFallback({ error, onReset }: { error: Error | null; onReset: () =>
           onClick={handleReload}
           style={{
             padding: '8px 16px',
-            background: '#6C8CFF',
-            color: '#0B0D0F',
+            background: '#9747FF',
+            color: '#0E0D0B',
             border: 'none',
             borderRadius: 6,
             cursor: 'pointer',

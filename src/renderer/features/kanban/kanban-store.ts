@@ -515,7 +515,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
 
         const termStore = useTerminalTabStore.getState()
         if (newTask.status === 'DONE') {
-          termStore.setTabColor(tabId, '#3DD68C')
+          termStore.setTabColor(tabId, '#20D4A0')
           taskFinished = true
           relaunchedTaskIds.delete(newTask.id) // allow future re-launch
           tabsToAutoClose.push({ tabId, isCto: isCtoMode })
@@ -540,7 +540,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
           pushNotification('success', wsName, `${ticketLabel} — ${body}`, { workspaceId: currentWorkspaceId!, tabId })
         }
         if (newTask.status === 'FAILED') {
-          termStore.setTabColor(tabId, '#F47067')
+          termStore.setTabColor(tabId, '#F4585B')
           termStore.killTabProcesses(tabId)
           taskFinished = true
           relaunchedTaskIds.delete(newTask.id) // allow future re-launch
@@ -1475,7 +1475,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
 
         const termStore = useTerminalTabStore.getState()
         if (newTask.status === 'DONE') {
-          termStore.setTabColor(tabId, '#3DD68C')
+          termStore.setTabColor(tabId, '#20D4A0')
           taskFinished = true
           relaunchedTaskIds.delete(newTask.id)
           tabsToAutoClose.push({ tabId, isCto: isCtoMode })
@@ -1505,7 +1505,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
           pushNotification('success', wsName, `${ticketLabel} — ${body}`, { workspaceId: wsId, tabId })
         }
         if (newTask.status === 'FAILED') {
-          termStore.setTabColor(tabId, '#F47067')
+          termStore.setTabColor(tabId, '#F4585B')
           termStore.killTabProcesses(tabId)
           taskFinished = true
           relaunchedTaskIds.delete(newTask.id)

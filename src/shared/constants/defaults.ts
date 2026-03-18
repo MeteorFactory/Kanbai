@@ -18,7 +18,7 @@ export function createDefaultSettings(): AppSettings {
     fontSize: 14,
     fontFamily: 'Menlo, Monaco, "Courier New", monospace',
     scrollbackLines: 10000,
-    claudeDetectionColor: '#C15F3C',
+    claudeDetectionColor: '#D4A574',
     codexDetectionColor: DEFAULT_CODEX_DETECTION_COLOR,
     copilotDetectionColor: DEFAULT_COPILOT_DETECTION_COLOR,
     geminiDetectionColor: DEFAULT_GEMINI_DETECTION_COLOR,

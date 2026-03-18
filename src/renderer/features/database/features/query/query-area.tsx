@@ -23,11 +23,11 @@ interface DatabaseQueryAreaProps {
 }
 
 const ENV_TAG_COLORS: Record<DbEnvironmentTag, string> = {
-  local: '#3DD68C',
-  dev: '#6C8CFF',
+  local: '#20D4A0',
+  dev: '#4B9CFF',
   int: '#F5A623',
   qua: '#a78bfa',
-  prd: '#F47067',
+  prd: '#F4585B',
   custom: 'var(--text-muted)',
 }
 
@@ -327,7 +327,7 @@ export function DatabaseQueryArea({
           </span>
           <span
             className="db-env-badge"
-            style={{ background: tagColor, color: '#0B0D0F' }}
+            style={{ background: tagColor, color: '#0E0D0B' }}
           >
             {tagLabel}
           </span>

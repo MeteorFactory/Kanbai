@@ -61,11 +61,11 @@ function formatTicketNumber(n?: number, type?: KanbanTaskType, isPrequalifying?:
 }
 
 const COLUMNS: { status: KanbanStatus; labelKey: string; color: string }[] = [
-  { status: 'TODO', labelKey: 'kanban.todo', color: '#6C8CFF' },
+  { status: 'TODO', labelKey: 'kanban.todo', color: '#6B6A65' },
   { status: 'WORKING', labelKey: 'kanban.working', color: '#F5A623' },
-  { status: 'PENDING', labelKey: 'kanban.pending', color: '#fbbf24' },
-  { status: 'DONE', labelKey: 'kanban.done', color: '#3DD68C' },
-  { status: 'FAILED', labelKey: 'kanban.failed', color: '#F47067' },
+  { status: 'PENDING', labelKey: 'kanban.pending', color: '#9747FF' },
+  { status: 'DONE', labelKey: 'kanban.done', color: '#20D4A0' },
+  { status: 'FAILED', labelKey: 'kanban.failed', color: '#F4585B' },
 ]
 
 // Columns displayed in the main board (DONE is handled via archive)
@@ -76,12 +76,12 @@ const PRIORITIES = ['low', 'medium', 'high'] as const
 const TASK_TYPES: KanbanTaskType[] = ['bug', 'feature', 'test', 'doc', 'ia', 'refactor']
 
 const TYPE_CONFIG: Record<KanbanTaskType, { color: string; labelFr: string; labelEn: string }> = {
-  bug:      { color: '#F47067', labelFr: 'Bug',      labelEn: 'Bug' },
-  feature:  { color: '#6C8CFF', labelFr: 'Feature',  labelEn: 'Feature' },
-  test:     { color: '#22d3ee', labelFr: 'Test',     labelEn: 'Test' },
-  doc:      { color: '#3DD68C', labelFr: 'Doc',      labelEn: 'Doc' },
-  ia:       { color: '#a78bfa', labelFr: 'IA',       labelEn: 'AI' },
-  refactor: { color: '#ec4899', labelFr: 'Refactor', labelEn: 'Refactor' },
+  bug:      { color: '#F4585B', labelFr: 'Bug',      labelEn: 'Bug' },
+  feature:  { color: '#9747FF', labelFr: 'Feature',  labelEn: 'Feature' },
+  test:     { color: '#22D3EE', labelFr: 'Test',     labelEn: 'Test' },
+  doc:      { color: '#20D4A0', labelFr: 'Doc',      labelEn: 'Doc' },
+  ia:       { color: '#B78AFF', labelFr: 'IA',       labelEn: 'AI' },
+  refactor: { color: '#4B9CFF', labelFr: 'Refactor', labelEn: 'Refactor' },
 }
 
 // --- Predefined task templates ---
@@ -1181,8 +1181,8 @@ export function KanbanBoard() {
             onDragOver={handleDragOver}
             onDrop={() => handleDrop('DONE')}
           >
-            <div className="kanban-column-header" style={{ borderColor: '#3DD68C' }}>
-              <span className="kanban-column-dot" style={{ backgroundColor: '#3DD68C' }} />
+            <div className="kanban-column-header" style={{ borderColor: '#20D4A0' }}>
+              <span className="kanban-column-dot" style={{ backgroundColor: '#20D4A0' }} />
               <span className="kanban-column-title">{t('kanban.done')}</span>
               <span className="kanban-column-count">{doneTasks.length}</span>
             </div>
@@ -1294,8 +1294,8 @@ function PredefinedTaskCard({
   const { locale } = useI18n()
 
   const priorityColors: Record<string, string> = {
-    low: '#565C66',
-    medium: '#6C8CFF',
+    low: '#6B6A65',
+    medium: '#9747FF',
     high: '#F5A623',
   }
 
@@ -1384,8 +1384,8 @@ function KanbanCard({
   }, [onDoubleClick])
 
   const priorityColors: Record<string, string> = {
-    low: '#565C66',
-    medium: '#6C8CFF',
+    low: '#6B6A65',
+    medium: '#9747FF',
     high: '#F5A623',
   }
 
@@ -1737,8 +1737,8 @@ function TaskDetailPanel({
   }, [task.conversationHistoryPath, t])
 
   const priorityColors: Record<string, string> = {
-    low: '#565C66',
-    medium: '#6C8CFF',
+    low: '#6B6A65',
+    medium: '#9747FF',
     high: '#F5A623',
   }
 
@@ -1964,12 +1964,12 @@ function TaskDetailPanel({
           <div className="kanban-split-suggestions">
             {task.splitSuggestions.map((s, i) => (
               <div key={i} className="kanban-split-suggestion-card">
-                <span className="kanban-split-suggestion-type" style={{ color: TYPE_CONFIG[s.type]?.color ?? '#F0F2F4' }}>
+                <span className="kanban-split-suggestion-type" style={{ color: TYPE_CONFIG[s.type]?.color ?? '#E0DCE8' }}>
                   {locale === 'en' ? (TYPE_CONFIG[s.type]?.labelEn ?? s.type) : (TYPE_CONFIG[s.type]?.labelFr ?? s.type)}
                 </span>
                 <span className="kanban-split-suggestion-title">{s.title}</span>
                 <span className="kanban-split-suggestion-desc">{s.description}</span>
-                <span className="kanban-split-suggestion-priority" style={{ color: priorityColors[s.priority] ?? '#565C66' }}>
+                <span className="kanban-split-suggestion-priority" style={{ color: priorityColors[s.priority] ?? '#6B6A65' }}>
                   {priorityLabels[s.priority] ?? s.priority}
                 </span>
               </div>

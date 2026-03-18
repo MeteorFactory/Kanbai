@@ -1019,7 +1019,7 @@
 }
 
 .kanban-card-ticket-number {
-  font-family: 'Menlo', 'SF Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 600;
   color: var(--text-muted);
@@ -1345,7 +1345,7 @@
 }
 
 .kanban-detail-id {
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   color: var(--text-muted);
 }
@@ -1487,7 +1487,7 @@
 }
 
 .kanban-detail-agent-id {
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
   color: var(--text-muted);
 }
@@ -1545,7 +1545,7 @@
 }
 
 .kanban-detail-ai-model {
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
   color: var(--text-muted);
   padding: 1px 6px;
@@ -1562,7 +1562,7 @@
   color: var(--success);
   line-height: 1.5;
   white-space: pre-wrap;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
 }
 
@@ -1575,7 +1575,7 @@
   color: var(--danger);
   line-height: 1.5;
   white-space: pre-wrap;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
 }
 
@@ -1613,7 +1613,7 @@
 }
 
 .kanban-detail-comment--resolution-done .kanban-detail-comment-text {
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
 }
 
@@ -1623,7 +1623,7 @@
 }
 
 .kanban-detail-comment--resolution-failed .kanban-detail-comment-text {
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
 }
 
@@ -1651,7 +1651,7 @@
 }
 
 .kanban-detail-conversation-path {
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   color: var(--accent);
   overflow: hidden;
@@ -1707,7 +1707,7 @@
 }
 
 .conversation-history-modal-filename {
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   color: var(--text-tertiary);
   flex: 1;
@@ -1782,7 +1782,7 @@
 .conversation-history-entry-message {
   margin: 0;
   padding: 12px;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   font-size: 12px;
   line-height: 1.6;
   color: var(--text-primary);
@@ -1801,7 +1801,7 @@
   color: var(--text-secondary);
   line-height: 1.5;
   white-space: pre-wrap;
-  font-family: 'Menlo', monospace;
+  font-family: var(--font-mono);
   max-height: 200px;
   overflow-y: auto;
 }

@@ -99,14 +99,14 @@ export function FileDiffViewer() {
                   { token: 'operator', foreground: '89dceb' },
                 ],
                 colors: {
-                  'editor.background': '#0B0D0F',
-                  'editor.foreground': '#F0F2F4',
-                  'editor.lineHighlightBackground': '#1A1D22',
-                  'editor.selectionBackground': '#1F2328',
+                  'editor.background': '#0E0D0B',
+                  'editor.foreground': '#E0DCE8',
+                  'editor.lineHighlightBackground': '#201F1C',
+                  'editor.selectionBackground': '#201F1C',
                   'editorCursor.foreground': '#f5e0dc',
-                  'editorLineNumber.foreground': '#565C66',
-                  'editorLineNumber.activeForeground': '#F0F2F4',
-                  'editor.inactiveSelectionBackground': '#1A1D2280',
+                  'editorLineNumber.foreground': '#6B6A65',
+                  'editorLineNumber.activeForeground': '#E0DCE8',
+                  'editor.inactiveSelectionBackground': '#201F1C80',
                 },
               })
             }}

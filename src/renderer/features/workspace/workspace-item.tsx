@@ -9,11 +9,11 @@ import { ProjectItem } from './features/project/project-item'
 import { ContextMenu, type ContextMenuItem } from '../../shared/ui/context-menu'
 
 const ENV_TAG_COLORS: Record<DbEnvironmentTag, string> = {
-  local: '#3DD68C',
-  dev: '#6C8CFF',
+  local: '#20D4A0',
+  dev: '#4B9CFF',
   int: '#F5A623',
   qua: '#a78bfa',
-  prd: '#F47067',
+  prd: '#F4585B',
   custom: 'var(--text-muted)',
 }
 
@@ -32,9 +32,9 @@ interface WorkspaceItemProps {
 }
 
 const WORKSPACE_COLORS = [
-  '#6C8CFF', // blue
-  '#3DD68C', // green
-  '#F47067', // red
+  '#9747FF', // purple
+  '#20D4A0', // green
+  '#F4585B', // red
   '#F5A623', // peach
   '#a78bfa', // mauve
   '#fbbf24', // yellow
@@ -535,7 +535,7 @@ export function WorkspaceItem({ workspace, projects, isActive }: WorkspaceItemPr
                   <span className="workspace-db-name">{conn.name}</span>
                   <span
                     className="workspace-db-tag"
-                    style={{ background: tagColor, color: '#0B0D0F' }}
+                    style={{ background: tagColor, color: '#0E0D0B' }}
                   >
                     {tagLabel}
                   </span>
