@@ -80,6 +80,26 @@ export function App() {
     })
   }, [])
 
+  // Listen for companion-initiated terminal creation (from mobile app).
+  // Must live here (always-mounted) — TerminalArea is only rendered in terminal view.
+  useEffect(() => {
+    const cleanup = window.kanbai.terminal.onCompanionCreate(async (payload) => {
+      const wsId = payload.workspaceId || useWorkspaceStore.getState().activeWorkspaceId
+      if (!wsId) return
+      const provider = AI_PROVIDERS[payload.provider as AiProviderId]
+      if (!provider) return
+
+      const workspace = useWorkspaceStore.getState().workspaces.find((w) => w.id === wsId)
+      const envPath = workspace ? await window.kanbai.workspaceEnv.getPath(workspace.name) : ''
+      const cwd = envPath || useWorkspaceStore.getState().projects.find((p) => p.workspaceId === wsId)?.path || ''
+      if (!cwd) return
+
+      const label = `${provider.displayName} + Terminal`
+      useTerminalTabStore.getState().createSplitTab(wsId, cwd, label, provider.cliCommand, null)
+    })
+    return () => { cleanup() }
+  }, [])
+
   // Load tutorial state, saved locale, and show welcome on first launch
   useEffect(() => {
     window.kanbai.settings.get().then((s: AppSettings) => {

@@ -220,20 +220,6 @@ export function TerminalArea() {
     }
   }, [editingTabId])
 
-  // Listen for companion-initiated terminal creation (from mobile app)
-  useEffect(() => {
-    const cleanup = window.kanbai.terminal.onCompanionCreate((payload) => {
-      const wsId = payload.workspaceId || activeWorkspaceId
-      if (!wsId || !envCwd) return
-      const provider = payload.provider
-      const config = AI_PROVIDERS[provider as keyof typeof AI_PROVIDERS]
-      const label = config ? `${config.displayName} + Terminal` : 'Terminal'
-      const { createSplitTab: splitTab } = useTerminalTabStore.getState()
-      splitTab(wsId, envCwd, label, provider, null)
-    })
-    return () => { cleanup() }
-  }, [activeWorkspaceId, envCwd])
-
   const handleDoubleClick = useCallback(
     (tabId: string, currentLabel: string) => {
       setEditingTabId(tabId)

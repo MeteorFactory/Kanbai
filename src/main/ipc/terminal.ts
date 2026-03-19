@@ -289,6 +289,52 @@ export function getTerminalOutputClean(sessionId: string): string {
   return renderTerminalToHtml(raw)
 }
 
+/**
+ * Close/kill a terminal session from the companion API.
+ * For live PTY sessions: kills the process and cleans up.
+ * For finished sessions: removes from the finished list and cleans output buffer.
+ * Returns true if the session was found and removed.
+ */
+export function closeTerminalSession(sessionId: string): boolean {
+  // Try live session first
+  const terminal = terminals.get(sessionId)
+  if (terminal) {
+    addFinishedSession({
+      id: terminal.id,
+      cwd: terminal.cwd,
+      workspaceId: terminal.workspaceId,
+      tabId: terminal.tabId,
+      taskId: terminal.taskId,
+      ticketNumber: terminal.ticketNumber,
+      title: terminal.label || path.basename(terminal.cwd) || 'Terminal',
+      status: 'done',
+      createdAt: terminal.createdAt,
+    })
+    disposeTerminal(terminal)
+    terminals.delete(sessionId)
+    outputBuffers.delete(sessionId)
+    persistTerminalSessions()
+    // Notify renderer
+    for (const win of BrowserWindow.getAllWindows()) {
+      try {
+        if (!win.isDestroyed() && !win.webContents.isDestroyed()) {
+          win.webContents.send(IPC_CHANNELS.TERMINAL_CLOSE, { id: sessionId, exitCode: 0, signal: 0 })
+        }
+      } catch { /* window destroyed */ }
+    }
+    return true
+  }
+  // Try finished session
+  const idx = finishedSessions.findIndex((s) => s.id === sessionId)
+  if (idx !== -1) {
+    finishedSessions.splice(idx, 1)
+    finishedOutputBuffers.delete(sessionId)
+    persistTerminalSessions()
+    return true
+  }
+  return false
+}
+
 // ANSI 8-color palette (SGR 30-37 foreground)
 const ANSI_COLORS: Record<number, string> = {
   30: '#555', 31: '#f55', 32: '#5f5', 33: '#ff5',

@@ -1,5 +1,5 @@
 import { BrowserWindow } from 'electron'
-import { getTerminalSessionsInfo, getTerminalOutputClean, writeTerminalInput } from '../../ipc/terminal'
+import { getTerminalSessionsInfo, getTerminalOutputClean, writeTerminalInput, closeTerminalSession } from '../../ipc/terminal'
 import type { CompanionFeature, CompanionContext, CompanionResult, CompanionCommandDef } from '../../../shared/types/companion'
 import { AI_PROVIDERS } from '../../../shared/types/ai-provider'
 import { IPC_CHANNELS } from '../../../shared/types'
@@ -116,6 +116,13 @@ export const terminalFeature: CompanionFeature = {
         },
       },
       {
+        name: 'closeTerminal',
+        description: 'Close/kill a terminal session',
+        params: {
+          sessionId: { type: 'string', required: true, description: 'Terminal session ID to close' },
+        },
+      },
+      {
         name: 'listProviders',
         description: 'List available AI providers',
         params: {},
@@ -138,6 +145,14 @@ export const terminalFeature: CompanionFeature = {
       if (!data && data !== '') return { success: false, error: 'Missing data' }
       const ok = writeTerminalInput(sessionId, data)
       if (!ok) return { success: false, error: `Terminal session not found: ${sessionId}` }
+      return { success: true }
+    }
+
+    if (command === 'closeTerminal') {
+      const sessionId = params.sessionId as string
+      if (!sessionId) return { success: false, error: 'Missing sessionId' }
+      const removed = closeTerminalSession(sessionId)
+      if (!removed) return { success: false, error: `Session not found: ${sessionId}` }
       return { success: true }
     }
 
