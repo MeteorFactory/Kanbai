@@ -106,7 +106,7 @@ export function AiDefaultsTab({ projectId, workspaceId }: Props) {
       )
       const updatedProjects = currentProjects.map((p) => {
         if (p.workspaceId === workspaceId) {
-          return { ...p, aiDefaults: { ...next, ...(p.aiDefaults ?? {}) } }
+          return { ...p, aiDefaults: { ...(p.aiDefaults ?? {}), ...next } }
         }
         return p
       })

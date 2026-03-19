@@ -232,11 +232,11 @@ export function registerAiProviderHandlers(ipcMain: IpcMain): void {
       workspace.updatedAt = Date.now()
       storage.updateWorkspace(workspace)
 
-      // Propagate to all projects in the workspace (fill-in-gaps, not overwrite)
+      // Propagate to all projects in the workspace (workspace wins over project)
       const projects = storage.getProjects(workspaceId)
       let updatedCount = 0
       for (const project of projects) {
-        const merged = { ...defaults, ...(project.aiDefaults ?? {}) }
+        const merged = { ...(project.aiDefaults ?? {}), ...defaults }
         const hasChanges = JSON.stringify(merged) !== JSON.stringify(project.aiDefaults ?? {})
         if (hasChanges) {
           project.aiDefaults = merged
@@ -267,7 +267,7 @@ export function registerAiProviderHandlers(ipcMain: IpcMain): void {
       const projects = storage.getProjects(workspaceId)
       let updatedCount = 0
       for (const project of projects) {
-        const merged = { ...defaults, ...(project.aiDefaults ?? {}) }
+        const merged = { ...(project.aiDefaults ?? {}), ...defaults }
         const hasChanges = JSON.stringify(merged) !== JSON.stringify(project.aiDefaults ?? {})
         if (hasChanges) {
           project.aiDefaults = merged
@@ -304,9 +304,9 @@ export function registerAiProviderHandlers(ipcMain: IpcMain): void {
           changed = true
         }
 
-        // Propagate aiDefaults: workspace defaults fill in missing project defaults
+        // Propagate aiDefaults: workspace defaults override project defaults
         if (workspace.aiDefaults) {
-          const merged = { ...workspace.aiDefaults, ...(project.aiDefaults ?? {}) }
+          const merged = { ...(project.aiDefaults ?? {}), ...workspace.aiDefaults }
           const hasChanges = JSON.stringify(merged) !== JSON.stringify(project.aiDefaults ?? {})
           if (hasChanges) {
             project.aiDefaults = merged

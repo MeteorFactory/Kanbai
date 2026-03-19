@@ -590,8 +590,11 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
     set({ activeWorkspaceId: id })
 
     if (id) {
-      // Switch to kanban view when changing workspace
-      useViewStore.getState().setViewMode('kanban')
+      // Preserve current viewMode unless it's terminal (which is workspace-agnostic)
+      const currentView = useViewStore.getState().viewMode
+      if (currentView === 'terminal') {
+        useViewStore.getState().setViewMode('kanban')
+      }
 
       // Auto-select the first project in this workspace
       const { projects, workspaces } = get()
@@ -658,7 +661,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
 
     const nextWorkspace = filtered[nextIndex]
     if (nextWorkspace) {
-      set({ activeWorkspaceId: nextWorkspace.id })
+      get().setActiveWorkspace(nextWorkspace.id)
     }
   },
 }))
