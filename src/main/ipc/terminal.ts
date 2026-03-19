@@ -103,6 +103,7 @@ const outputBuffers = new Map<string, string>()
  */
 const INPUT_QUEUE_PATH = path.join(os.homedir(), '.kanbai', 'terminal-input-queue.json')
 const CLOSE_QUEUE_PATH = path.join(os.homedir(), '.kanbai', 'terminal-close-queue.json')
+const CREATE_QUEUE_PATH = path.join(os.homedir(), '.kanbai', 'terminal-create-queue.json')
 const OUTPUT_DIR = path.join(os.homedir(), '.kanbai', 'terminal-output')
 
 /**
@@ -639,14 +640,42 @@ function processCloseQueue(): void {
   }
 }
 
+/** Process pending create commands from the relay queue file (KanbaiApi → Desktop) */
+function processCreateQueue(): void {
+  try {
+    if (!fs.existsSync(CREATE_QUEUE_PATH)) return
+    const raw = fs.readFileSync(CREATE_QUEUE_PATH, 'utf-8')
+    if (!raw.trim()) return
+    const commands = JSON.parse(raw) as Array<{ provider: string; workspaceId: string }>
+    // Clear queue immediately to avoid double-processing
+    fs.writeFileSync(CREATE_QUEUE_PATH, '[]', 'utf-8')
+    for (const cmd of commands) {
+      // Send IPC to renderer to create a new terminal tab with this provider
+      for (const win of BrowserWindow.getAllWindows()) {
+        try {
+          if (!win.isDestroyed() && !win.webContents.isDestroyed()) {
+            win.webContents.send(IPC_CHANNELS.TERMINAL_COMPANION_CREATE, {
+              provider: cmd.provider,
+              workspaceId: cmd.workspaceId,
+            })
+          }
+        } catch { /* window destroyed */ }
+      }
+    }
+  } catch {
+    // Malformed or locked — skip this cycle
+  }
+}
+
 let inputQueueInterval: ReturnType<typeof setInterval> | null = null
 
-/** Start polling for external input and close commands (called once at registration) */
+/** Start polling for external input, close, and create commands (called once at registration) */
 function startInputQueuePolling(): void {
   if (inputQueueInterval) return
   inputQueueInterval = setInterval(() => {
     processInputQueue()
     processCloseQueue()
+    processCreateQueue()
   }, 500)
 }
 
