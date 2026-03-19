@@ -1,7 +1,11 @@
-import React, { useState, useRef, useCallback } from 'react'
+import React, { useState, useRef, useCallback, useMemo } from 'react'
 import { useTerminalTabStore, type TerminalTabData } from './terminal-store'
 import { useWorkspaceStore } from '../../lib/stores/workspaceStore'
+import { useKanbanStore } from '../../lib/stores/kanbanStore'
 import { ContextMenu, type ContextMenuItem } from '../../shared/ui/context-menu'
+
+const DONE_COLOR = '#4CAF50'
+const FAILED_COLOR = '#F44336'
 
 export function TabBar() {
   const { tabs, activeTabId, createTab, closeTab, setActiveTab, renameTab, reorderTabs, closeOtherTabs, closeTabsToRight, duplicateTab } =
@@ -16,6 +20,19 @@ export function TabBar() {
   const [dragIndex, setDragIndex] = useState<number | null>(null)
   const [dropTarget, setDropTarget] = useState<number | null>(null)
   const renameInputRef = useRef<HTMLInputElement>(null)
+
+  // Map tabId -> linked kanban task status for terminal status coloring
+  const kanbanTabIds = useKanbanStore((s) => s.kanbanTabIds)
+  const kanbanTasks = useKanbanStore((s) => s.tasks)
+  const tabStatusColor = useMemo(() => {
+    const map: Record<string, string> = {}
+    for (const [taskId, tabId] of Object.entries(kanbanTabIds)) {
+      const task = kanbanTasks.find((t) => t.id === taskId)
+      if (task?.status === 'DONE') map[tabId] = DONE_COLOR
+      else if (task?.status === 'FAILED') map[tabId] = FAILED_COLOR
+    }
+    return map
+  }, [kanbanTabIds, kanbanTasks])
 
   const handleDoubleClick = useCallback(
     (tab: TerminalTabData) => {
@@ -113,12 +130,14 @@ export function TabBar() {
         const isDragging = index === dragIndex
         const isDropTarget = index === dropTarget
         const isStreaming = tab.color === '#F5A623' // Orange = active kanban AI session
+        const doneColor = tabStatusColor[tab.id]
+        const effectiveColor = doneColor || tab.color
 
         return (
           <div
             key={tab.id}
-            className={`tab${isActive ? ' active' : ''}${isDragging ? ' tab--dragging' : ''}${isDropTarget ? ' tab--drop-target' : ''}${isStreaming ? ' tab--streaming' : ''}${tab.color ? ' tab--tinted' : ''}`}
-            style={tab.color ? { '--tab-tint-color': tab.color } as React.CSSProperties : undefined}
+            className={`tab${isActive ? ' active' : ''}${isDragging ? ' tab--dragging' : ''}${isDropTarget ? ' tab--drop-target' : ''}${isStreaming && !doneColor ? ' tab--streaming' : ''}${effectiveColor ? ' tab--tinted' : ''}`}
+            style={effectiveColor ? { '--tab-tint-color': effectiveColor } as React.CSSProperties : undefined}
             onClick={() => !isRenaming && setActiveTab(tab.id)}
             onDoubleClick={() => handleDoubleClick(tab)}
             onContextMenu={(e) => handleContextMenu(e, tab.id)}
@@ -128,7 +147,7 @@ export function TabBar() {
             onDrop={(e) => handleDrop(e, index)}
             onDragEnd={handleDragEnd}
           >
-            {tab.color && <span className="tab-color-dot" style={{ background: tab.color }} />}
+            {effectiveColor && <span className="tab-color-dot" style={{ background: effectiveColor }} />}
             {tab.hasActivity && !isActive && <span className="tab-activity-dot" />}
             {isRenaming ? (
               <input
