@@ -3,6 +3,7 @@ import { getTerminalSessionsInfo, getTerminalOutputClean, writeTerminalInput, cl
 import type { CompanionFeature, CompanionContext, CompanionResult, CompanionCommandDef } from '../../../shared/types/companion'
 import { AI_PROVIDERS } from '../../../shared/types/ai-provider'
 import { IPC_CHANNELS } from '../../../shared/types'
+import { readKanbanTasks } from '../../../mcp-server/lib/kanban-store'
 
 function formatElapsed(createdAt: number): string {
   const seconds = Math.floor((Date.now() - createdAt) / 1000)
@@ -45,6 +46,13 @@ export const terminalFeature: CompanionFeature = {
       }
     }
 
+    // Build a lookup map of kanban tasks by ID to resolve ticket statuses
+    const kanbanTasks = ctx.workspaceId ? readKanbanTasks(ctx.workspaceId) : []
+    const taskStatusMap = new Map<string, string>()
+    for (const task of kanbanTasks) {
+      taskStatusMap.set(task.id, task.status)
+    }
+
     const tabEntries = Array.from(tabMap.values()).flatMap((group) => {
       // Use the most recently created session as representative — the latest is most likely active
       group.sort((a, b) => b.createdAt - a.createdAt)
@@ -69,6 +77,7 @@ export const terminalFeature: CompanionFeature = {
         ticketNumber: representative.ticketNumber,
         title: representative.title,
         status,
+        ticketStatus: representative.taskId ? taskStatusMap.get(representative.taskId) : undefined,
         elapsed: formatElapsed(earliestCreatedAt),
         sessionIds,
       }]
@@ -81,6 +90,7 @@ export const terminalFeature: CompanionFeature = {
       ticketNumber: s.ticketNumber,
       title: s.title,
       status: s.status,
+      ticketStatus: s.taskId ? taskStatusMap.get(s.taskId) : undefined,
       elapsed: formatElapsed(s.createdAt),
       sessionIds: [s.id],
     }))
