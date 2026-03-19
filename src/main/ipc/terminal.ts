@@ -43,11 +43,22 @@ export interface TerminalSessionInfo {
   taskId: string | null
   ticketNumber: string | null
   title: string
-  status: 'working' | 'idle'
+  status: 'working' | 'idle' | 'done' | 'failed'
   createdAt: number
 }
 
 const terminals = new Map<string, ManagedTerminal>()
+
+/** Finished sessions kept for companion/mobile visibility */
+const MAX_FINISHED_SESSIONS = 50
+const finishedSessions: TerminalSessionInfo[] = []
+
+function addFinishedSession(info: TerminalSessionInfo): void {
+  finishedSessions.push(info)
+  if (finishedSessions.length > MAX_FINISHED_SESSIONS) {
+    finishedSessions.splice(0, finishedSessions.length - MAX_FINISHED_SESSIONS)
+  }
+}
 
 /**
  * Tab metadata synced from the renderer store.
@@ -175,25 +186,38 @@ export function getTerminalSessionsInfo(): TerminalSessionInfo[] {
     }
   })
 
+  // Build a lookup of finished sessions by tabId for orphan tab status resolution
+  const finishedByTab = new Map<string, TerminalSessionInfo>()
+  for (const fs of finishedSessions) {
+    if (fs.tabId) finishedByTab.set(fs.tabId, fs)
+  }
+
   // Tabs without live PTY sessions (process exited but tab still open)
   const orphanTabEntries: TerminalSessionInfo[] = []
+  const orphanTabIds = new Set<string>()
   for (const tab of syncedTabs.values()) {
     if (!liveTabIds.has(tab.id)) {
+      orphanTabIds.add(tab.id)
+      const finished = finishedByTab.get(tab.id)
       orphanTabEntries.push({
-        id: `tab-placeholder-${tab.id}`,
-        cwd: '',
+        id: finished?.id ?? `tab-placeholder-${tab.id}`,
+        cwd: finished?.cwd ?? '',
         workspaceId: tab.workspaceId,
         tabId: tab.id,
-        taskId: null,
-        ticketNumber: null,
+        taskId: finished?.taskId ?? null,
+        ticketNumber: finished?.ticketNumber ?? null,
         title: tab.label,
-        status: 'idle',
-        createdAt: now,
+        status: finished?.status ?? 'idle',
+        createdAt: finished?.createdAt ?? now,
       })
     }
   }
 
-  return [...liveEntries, ...orphanTabEntries]
+  // Finished sessions without a tab or whose tab is no longer tracked
+  const allTabIds = new Set([...liveTabIds, ...orphanTabIds])
+  const finishedEntries = finishedSessions.filter((s) => !s.tabId || !allTabIds.has(s.tabId))
+
+  return [...liveEntries, ...orphanTabEntries, ...finishedEntries]
 }
 
 /** Persist current terminal sessions to ~/.kanbai/terminal-sessions.json for the companion API */
@@ -514,7 +538,7 @@ function startSessionPersistInterval(): void {
   if (sessionPersistInterval) return
   sessionPersistInterval = setInterval(() => {
     if (terminals.size > 0) persistTerminalSessions()
-  }, 3000)
+  }, SESSION_PERSIST_INTERVAL_MS)
 }
 
 /** Stop input queue polling (called on cleanup) */
@@ -622,6 +646,20 @@ export function registerTerminalHandlers(ipcMain: IpcMain): void {
 
       managed.disposables.push(
         pty.onExit(({ exitCode, signal }) => {
+          const terminal = terminals.get(id)
+          if (terminal) {
+            addFinishedSession({
+              id: terminal.id,
+              cwd: terminal.cwd,
+              workspaceId: terminal.workspaceId,
+              tabId: terminal.tabId,
+              taskId: terminal.taskId,
+              ticketNumber: terminal.ticketNumber,
+              title: terminal.label || path.basename(terminal.cwd) || 'Terminal',
+              status: exitCode === 0 ? 'done' : 'failed',
+              createdAt: terminal.createdAt,
+            })
+          }
           terminals.delete(id)
           outputBuffers.delete(id)
           // Clean up output file
