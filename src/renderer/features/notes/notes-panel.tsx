@@ -248,7 +248,7 @@ export function NotesPanel() {
               />
               <NoteEditor
                 noteId={selectedNoteId}
-                initialContent={editContent}
+                initialContent={selectedNote.content}
                 onChange={handleContentChange}
                 placeholder={t('notes.contentPlaceholder')}
               />
