@@ -53,10 +53,23 @@ const terminals = new Map<string, ManagedTerminal>()
 const MAX_FINISHED_SESSIONS = 50
 const finishedSessions: TerminalSessionInfo[] = []
 
+/** Output buffers preserved for finished sessions so mobile can still read them */
+const finishedOutputBuffers = new Map<string, string>()
+
 function addFinishedSession(info: TerminalSessionInfo): void {
+  // Preserve the output buffer before it gets deleted from the live map
+  const output = outputBuffers.get(info.id)
+  if (output) {
+    finishedOutputBuffers.set(info.id, output)
+  }
+
   finishedSessions.push(info)
   if (finishedSessions.length > MAX_FINISHED_SESSIONS) {
-    finishedSessions.splice(0, finishedSessions.length - MAX_FINISHED_SESSIONS)
+    const removed = finishedSessions.splice(0, finishedSessions.length - MAX_FINISHED_SESSIONS)
+    // Clean up output buffers for evicted sessions
+    for (const s of removed) {
+      finishedOutputBuffers.delete(s.id)
+    }
   }
 }
 
@@ -261,16 +274,17 @@ export function setTerminalTaskInfo(tabId: string, taskId: string, ticketNumber:
   }
 }
 
-/** Return buffered output for a terminal session */
+/** Return buffered output for a terminal session (checks finished buffers too) */
 export function getTerminalOutput(sessionId: string): string {
-  return outputBuffers.get(sessionId) ?? ''
+  return outputBuffers.get(sessionId) ?? finishedOutputBuffers.get(sessionId) ?? ''
 }
 
 /**
  * Return an HTML rendering of terminal output with ANSI colors preserved.
+ * Also checks finished session buffers so mobile can view output of terminated sessions.
  */
 export function getTerminalOutputClean(sessionId: string): string {
-  const raw = outputBuffers.get(sessionId) ?? ''
+  const raw = outputBuffers.get(sessionId) ?? finishedOutputBuffers.get(sessionId) ?? ''
   if (!raw) return ''
   return renderTerminalToHtml(raw)
 }
@@ -662,8 +676,6 @@ export function registerTerminalHandlers(ipcMain: IpcMain): void {
           }
           terminals.delete(id)
           outputBuffers.delete(id)
-          // Clean up output file
-          try { fs.unlinkSync(path.join(OUTPUT_DIR, `${id}.log`)) } catch { /* ignore */ }
           persistTerminalSessions()
           for (const win of BrowserWindow.getAllWindows()) {
             try {
@@ -739,6 +751,17 @@ export function registerTerminalHandlers(ipcMain: IpcMain): void {
   ipcMain.handle(IPC_CHANNELS.TERMINAL_CLOSE, async (_event, { id }: { id: string }) => {
     const terminal = terminals.get(id)
     if (terminal) {
+      addFinishedSession({
+        id: terminal.id,
+        cwd: terminal.cwd,
+        workspaceId: terminal.workspaceId,
+        tabId: terminal.tabId,
+        taskId: terminal.taskId,
+        ticketNumber: terminal.ticketNumber,
+        title: terminal.label || path.basename(terminal.cwd) || 'Terminal',
+        status: 'done',
+        createdAt: terminal.createdAt,
+      })
       terminals.delete(id)
       persistTerminalSessions()
       disposeTerminal(terminal)
@@ -761,5 +784,7 @@ export function cleanupTerminals(): void {
   }
   terminals.clear()
   outputBuffers.clear()
+  finishedOutputBuffers.clear()
+  finishedSessions.length = 0
   persistTerminalSessions()
 }
