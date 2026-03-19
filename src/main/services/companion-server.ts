@@ -23,6 +23,13 @@ const state: CompanionServerState = {
   token: '',
 }
 
+/** Global change version — incremented when any feature state changes */
+let changeVersion = 0
+
+export function bumpCompanionChangeVersion(): void {
+  changeVersion++
+}
+
 function encrypt(data: string, key: Buffer): { iv: string; encrypted: string; tag: string } {
   const iv = crypto.randomBytes(IV_LENGTH)
   const cipher = crypto.createCipheriv(ENCRYPTION_ALGO, key, iv)
@@ -253,6 +260,13 @@ function handleRequest(req: http.IncomingMessage, res: http.ServerResponse): voi
 
   const url = new URL(req.url ?? '/', `http://localhost:${state.port}`)
   const pathname = url.pathname
+
+  // GET /api/v2/companion/changes — lightweight change counter (no encryption for speed)
+  if (req.method === 'GET' && pathname === '/api/v2/companion/changes') {
+    res.writeHead(200, { 'Content-Type': 'application/json' })
+    res.end(JSON.stringify({ version: changeVersion }))
+    return
+  }
 
   // -----------------------------------------------------------------------
   // V2 API — Feature Registry

@@ -14,6 +14,7 @@ import {
 } from '../../mcp-server/lib/kanban-store'
 import { callAiCli } from '../services/ai-cli'
 import { IS_WIN } from '../../shared/platform'
+import { bumpCompanionChangeVersion } from '../services/companion-server'
 
 const DEFAULT_KANBAN_CONFIG: KanbanConfig = {
   autoCloseCompletedTerminals: false,
@@ -864,6 +865,7 @@ export function registerKanbanHandlers(ipcMain: IpcMain): void {
       }
       tasks.push(task)
       writeKanbanTasks(data.workspaceId, tasks)
+      bumpCompanionChangeVersion()
 
       // Auto-create memory refactor ticket every 10 tickets (checks setting internally)
       maybeCreateMemoryRefactorTicket(data.workspaceId, readKanbanTasks(data.workspaceId))
@@ -882,6 +884,7 @@ export function registerKanbanHandlers(ipcMain: IpcMain): void {
       const { workspaceId: _wid, ...updateData } = data
       tasks[idx] = { ...tasks[idx]!, ...updateData, updatedAt: Date.now() }
       writeKanbanTasks(data.workspaceId, tasks)
+      bumpCompanionChangeVersion()
       return tasks[idx]
     },
   )
@@ -914,6 +917,7 @@ export function registerKanbanHandlers(ipcMain: IpcMain): void {
 
       const filtered = tasks.filter((t) => t.id !== id)
       writeKanbanTasks(workspaceId, filtered)
+      bumpCompanionChangeVersion()
     },
   )
 
@@ -994,6 +998,7 @@ export function registerKanbanHandlers(ipcMain: IpcMain): void {
         task.attachments.push(attachment)
         task.updatedAt = Date.now()
         writeKanbanTasks(workspaceId, tasks)
+        bumpCompanionChangeVersion()
       }
 
       return attachment
@@ -1035,6 +1040,7 @@ export function registerKanbanHandlers(ipcMain: IpcMain): void {
         task.attachments.push(attachment)
         task.updatedAt = Date.now()
         writeKanbanTasks(workspaceId, tasks)
+        bumpCompanionChangeVersion()
       }
 
       return attachment
@@ -1063,6 +1069,7 @@ export function registerKanbanHandlers(ipcMain: IpcMain): void {
       task.attachments = task.attachments.filter((a) => a.id !== attachmentId)
       task.updatedAt = Date.now()
       writeKanbanTasks(workspaceId, tasks)
+      bumpCompanionChangeVersion()
     },
   )
 
@@ -1165,6 +1172,7 @@ export function registerKanbanHandlers(ipcMain: IpcMain): void {
         task.conversationHistoryPath = conversationPath
         task.updatedAt = Date.now()
         writeKanbanTasks(workspaceId, tasks)
+        bumpCompanionChangeVersion()
       }
 
       return conversationPath

@@ -12,6 +12,7 @@ import { IS_WIN, getDefaultShell, getDefaultShellArgs, killProcess, isShellValid
 const execFileAsync = promisify(execFile)
 import { StorageService } from '../services/storage'
 import { getGitProfileEnvForWorkspace } from './git'
+import { bumpCompanionChangeVersion } from '../services/companion-server'
 
 interface ManagedTerminal {
   id: string
@@ -314,6 +315,7 @@ export function closeTerminalSession(sessionId: string): boolean {
     terminals.delete(sessionId)
     outputBuffers.delete(sessionId)
     persistTerminalSessions()
+    bumpCompanionChangeVersion()
     // Notify renderer
     for (const win of BrowserWindow.getAllWindows()) {
       try {
@@ -330,6 +332,7 @@ export function closeTerminalSession(sessionId: string): boolean {
     finishedSessions.splice(idx, 1)
     finishedOutputBuffers.delete(sessionId)
     persistTerminalSessions()
+    bumpCompanionChangeVersion()
     return true
   }
   return false
@@ -686,6 +689,7 @@ export function registerTerminalHandlers(ipcMain: IpcMain): void {
       }
       terminals.set(id, managed)
       persistTerminalSessions()
+      bumpCompanionChangeVersion()
 
       // Forward output to renderer and capture in ring buffer for companion API
       managed.disposables.push(
@@ -723,6 +727,7 @@ export function registerTerminalHandlers(ipcMain: IpcMain): void {
           terminals.delete(id)
           outputBuffers.delete(id)
           persistTerminalSessions()
+          bumpCompanionChangeVersion()
           for (const win of BrowserWindow.getAllWindows()) {
             try {
               if (!win.isDestroyed() && !win.webContents.isDestroyed()) {
@@ -810,6 +815,7 @@ export function registerTerminalHandlers(ipcMain: IpcMain): void {
       })
       terminals.delete(id)
       persistTerminalSessions()
+      bumpCompanionChangeVersion()
       disposeTerminal(terminal)
       // Notify renderer manually since onExit won't fire after dispose
       for (const win of BrowserWindow.getAllWindows()) {
