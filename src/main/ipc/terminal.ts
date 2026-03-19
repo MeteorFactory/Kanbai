@@ -102,6 +102,7 @@ const outputBuffers = new Map<string, string>()
  * The Desktop app polls this file and feeds data to the matching PTY.
  */
 const INPUT_QUEUE_PATH = path.join(os.homedir(), '.kanbai', 'terminal-input-queue.json')
+const CLOSE_QUEUE_PATH = path.join(os.homedir(), '.kanbai', 'terminal-close-queue.json')
 const OUTPUT_DIR = path.join(os.homedir(), '.kanbai', 'terminal-output')
 
 /**
@@ -621,12 +622,32 @@ function processInputQueue(): void {
   }
 }
 
+/** Process pending close commands from the relay queue file */
+function processCloseQueue(): void {
+  try {
+    if (!fs.existsSync(CLOSE_QUEUE_PATH)) return
+    const raw = fs.readFileSync(CLOSE_QUEUE_PATH, 'utf-8')
+    if (!raw.trim()) return
+    const sessionIds = JSON.parse(raw) as string[]
+    // Clear queue immediately to avoid double-processing
+    fs.writeFileSync(CLOSE_QUEUE_PATH, '[]', 'utf-8')
+    for (const sessionId of sessionIds) {
+      closeTerminalSession(sessionId)
+    }
+  } catch {
+    // Malformed or locked — skip this cycle
+  }
+}
+
 let inputQueueInterval: ReturnType<typeof setInterval> | null = null
 
-/** Start polling for external input commands (called once at registration) */
+/** Start polling for external input and close commands (called once at registration) */
 function startInputQueuePolling(): void {
   if (inputQueueInterval) return
-  inputQueueInterval = setInterval(processInputQueue, 500)
+  inputQueueInterval = setInterval(() => {
+    processInputQueue()
+    processCloseQueue()
+  }, 500)
 }
 
 /** Start periodic session persistence so KanbaiApi reads fresh status */
