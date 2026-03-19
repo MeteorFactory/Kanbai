@@ -967,6 +967,26 @@ export function SettingsPanel() {
                       </button>
                     </div>
                   ))}
+                  {kanbanDefaultConfig.autoCreateAiMemoryRefactorTickets && (
+                    <div className="settings-row">
+                      <div className="settings-row-info">
+                        <label className="settings-label">{t('kanban.aiMemoryRefactorInterval')}</label>
+                        <span className="settings-hint">{t('kanban.aiMemoryRefactorIntervalHint')}</span>
+                      </div>
+                      <input
+                        type="number"
+                        className="kanban-settings-number-input"
+                        min={2}
+                        max={100}
+                        value={kanbanDefaultConfig.aiMemoryRefactorInterval}
+                        onChange={async (e) => {
+                          const val = Math.max(2, Math.min(100, parseInt(e.target.value, 10) || 10))
+                          const updated = await window.kanbai.kanban.setDefaultConfig({ aiMemoryRefactorInterval: val })
+                          setKanbanDefaultConfig(updated)
+                        }}
+                      />
+                    </div>
+                  )}
                   {kanbanDefaultConfig.useWorktrees && (
                     <>
                     <div className="settings-row">
@@ -1053,6 +1073,26 @@ export function SettingsPanel() {
                       </button>
                     </div>
                   ))}
+                  {kanbanProjectConfig.autoCreateAiMemoryRefactorTickets && (
+                    <div className="settings-row">
+                      <div className="settings-row-info">
+                        <label className="settings-label">{t('kanban.aiMemoryRefactorInterval')}</label>
+                        <span className="settings-hint">{t('kanban.aiMemoryRefactorIntervalHint')}</span>
+                      </div>
+                      <input
+                        type="number"
+                        className="kanban-settings-number-input"
+                        min={2}
+                        max={100}
+                        value={kanbanProjectConfig.aiMemoryRefactorInterval}
+                        onChange={async (e) => {
+                          const val = Math.max(2, Math.min(100, parseInt(e.target.value, 10) || 10))
+                          const updated = await window.kanbai.kanban.setConfig(activeWorkspaceId, { aiMemoryRefactorInterval: val })
+                          setKanbanProjectConfig(updated)
+                        }}
+                      />
+                    </div>
+                  )}
                   {kanbanProjectConfig.useWorktrees && (
                     <>
                     <div className="settings-row">

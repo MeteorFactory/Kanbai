@@ -748,6 +748,25 @@ export function KanbanBoard() {
               </button>
             </div>
           ))}
+          {kanbanConfig.autoCreateAiMemoryRefactorTickets && (
+            <div className="kanban-settings-row">
+              <div className="kanban-settings-row-info">
+                <span className="kanban-settings-label">{t('kanban.aiMemoryRefactorInterval')}</span>
+                <span className="kanban-settings-hint">{t('kanban.aiMemoryRefactorIntervalHint')}</span>
+              </div>
+              <input
+                type="number"
+                className="kanban-settings-number-input"
+                min={2}
+                max={100}
+                value={kanbanConfig.aiMemoryRefactorInterval}
+                onChange={(e) => {
+                  const val = Math.max(2, Math.min(100, parseInt(e.target.value, 10) || 10))
+                  updateKanbanConfig('aiMemoryRefactorInterval', val)
+                }}
+              />
+            </div>
+          )}
           {kanbanConfig.useWorktrees && (<>
             <div className="kanban-settings-row">
               <div className="kanban-settings-row-info">

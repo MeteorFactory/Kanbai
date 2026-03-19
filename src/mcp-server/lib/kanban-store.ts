@@ -86,7 +86,7 @@ export function getNextTicketNumber(tasks: KanbanTask[]): number {
 
 export const AI_MEMORY_REFACTOR_LABEL = 'ai-memory-refactor'
 
-const MEMORY_REFACTOR_INTERVAL = 10
+const DEFAULT_MEMORY_REFACTOR_INTERVAL = 10
 
 const MEMORY_REFACTOR_TITLES: Record<string, string> = {
   fr: 'Refonte des memoires IA (Claude.md, Gemini.md, etc)',
@@ -188,7 +188,7 @@ Tout le travail doit etre fait dans le **workspace** (pas le projet).
 `,
 }
 
-function readAutoMemoryRefactorSetting(workspaceId?: string): boolean {
+function readMemoryRefactorSettings(workspaceId?: string): { enabled: boolean; interval: number } {
   // Try per-workspace config first
   if (workspaceId) {
     try {
@@ -197,20 +197,43 @@ function readAutoMemoryRefactorSetting(workspaceId?: string): boolean {
         const raw = fs.readFileSync(configPath, 'utf-8')
         const config = JSON.parse(raw)
         if (typeof config.autoCreateAiMemoryRefactorTickets === 'boolean') {
-          return config.autoCreateAiMemoryRefactorTickets
+          return {
+            enabled: config.autoCreateAiMemoryRefactorTickets,
+            interval: typeof config.aiMemoryRefactorInterval === 'number' && config.aiMemoryRefactorInterval >= 1
+              ? config.aiMemoryRefactorInterval
+              : DEFAULT_MEMORY_REFACTOR_INTERVAL,
+          }
         }
       }
     } catch { /* fallback below */ }
   }
-  // Fallback to global settings
+  // Fallback to global default config, then data.json
+  try {
+    const defaultConfigPath = path.join(os.homedir(), '.kanbai', 'kanban', 'default-config.json')
+    if (fs.existsSync(defaultConfigPath)) {
+      const raw = fs.readFileSync(defaultConfigPath, 'utf-8')
+      const config = JSON.parse(raw)
+      if (typeof config.autoCreateAiMemoryRefactorTickets === 'boolean') {
+        return {
+          enabled: config.autoCreateAiMemoryRefactorTickets,
+          interval: typeof config.aiMemoryRefactorInterval === 'number' && config.aiMemoryRefactorInterval >= 1
+            ? config.aiMemoryRefactorInterval
+            : DEFAULT_MEMORY_REFACTOR_INTERVAL,
+        }
+      }
+    }
+  } catch { /* fallback below */ }
   try {
     const dataPath = path.join(os.homedir(), '.kanbai', 'data.json')
-    if (!fs.existsSync(dataPath)) return true
+    if (!fs.existsSync(dataPath)) return { enabled: true, interval: DEFAULT_MEMORY_REFACTOR_INTERVAL }
     const raw = fs.readFileSync(dataPath, 'utf-8')
     const data = JSON.parse(raw)
-    return data.settings?.autoCreateAiMemoryRefactorTickets ?? true
+    return {
+      enabled: data.settings?.autoCreateAiMemoryRefactorTickets ?? true,
+      interval: DEFAULT_MEMORY_REFACTOR_INTERVAL,
+    }
   } catch {
-    return true
+    return { enabled: true, interval: DEFAULT_MEMORY_REFACTOR_INTERVAL }
   }
 }
 
@@ -225,7 +248,8 @@ export function maybeCreateMemoryRefactorTicket(
   workspaceId: string,
   tasks: KanbanTask[],
 ): KanbanTask | null {
-  if (!readAutoMemoryRefactorSetting(workspaceId)) return null
+  const memorySettings = readMemoryRefactorSettings(workspaceId)
+  if (!memorySettings.enabled) return null
 
   const isRefactorTicket = (t: KanbanTask) =>
     t.type === 'ia' && t.title === (MEMORY_REFACTOR_TITLES[readLocaleFromSettings()] ?? MEMORY_REFACTOR_TITLES['fr']!)
@@ -239,7 +263,8 @@ export function maybeCreateMemoryRefactorTicket(
 
   const hasAnyRefactorHistory = tasks.some(isRefactorTicket)
 
-  const shouldCreate = !hasAnyRefactorHistory || tasks.length % MEMORY_REFACTOR_INTERVAL === 0
+  const interval = memorySettings.interval
+  const shouldCreate = !hasAnyRefactorHistory || tasks.length % interval === 0
   if (!shouldCreate) return null
 
   const refactorTask: KanbanTask = {

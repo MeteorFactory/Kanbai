@@ -229,6 +229,7 @@ export interface KanbanConfig {
   autoCloseCompletedTerminals: boolean
   autoCloseCtoTerminals: boolean
   autoCreateAiMemoryRefactorTickets: boolean
+  aiMemoryRefactorInterval: number
   autoPrequalifyTickets: boolean
   autoPrioritizeBugs: boolean
   useWorktrees: boolean
