@@ -47,13 +47,19 @@ export const terminalFeature: CompanionFeature = {
       group.sort((a, b) => b.createdAt - a.createdAt)
       const representative = group[0]
       if (!representative) return []
-      // A tab is "working" if any of its sessions is working
-      const status = group.some((s) => s.status === 'working') ? 'working' : 'idle'
+      // Determine aggregate status for the tab group
+      const status = group.some((s) => s.status === 'working')
+        ? 'working'
+        : group.some((s) => s.status === 'failed')
+          ? 'failed'
+          : group.every((s) => s.status === 'done')
+            ? 'done'
+            : group[0]!.status
       // Use the earliest createdAt for elapsed time
       const earliestCreatedAt = Math.min(...group.map((s) => s.createdAt))
       // Collect all session IDs so the mobile app can still interact with individual sessions
       const sessionIds = group.map((s) => s.id)
-      return {
+      return [{
         id: representative.id,
         tabId: representative.tabId,
         taskId: representative.taskId,
@@ -62,7 +68,7 @@ export const terminalFeature: CompanionFeature = {
         status,
         elapsed: formatElapsed(earliestCreatedAt),
         sessionIds,
-      }
+      }]
     })
 
     const orphanEntries = orphans.map((s) => ({
@@ -78,15 +84,7 @@ export const terminalFeature: CompanionFeature = {
 
     return {
       success: true,
-      data: filtered.map((s) => ({
-        id: s.id,
-        tabId: s.tabId,
-        taskId: s.taskId,
-        ticketNumber: s.ticketNumber,
-        title: s.title,
-        status: s.status,
-        elapsed: formatElapsed(s.createdAt),
-      })),
+      data: [...tabEntries, ...orphanEntries],
     }
   },
 
