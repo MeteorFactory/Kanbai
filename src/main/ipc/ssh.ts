@@ -7,6 +7,44 @@ import { IPC_CHANNELS, SshKeyInfo, SshKeyType } from '../../shared/types'
 
 const SSH_DIR = path.join(os.homedir(), '.ssh')
 
+const KEY_NAME_REGEX = /^[a-zA-Z0-9_-]+$/
+
+function validateKeyName(name: unknown): string {
+  if (typeof name !== 'string') {
+    throw new Error('Key name must be a string')
+  }
+  if (name.length === 0) {
+    throw new Error('Key name must not be empty')
+  }
+  if (name.includes('\0')) {
+    throw new Error('Key name must not contain null bytes')
+  }
+  if (!KEY_NAME_REGEX.test(name)) {
+    throw new Error(
+      'Key name must contain only alphanumeric characters, hyphens, and underscores',
+    )
+  }
+  return name
+}
+
+function validatePublicKeyPath(keyPath: unknown): string {
+  if (typeof keyPath !== 'string') {
+    throw new Error('Key path must be a string')
+  }
+  if (keyPath.includes('\0')) {
+    throw new Error('Key path must not contain null bytes')
+  }
+  const resolved = path.resolve(keyPath)
+  const sshDirResolved = path.resolve(SSH_DIR)
+  if (!resolved.startsWith(sshDirResolved + path.sep) && resolved !== sshDirResolved) {
+    throw new Error('Key path must be within the ~/.ssh directory')
+  }
+  if (!resolved.endsWith('.pub')) {
+    throw new Error('Key path must point to a .pub file')
+  }
+  return resolved
+}
+
 function getFingerprint(pubKeyPath: string): string {
   try {
     return execFileSync('ssh-keygen', ['-lf', pubKeyPath], {
@@ -119,12 +157,14 @@ export function registerSshHandlers(ipcMain: IpcMain): void {
       { name, type, comment }: { name: string; type: SshKeyType; comment: string },
     ) => {
       try {
+        const validName = validateKeyName(name)
+
         // Ensure ~/.ssh exists
         if (!fs.existsSync(SSH_DIR)) {
           fs.mkdirSync(SSH_DIR, { mode: 0o700 })
         }
 
-        const keyPath = path.join(SSH_DIR, name)
+        const keyPath = path.join(SSH_DIR, validName)
 
         // Don't overwrite existing keys
         if (fs.existsSync(keyPath)) {
@@ -153,7 +193,8 @@ export function registerSshHandlers(ipcMain: IpcMain): void {
     IPC_CHANNELS.SSH_READ_PUBLIC_KEY,
     async (_event, { keyPath }: { keyPath: string }) => {
       try {
-        const content = fs.readFileSync(keyPath, 'utf-8').trim()
+        const validPath = validatePublicKeyPath(keyPath)
+        const content = fs.readFileSync(validPath, 'utf-8').trim()
         return { success: true, content }
       } catch (err) {
         return { success: false, content: '', error: String(err) }
@@ -165,11 +206,13 @@ export function registerSshHandlers(ipcMain: IpcMain): void {
     IPC_CHANNELS.SSH_IMPORT_KEY,
     async (_event, { name, privateKey, publicKey }: { name: string; privateKey: string; publicKey?: string }) => {
       try {
+        const validName = validateKeyName(name)
+
         if (!fs.existsSync(SSH_DIR)) {
           fs.mkdirSync(SSH_DIR, { mode: 0o700 })
         }
 
-        const keyPath = path.join(SSH_DIR, name)
+        const keyPath = path.join(SSH_DIR, validName)
         if (fs.existsSync(keyPath)) {
           return { success: false, error: `Key "${name}" already exists` }
         }
@@ -191,7 +234,8 @@ export function registerSshHandlers(ipcMain: IpcMain): void {
     IPC_CHANNELS.SSH_DELETE_KEY,
     async (_event, { name }: { name: string }) => {
       try {
-        const keyPath = path.join(SSH_DIR, name)
+        const validName = validateKeyName(name)
+        const keyPath = path.join(SSH_DIR, validName)
         const pubPath = keyPath + '.pub'
 
         if (fs.existsSync(keyPath)) fs.unlinkSync(keyPath)
