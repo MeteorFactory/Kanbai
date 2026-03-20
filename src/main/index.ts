@@ -2,7 +2,7 @@ import { app, BrowserWindow, ipcMain, globalShortcut, protocol, net, session, sh
 import fs from 'fs'
 import path from 'path'
 import { pathToFileURL } from 'url'
-import { execSync } from 'child_process'
+import { resolveLoginShellPath } from './services/shell-path'
 import { registerTerminalHandlers } from './ipc/terminal'
 import { registerWorkspaceHandlers } from './ipc/workspace'
 import { registerProjectHandlers } from './ipc/project'
@@ -52,11 +52,7 @@ import { isAppUpdateInstalling } from './services/appUpdateState'
 if (process.platform === 'darwin') {
   // macOS: resolve the real PATH by asking the user's login shell.
   try {
-    const userShell = process.env.SHELL || '/bin/zsh'
-    const shellPath = execSync(`${userShell} -ilc 'printf "%s" "$PATH"'`, {
-      encoding: 'utf-8',
-      timeout: 5000,
-    })
+    const shellPath = resolveLoginShellPath(process.env.SHELL)
     if (shellPath) {
       process.env.PATH = shellPath
     }
