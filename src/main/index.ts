@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, globalShortcut, protocol, net, session, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, globalShortcut, protocol, net, session } from 'electron'
 import fs from 'fs'
 import path from 'path'
 import { pathToFileURL } from 'url'

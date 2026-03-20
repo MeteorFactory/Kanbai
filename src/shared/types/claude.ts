@@ -4,6 +4,7 @@ export interface ClaudeSession {
   id: string
   projectId: string
   terminalId: string
+  provider: import('./ai-provider').AiProviderId
   status: 'running' | 'completed' | 'failed' | 'paused'
   startedAt: number
   endedAt?: number

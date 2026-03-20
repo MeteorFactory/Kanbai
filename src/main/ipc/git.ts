@@ -82,6 +82,43 @@ function validateHash(hash: string): string {
   return hash
 }
 
+/** Allowed git remote URL protocols/patterns. */
+const ALLOWED_GIT_URL_PATTERNS = [
+  /^https:\/\//,
+  /^http:\/\//,
+  /^git:\/\//,
+  /^[a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+:/, // SSH shorthand: git@host:path
+] as const
+
+/** Validate a git remote URL — only allows https, http, git, and SSH shorthand protocols. */
+function validateGitUrl(url: string): string {
+  if (!url) {
+    throw new Error('Git remote URL cannot be empty')
+  }
+  const isAllowed = ALLOWED_GIT_URL_PATTERNS.some((pattern) => pattern.test(url))
+  if (!isAllowed) {
+    throw new Error(`Invalid git remote URL protocol: "${url}". Only https://, http://, git://, and SSH (git@host:path) are allowed.`)
+  }
+  return url
+}
+
+/** Validate that a file path is within the working directory — prevents path traversal. */
+function validateFilePath(file: string, cwd: string): string {
+  if (!file) {
+    throw new Error('File path cannot be empty')
+  }
+  // Reject option injection
+  if (file.startsWith('-')) {
+    throw new Error(`Invalid file path: "${file}"`)
+  }
+  const resolved = path.resolve(cwd, file)
+  const normalizedCwd = path.resolve(cwd)
+  if (!resolved.startsWith(normalizedCwd + path.sep) && resolved !== normalizedCwd) {
+    throw new Error(`File path "${file}" is outside the working directory`)
+  }
+  return file
+}
+
 /** Execute a git command safely using execFileSync (no shell interpretation). */
 function execGit(args: string[], cwd: string): string {
   return execFileSync('git', args, {
@@ -363,6 +400,7 @@ export function registerGitHandlers(ipcMain: IpcMain): void {
     ) => {
       try {
         for (const file of files) {
+          validateFilePath(file, cwd)
           execGit(['add', file], cwd)
         }
         // Apply namespace git profile overrides if configured
@@ -466,6 +504,7 @@ export function registerGitHandlers(ipcMain: IpcMain): void {
     async (_event, { cwd, files }: { cwd: string; files: string[] }) => {
       try {
         for (const file of files) {
+          validateFilePath(file, cwd)
           execGit(['add', file], cwd)
         }
         return { success: true }
@@ -481,10 +520,12 @@ export function registerGitHandlers(ipcMain: IpcMain): void {
       try {
         if (!hasCommits(cwd)) {
           for (const file of files) {
+            validateFilePath(file, cwd)
             execGit(['rm', '--cached', file], cwd)
           }
         } else {
           for (const file of files) {
+            validateFilePath(file, cwd)
             execGit(['reset', 'HEAD', '--', file], cwd)
           }
         }
@@ -500,6 +541,7 @@ export function registerGitHandlers(ipcMain: IpcMain): void {
     async (_event, { cwd, files }: { cwd: string; files: string[] }) => {
       try {
         for (const file of files) {
+          validateFilePath(file, cwd)
           execGit(['checkout', '--', file], cwd)
         }
         return { success: true }
@@ -725,7 +767,7 @@ export function registerGitHandlers(ipcMain: IpcMain): void {
     IPC_CHANNELS.GIT_ADD_REMOTE,
     async (_event, { cwd, name, url }: { cwd: string; name: string; url: string }) => {
       try {
-        execGit(['remote', 'add', validateRef(name), url], cwd)
+        execGit(['remote', 'add', validateRef(name), validateGitUrl(url)], cwd)
         return { success: true }
       } catch (err) {
         return { success: false, error: String(err) }

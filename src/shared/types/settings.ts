@@ -12,16 +12,27 @@ export interface AppSettings {
   fontFamily: string
   scrollbackLines: number
   claudeDetectionColor: string
+  codexDetectionColor: string
+  copilotDetectionColor: string
+  geminiDetectionColor: string
+  defaultAiProvider: import('./ai-provider').AiProviderId
   autoClauderEnabled: boolean
   defaultAutoClauderTemplateId?: string
   notificationSound: boolean
   notificationBadge: boolean
   checkUpdatesOnLaunch: boolean
+  toolAutoCheckEnabled: boolean
   autoCloseCompletedTerminals: boolean
   autoCloseCtoTerminals: boolean
   autoApprove: boolean
+  autoCreateAiMemoryRefactorTickets: boolean
+  kanbanSettings?: {
+    autoPrequalifyTickets: boolean
+    autoPrioritizeBugs: boolean
+  }
   tutorialCompleted: boolean
   tutorialSeenSections: string[]
+  defaultVisibleTabs?: string[]
 }
 
 export interface SessionTab {
@@ -49,4 +60,7 @@ export interface UpdateInfo {
   installed: boolean
   scope: 'global' | 'project' | 'unit'
   projectId?: string
+  installSource?: string
+  canInstall?: boolean
+  canUninstall?: boolean
 }

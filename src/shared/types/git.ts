@@ -43,6 +43,13 @@ export interface GitRemote {
   pushUrl: string
 }
 
+export interface GitWorktree {
+  path: string
+  branch: string
+  head: string
+  isBare: boolean
+}
+
 export interface GitProfile {
   id: string
   namespaceId: string

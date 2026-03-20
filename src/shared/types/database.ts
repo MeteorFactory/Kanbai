@@ -173,6 +173,7 @@ export interface DbNlInterpretRequest {
   rows: Record<string, unknown>[]
   rowCount: number
   history?: DbNlHistoryEntry[]
+  provider?: string
 }
 
 export interface DbNlInterpretResponse {

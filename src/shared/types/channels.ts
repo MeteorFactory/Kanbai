@@ -7,6 +7,12 @@ export const IPC_CHANNELS = {
   TERMINAL_RESIZE: 'terminal:resize',
   TERMINAL_CLOSE: 'terminal:close',
   TERMINAL_INPUT: 'terminal:input',
+  TERMINAL_CHECK_BUSY: 'terminal:checkBusy',
+  TERMINAL_UPDATE_LABEL: 'terminal:updateLabel',
+  TERMINAL_SET_TASK_INFO: 'terminal:setTaskInfo',
+  TERMINAL_GET_OUTPUT: 'terminal:getOutput',
+  TERMINAL_SYNC_TABS: 'terminal:syncTabs',
+  TERMINAL_COMPANION_CREATE: 'terminal:companionCreate',
 
   // Workspace
   WORKSPACE_LIST: 'workspace:list',
@@ -42,13 +48,20 @@ export const IPC_CHANNELS = {
   KANBAN_ATTACH_FILE: 'kanban:attachFile',
   KANBAN_ATTACH_FROM_CLIPBOARD: 'kanban:attachFromClipboard',
   KANBAN_REMOVE_ATTACHMENT: 'kanban:removeAttachment',
+  KANBAN_READ_ATTACHMENT: 'kanban:readAttachment',
   KANBAN_GET_WORKING_TICKET: 'kanban:getWorkingTicket',
+  KANBAN_GET_WORKING_TICKETS: 'kanban:getWorkingTickets',
   KANBAN_WATCH: 'kanban:watch',
   KANBAN_UNWATCH: 'kanban:unwatch',
   KANBAN_WATCH_ADD: 'kanban:watchAdd',
   KANBAN_WATCH_REMOVE: 'kanban:watchRemove',
   KANBAN_FILE_CHANGED: 'kanban:fileChanged',
   KANBAN_LINK_CONVERSATION: 'kanban:linkConversation',
+  KANBAN_PREQUALIFY: 'kanban:prequalify',
+  KANBAN_GET_CONFIG: 'kanban:getConfig',
+  KANBAN_SET_CONFIG: 'kanban:setConfig',
+  KANBAN_GET_DEFAULT_CONFIG: 'kanban:getDefaultConfig',
+  KANBAN_SET_DEFAULT_CONFIG: 'kanban:setDefaultConfig',
 
   // Updates
   UPDATE_CHECK: 'update:check',
@@ -79,6 +92,8 @@ export const IPC_CHANNELS = {
   FS_READ_BASE64: 'fs:readBase64',
   FS_OPEN_IN_FINDER: 'fs:openInFinder',
   FS_SEARCH: 'fs:search',
+  FS_FILE_INFO: 'fs:fileInfo',
+  FS_READ_FILE_CHUNKED: 'fs:readFileChunked',
 
   // Git
   GIT_INIT: 'git:init',
@@ -112,6 +127,15 @@ export const IPC_CHANNELS = {
   GIT_ADD_REMOTE: 'git:addRemote',
   GIT_REMOVE_REMOTE: 'git:removeRemote',
   GIT_RESET_SOFT: 'git:resetSoft',
+  GIT_WORKTREE_ADD: 'git:worktreeAdd',
+  GIT_WORKTREE_REMOVE: 'git:worktreeRemove',
+  GIT_WORKTREE_LIST: 'git:worktreeList',
+  GIT_WORKTREE_FINALIZE: 'git:worktreeFinalize',
+  GIT_WORKTREE_MERGE_AND_CLEANUP: 'git:worktreeMergeAndCleanup',
+  GIT_WORKTREE_LOCK: 'git:worktreeLock',
+  GIT_WORKTREE_UNLOCK: 'git:worktreeUnlock',
+  GIT_WORKTREE_IS_LOCKED: 'git:worktreeIsLocked',
+  GIT_BRANCH_IS_MERGED: 'git:branchIsMerged',
 
   // Workspace storage (.workspaces dir)
   WORKSPACE_INIT_DIR: 'workspace:initDir',
@@ -136,9 +160,18 @@ export const IPC_CHANNELS = {
   PROJECT_SAVE_IGNORED_TODOS: 'project:saveIgnoredTodos',
   PROJECT_STATS: 'project:stats',
 
-  // Project notes
+  // Project notes (legacy per-project)
   PROJECT_GET_NOTES: 'project:getNotes',
   PROJECT_SAVE_NOTES: 'project:saveNotes',
+
+  // Notes (workspace-level)
+  NOTES_LIST: 'notes:list',
+  NOTES_CREATE: 'notes:create',
+  NOTES_UPDATE: 'notes:update',
+  NOTES_DELETE: 'notes:delete',
+  NOTES_SAVE_IMAGE: 'notes:save-image',
+  NOTES_LOAD_IMAGE: 'notes:load-image',
+  NOTES_DELETE_IMAGE: 'notes:delete-image',
 
   // Namespace
   NAMESPACE_LIST: 'namespace:list',
@@ -230,6 +263,8 @@ export const IPC_CHANNELS = {
 
   // MCP
   MCP_GET_HELP: 'mcp:getHelp',
+  MCP_WORKSPACE_READ: 'mcp:workspaceRead',
+  MCP_WORKSPACE_WRITE: 'mcp:workspaceWrite',
 
   // API Tester
   API_EXECUTE: 'api:execute',
@@ -278,6 +313,10 @@ export const IPC_CHANNELS = {
   DB_NL_CANCEL: 'db:nlCancel',
   DB_GET_SCHEMA_CONTEXT: 'db:getSchemaContext',
 
+  // Skills Store
+  SKILLS_STORE_FETCH: 'skillsStore:fetch',
+  SKILLS_STORE_INSTALL: 'skillsStore:install',
+
   // Shell
   SHELL_OPEN_EXTERNAL: 'shell:openExternal',
 
@@ -286,6 +325,7 @@ export const IPC_CHANNELS = {
   APP_SETTINGS_SET: 'app:settingsSet',
   APP_NOTIFICATION: 'app:notification',
   APP_VERSION: 'app:version',
+  APP_PLATFORM_INFO: 'app:platformInfo',
 
   // App Update (electron-updater)
   APP_UPDATE_CHECK: 'appUpdate:check',
@@ -313,6 +353,81 @@ export const IPC_CHANNELS = {
   PACKAGES_NL_ASK: 'packages:nlAsk',
   PACKAGES_NL_CANCEL: 'packages:nlCancel',
 
+  // Codex config
+  CODEX_READ_CONFIG: 'codex:readConfig',
+  CODEX_WRITE_CONFIG: 'codex:writeConfig',
+  CODEX_CHECK_CONFIG: 'codex:checkConfig',
+  CODEX_READ_GLOBAL_CONFIG: 'codex:readGlobalConfig',
+  CODEX_WRITE_GLOBAL_CONFIG: 'codex:writeGlobalConfig',
+  CODEX_CHECK_GLOBAL_CONFIG: 'codex:checkGlobalConfig',
+
+  // Codex rules
+  CODEX_LIST_RULES: 'codex:listRules',
+  CODEX_READ_RULE: 'codex:readRule',
+  CODEX_WRITE_RULE: 'codex:writeRule',
+  CODEX_DELETE_RULE: 'codex:deleteRule',
+
+  // Codex AGENTS.md (memory)
+  CODEX_READ_AGENTS_MD: 'codex:readAgentsMd',
+  CODEX_WRITE_AGENTS_MD: 'codex:writeAgentsMd',
+  CODEX_READ_GLOBAL_AGENTS_MD: 'codex:readGlobalAgentsMd',
+  CODEX_WRITE_GLOBAL_AGENTS_MD: 'codex:writeGlobalAgentsMd',
+
+  // Codex skills
+  CODEX_LIST_SKILLS: 'codex:listSkills',
+  CODEX_READ_SKILL: 'codex:readSkill',
+  CODEX_WRITE_SKILL: 'codex:writeSkill',
+  CODEX_DELETE_SKILL: 'codex:deleteSkill',
+
+  // Copilot config
+  COPILOT_READ_CONFIG: 'copilot:readConfig',
+  COPILOT_WRITE_CONFIG: 'copilot:writeConfig',
+  COPILOT_CHECK_CONFIG: 'copilot:checkConfig',
+
+  // Copilot instructions (memory)
+  COPILOT_READ_INSTRUCTIONS: 'copilot:readInstructions',
+  COPILOT_WRITE_INSTRUCTIONS: 'copilot:writeInstructions',
+  COPILOT_READ_GLOBAL_INSTRUCTIONS: 'copilot:readGlobalInstructions',
+  COPILOT_WRITE_GLOBAL_INSTRUCTIONS: 'copilot:writeGlobalInstructions',
+
+  // Copilot skills (.agents/skills)
+  COPILOT_LIST_SKILLS: 'copilot:listSkills',
+  COPILOT_READ_SKILL: 'copilot:readSkill',
+  COPILOT_WRITE_SKILL: 'copilot:writeSkill',
+  COPILOT_DELETE_SKILL: 'copilot:deleteSkill',
+
+  // Gemini config
+  GEMINI_READ_CONFIG: 'gemini:readConfig',
+  GEMINI_WRITE_CONFIG: 'gemini:writeConfig',
+  GEMINI_CHECK_CONFIG: 'gemini:checkConfig',
+
+  // Gemini memory (GEMINI.md)
+  GEMINI_READ_MEMORY: 'gemini:readMemory',
+  GEMINI_WRITE_MEMORY: 'gemini:writeMemory',
+  GEMINI_READ_GLOBAL_MEMORY: 'gemini:readGlobalMemory',
+  GEMINI_WRITE_GLOBAL_MEMORY: 'gemini:writeGlobalMemory',
+
+  // Gemini skills
+  GEMINI_LIST_SKILLS: 'gemini:listSkills',
+  GEMINI_READ_SKILL: 'gemini:readSkill',
+  GEMINI_WRITE_SKILL: 'gemini:writeSkill',
+  GEMINI_DELETE_SKILL: 'gemini:deleteSkill',
+
+  // AI Provider
+  AI_PROVIDER_SET: 'ai:providerSet',
+  AI_PROVIDER_CHECK_INSTALLED: 'ai:providerCheckInstalled',
+  AI_DEFAULTS_SET: 'ai:defaultsSet',
+  AI_DEFAULTS_GET: 'ai:defaultsGet',
+  AI_DEFAULTS_GET_GLOBAL: 'ai:defaultsGetGlobal',
+  AI_DEFAULTS_SET_GLOBAL: 'ai:defaultsSetGlobal',
+  AI_DEFAULTS_GET_WORKSPACE: 'ai:defaultsGetWorkspace',
+  AI_DEFAULTS_SET_WORKSPACE: 'ai:defaultsSetWorkspace',
+  AI_CHECK_MULTI_AGENT: 'ai:checkMultiAgent',
+  AI_WORKSPACE_PROVIDER_SET: 'ai:workspaceProviderSet',
+  AI_WORKSPACE_DEFAULTS_SET: 'ai:workspaceDefaultsSet',
+  AI_WORKSPACE_DEFAULTS_GET: 'ai:workspaceDefaultsGet',
+  AI_WORKSPACE_PROPAGATE: 'ai:workspacePropagate',
+
   // Code Analysis
   ANALYSIS_DETECT_TOOLS: 'analysis:detectTools',
   ANALYSIS_RUN: 'analysis:run',
@@ -323,4 +438,32 @@ export const IPC_CHANNELS = {
   ANALYSIS_CREATE_TICKETS: 'analysis:createTickets',
   ANALYSIS_INSTALL_TOOL: 'analysis:installTool',
   ANALYSIS_INSTALL_PROGRESS: 'analysis:installProgress',
+
+  // Pixel Agents
+  PIXEL_AGENTS_START: 'pixel-agents:start',
+  PIXEL_AGENTS_STOP: 'pixel-agents:stop',
+  PIXEL_AGENTS_EVENT: 'pixel-agents:event',
+  PIXEL_AGENTS_WEBVIEW_READY: 'pixel-agents:webviewReady',
+  PIXEL_AGENTS_SAVE_LAYOUT: 'pixel-agents:saveLayout',
+
+  // DevOps
+  DEVOPS_LOAD: 'devops:load',
+  DEVOPS_SAVE: 'devops:save',
+  DEVOPS_TEST_CONNECTION: 'devops:testConnection',
+  DEVOPS_LIST_PIPELINES: 'devops:listPipelines',
+  DEVOPS_GET_PIPELINE_RUNS: 'devops:getPipelineRuns',
+  DEVOPS_RUN_PIPELINE: 'devops:runPipeline',
+  DEVOPS_GET_BUILD_TIMELINE: 'devops:getBuildTimeline',
+  DEVOPS_GET_APPROVALS: 'devops:getApprovals',
+  DEVOPS_APPROVE: 'devops:approve',
+  DEVOPS_GET_BUILD_LOG: 'devops:getBuildLog',
+
+  // Companion
+  COMPANION_REGISTER: 'companion:register',
+  COMPANION_CANCEL: 'companion:cancel',
+  COMPANION_DISCONNECT: 'companion:disconnect',
+  COMPANION_STATUS_CHANGED: 'companion:statusChanged',
+  COMPANION_DATA_INFO: 'companion:dataInfo',
+  COMPANION_SYNC_TICKETS: 'companion:syncTickets',
+  COMPANION_TICKET_UPDATED: 'companion:ticketUpdated',
 } as const

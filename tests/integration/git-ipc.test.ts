@@ -639,4 +639,228 @@ describe('Git IPC Handlers', () => {
       expect(result.success).toBe(false)
     })
   })
+
+  // --- SEC-09: Git URL validation and file path traversal prevention ---
+
+  describe('git:addRemote — URL validation', () => {
+    it('accepts https:// URL', async () => {
+      setupGitRepoWithCommit()
+      const result = await mockIpcMain._invoke('git:addRemote', {
+        cwd: repoDir,
+        name: 'origin',
+        url: 'https://github.com/user/repo.git',
+      })
+      expect(result.success).toBe(true)
+    })
+
+    it('accepts http:// URL', async () => {
+      setupGitRepoWithCommit()
+      const result = await mockIpcMain._invoke('git:addRemote', {
+        cwd: repoDir,
+        name: 'origin',
+        url: 'http://github.com/user/repo.git',
+      })
+      expect(result.success).toBe(true)
+    })
+
+    it('accepts git:// URL', async () => {
+      setupGitRepoWithCommit()
+      const result = await mockIpcMain._invoke('git:addRemote', {
+        cwd: repoDir,
+        name: 'origin',
+        url: 'git://github.com/user/repo.git',
+      })
+      expect(result.success).toBe(true)
+    })
+
+    it('accepts SSH shorthand URL (git@host:path)', async () => {
+      setupGitRepoWithCommit()
+      const result = await mockIpcMain._invoke('git:addRemote', {
+        cwd: repoDir,
+        name: 'origin',
+        url: 'git@github.com:user/repo.git',
+      })
+      expect(result.success).toBe(true)
+    })
+
+    it('rejects file:// URL', async () => {
+      setupGitRepoWithCommit()
+      const result = await mockIpcMain._invoke('git:addRemote', {
+        cwd: repoDir,
+        name: 'origin',
+        url: 'file:///etc/passwd',
+      })
+      expect(result.success).toBe(false)
+      expect(result.error).toContain('Invalid git remote URL protocol')
+    })
+
+    it('rejects file:// URL targeting local git repo', async () => {
+      setupGitRepoWithCommit()
+      const result = await mockIpcMain._invoke('git:addRemote', {
+        cwd: repoDir,
+        name: 'origin',
+        url: 'file:///tmp/malicious-repo',
+      })
+      expect(result.success).toBe(false)
+      expect(result.error).toContain('Invalid git remote URL protocol')
+    })
+
+    it('rejects ssh:// URL (only SSH shorthand allowed)', async () => {
+      setupGitRepoWithCommit()
+      const result = await mockIpcMain._invoke('git:addRemote', {
+        cwd: repoDir,
+        name: 'origin',
+        url: 'ssh://git@github.com/user/repo.git',
+      })
+      expect(result.success).toBe(false)
+      expect(result.error).toContain('Invalid git remote URL protocol')
+    })
+
+    it('rejects arbitrary protocol URLs', async () => {
+      setupGitRepoWithCommit()
+      const result = await mockIpcMain._invoke('git:addRemote', {
+        cwd: repoDir,
+        name: 'origin',
+        url: 'ext::sh -c evil-command',
+      })
+      expect(result.success).toBe(false)
+      expect(result.error).toContain('Invalid git remote URL protocol')
+    })
+
+    it('rejects empty URL', async () => {
+      setupGitRepoWithCommit()
+      const result = await mockIpcMain._invoke('git:addRemote', {
+        cwd: repoDir,
+        name: 'origin',
+        url: '',
+      })
+      expect(result.success).toBe(false)
+      expect(result.error).toContain('Git remote URL cannot be empty')
+    })
+
+    it('rejects bare path as URL', async () => {
+      setupGitRepoWithCommit()
+      const result = await mockIpcMain._invoke('git:addRemote', {
+        cwd: repoDir,
+        name: 'origin',
+        url: '/tmp/local-repo',
+      })
+      expect(result.success).toBe(false)
+      expect(result.error).toContain('Invalid git remote URL protocol')
+    })
+  })
+
+  describe('git:stage — file path traversal prevention', () => {
+    it('accepts valid file path within cwd', async () => {
+      setupGitRepoWithCommit()
+      fs.writeFileSync(path.join(repoDir, 'valid.txt'), 'content')
+
+      const result = await mockIpcMain._invoke('git:stage', {
+        cwd: repoDir,
+        files: ['valid.txt'],
+      })
+      expect(result.success).toBe(true)
+    })
+
+    it('accepts file path in subdirectory', async () => {
+      setupGitRepoWithCommit()
+      fs.mkdirSync(path.join(repoDir, 'subdir'), { recursive: true })
+      fs.writeFileSync(path.join(repoDir, 'subdir', 'file.txt'), 'content')
+
+      const result = await mockIpcMain._invoke('git:stage', {
+        cwd: repoDir,
+        files: ['subdir/file.txt'],
+      })
+      expect(result.success).toBe(true)
+    })
+
+    it('rejects path traversal with ../', async () => {
+      setupGitRepoWithCommit()
+      const result = await mockIpcMain._invoke('git:stage', {
+        cwd: repoDir,
+        files: ['../../../etc/passwd'],
+      })
+      expect(result.success).toBe(false)
+      expect(result.error).toContain('outside the working directory')
+    })
+
+    it('rejects absolute path outside cwd', async () => {
+      setupGitRepoWithCommit()
+      const result = await mockIpcMain._invoke('git:stage', {
+        cwd: repoDir,
+        files: ['/etc/passwd'],
+      })
+      expect(result.success).toBe(false)
+      expect(result.error).toContain('outside the working directory')
+    })
+
+    it('rejects option injection with dash prefix', async () => {
+      setupGitRepoWithCommit()
+      const result = await mockIpcMain._invoke('git:stage', {
+        cwd: repoDir,
+        files: ['--all'],
+      })
+      expect(result.success).toBe(false)
+      expect(result.error).toContain('Invalid file path')
+    })
+  })
+
+  describe('git:discard — file path traversal prevention', () => {
+    it('rejects path traversal with ../', async () => {
+      setupGitRepoWithCommit()
+      const result = await mockIpcMain._invoke('git:discard', {
+        cwd: repoDir,
+        files: ['../../etc/shadow'],
+      })
+      expect(result.success).toBe(false)
+      expect(result.error).toContain('outside the working directory')
+    })
+
+    it('rejects absolute path outside cwd', async () => {
+      setupGitRepoWithCommit()
+      const result = await mockIpcMain._invoke('git:discard', {
+        cwd: repoDir,
+        files: ['/tmp/sensitive-file'],
+      })
+      expect(result.success).toBe(false)
+      expect(result.error).toContain('outside the working directory')
+    })
+  })
+
+  describe('git:unstage — file path traversal prevention', () => {
+    it('rejects path traversal with ../', async () => {
+      setupGitRepoWithCommit()
+      const result = await mockIpcMain._invoke('git:unstage', {
+        cwd: repoDir,
+        files: ['../../../etc/passwd'],
+      })
+      expect(result.success).toBe(false)
+      expect(result.error).toContain('outside the working directory')
+    })
+  })
+
+  describe('git:commit — file path traversal prevention', () => {
+    it('rejects path traversal in commit files', async () => {
+      setupGitRepoWithCommit()
+      const result = await mockIpcMain._invoke('git:commit', {
+        cwd: repoDir,
+        message: 'malicious commit',
+        files: ['../../../etc/passwd'],
+      })
+      expect(result.success).toBe(false)
+      expect(result.error).toContain('outside the working directory')
+    })
+
+    it('accepts valid file paths in commit', async () => {
+      setupGitRepoWithCommit()
+      fs.writeFileSync(path.join(repoDir, 'new-file.txt'), 'content')
+
+      const result = await mockIpcMain._invoke('git:commit', {
+        cwd: repoDir,
+        message: 'valid commit',
+        files: ['new-file.txt'],
+      })
+      expect(result.success).toBe(true)
+    })
+  })
 })
