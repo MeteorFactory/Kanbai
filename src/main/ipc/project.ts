@@ -3,7 +3,7 @@ import { v4 as uuid } from 'uuid'
 import fs from 'fs'
 import path from 'path'
 import os from 'os'
-import { execSync, execFile } from 'child_process'
+import { execSync, execFile, execFileSync } from 'child_process'
 import { promisify } from 'util'
 import ignore from 'ignore'
 
@@ -1167,7 +1167,7 @@ export function registerProjectHandlers(ipcMain: IpcMain): void {
       })
       if (result.canceled || !result.filePath) return { success: false, error: 'Cancelled' }
       try {
-        execSync(`tar czf "${result.filePath}" -C "${projectPath}" .claude`, { timeout: 30000 })
+        execFileSync('tar', ['czf', result.filePath, '-C', projectPath, '.claude'], { timeout: 30000 })
         return { success: true, filePath: result.filePath }
       } catch (err) {
         return { success: false, error: String(err) }
@@ -1182,14 +1182,15 @@ export function registerProjectHandlers(ipcMain: IpcMain): void {
         filters: [{ name: 'Tar Archive', extensions: ['tar.gz'] }],
         properties: ['openFile'],
       })
-      if (result.canceled || result.filePaths.length === 0) return { success: false, error: 'Cancelled' }
+      const selectedFile = result.filePaths[0]
+      if (result.canceled || !selectedFile) return { success: false, error: 'Cancelled' }
       try {
         const claudeDir = path.join(projectPath, '.claude')
         if (fs.existsSync(claudeDir)) {
           const backupName = `.claude-backup-${Date.now()}`
           fs.renameSync(claudeDir, path.join(projectPath, backupName))
         }
-        execSync(`tar xzf "${result.filePaths[0]}" -C "${projectPath}"`, { timeout: 30000 })
+        execFileSync('tar', ['xzf', selectedFile, '-C', projectPath], { timeout: 30000 })
         return { success: true }
       } catch (err) {
         return { success: false, error: String(err) }

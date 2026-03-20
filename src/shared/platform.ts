@@ -39,12 +39,23 @@ export function getDefaultShellArgs(shell: string): string[] {
   return []
 }
 
-/** Command to play a WAV sound file */
+/** Command to play a WAV sound file (returns shell command string — DEPRECATED, use getPlaySoundArgs) */
 export function getPlaySoundCommand(wavPath: string): string {
   if (IS_WIN) {
     return `powershell -c "(New-Object Media.SoundPlayer '${wavPath.replace(/'/g, "''")}').PlaySync()"`
   }
   return `afplay "${wavPath}"`
+}
+
+/** Safe command + args to play a WAV sound file (no shell interpolation) */
+export function getPlaySoundArgs(wavPath: string): { command: string; args: string[] } {
+  if (IS_WIN) {
+    return {
+      command: 'powershell',
+      args: ['-c', `(New-Object Media.SoundPlayer '${wavPath.replace(/'/g, "''")}').PlaySync()`],
+    }
+  }
+  return { command: 'afplay', args: [wavPath] }
 }
 
 /** Extended tool paths for the current platform (Homebrew / Chocolatey / standard) */
