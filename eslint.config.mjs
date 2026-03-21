@@ -6,6 +6,9 @@ import prettier from 'eslint-config-prettier'
 
 export default [
   {
+    ignores: ['coverage/**'],
+  },
+  {
     files: ['src/**/*.{ts,tsx}'],
     languageOptions: {
       parser: tsparser,
@@ -33,12 +36,18 @@ export default [
         },
       ],
       '@typescript-eslint/no-explicit-any': 'error',
-      'no-console': 'warn',
+      'no-console': ['warn', { allow: ['warn', 'error'] }],
       'react-hooks/set-state-in-effect': 'off',
       'react-hooks/preserve-manual-memoization': 'off',
     },
     settings: {
       react: { version: 'detect' },
+    },
+  },
+  {
+    files: ['src/main/**/*.ts'],
+    rules: {
+      'no-console': 'off',
     },
   },
   prettier,

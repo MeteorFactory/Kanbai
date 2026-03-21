@@ -1,8 +1,8 @@
-import { app, BrowserWindow, ipcMain, globalShortcut, protocol, net } from 'electron'
+import { app, BrowserWindow, ipcMain, globalShortcut, protocol, net, session } from 'electron'
 import fs from 'fs'
 import path from 'path'
 import { pathToFileURL } from 'url'
-import { execSync } from 'child_process'
+import { resolveLoginShellPath } from './services/shell-path'
 import { registerTerminalHandlers } from './ipc/terminal'
 import { registerWorkspaceHandlers } from './ipc/workspace'
 import { registerProjectHandlers } from './ipc/project'
@@ -52,11 +52,7 @@ import { isAppUpdateInstalling } from './services/appUpdateState'
 if (process.platform === 'darwin') {
   // macOS: resolve the real PATH by asking the user's login shell.
   try {
-    const userShell = process.env.SHELL || '/bin/zsh'
-    const shellPath = execSync(`${userShell} -ilc 'printf "%s" "$PATH"'`, {
-      encoding: 'utf-8',
-      timeout: 5000,
-    })
+    const shellPath = resolveLoginShellPath(process.env.SHELL)
     if (shellPath) {
       process.env.PATH = shellPath
     }
@@ -104,7 +100,7 @@ function createMainWindow(): BrowserWindow {
       preload: path.join(__dirname, '../preload/index.js'),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: false, // Required for node-pty via preload
+      sandbox: true,
       webSecurity: true,
     },
     show: false,
@@ -129,10 +125,35 @@ function createMainWindow(): BrowserWindow {
     mainWindow = null
   })
 
+  // Security: block navigation away from the app origin
+  const allowedOrigin = VITE_DEV_SERVER_URL
+    ? new URL(VITE_DEV_SERVER_URL).origin
+    : 'file://'
+  win.webContents.on('will-navigate', (event, url) => {
+    const targetOrigin = url.startsWith('file://') ? 'file://' : new URL(url).origin
+    if (targetOrigin !== allowedOrigin) {
+      event.preventDefault()
+    }
+  })
+
   return win
 }
 
 app.whenReady().then(() => {
+  // Content Security Policy — strict by default, relaxed for Vite dev server
+  const cspDirectives = VITE_DEV_SERVER_URL
+    ? "default-src 'self' pixel-agents:; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' ws:"
+    : "default-src 'self' pixel-agents:; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:"
+
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Content-Security-Policy': [cspDirectives],
+      },
+    })
+  })
+
   // Register pixel-agents protocol handler
   protocol.handle('pixel-agents', (request) => {
     const url = new URL(request.url)

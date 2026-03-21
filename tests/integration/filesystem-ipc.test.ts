@@ -409,6 +409,102 @@ describe('Filesystem IPC Handlers', () => {
     })
   })
 
+  describe('path traversal prevention (CWE-22)', () => {
+    it('should reject null bytes in readFile path', async () => {
+      const result = await mockIpcMain._invoke('fs:readFile', { path: '/tmp/file.txt\0.jpg' })
+      expect(result.content).toBeNull()
+      expect(result.error).toContain('null bytes')
+    })
+
+    it('should reject null bytes in writeFile path', async () => {
+      const result = await mockIpcMain._invoke('fs:writeFile', {
+        path: '/tmp/file.txt\0.sh',
+        content: 'malicious',
+      })
+      expect(result.success).toBe(false)
+      expect(result.error).toContain('null bytes')
+    })
+
+    it('should reject empty string path in readFile', async () => {
+      const result = await mockIpcMain._invoke('fs:readFile', { path: '' })
+      expect(result.content).toBeNull()
+      expect(result.error).toContain('non-empty string')
+    })
+
+    it('should reject empty string path in writeFile', async () => {
+      const result = await mockIpcMain._invoke('fs:writeFile', { path: '', content: 'test' })
+      expect(result.success).toBe(false)
+      expect(result.error).toContain('non-empty string')
+    })
+
+    it('should reject null bytes in rename paths', async () => {
+      await expect(
+        mockIpcMain._invoke('fs:rename', {
+          oldPath: '/tmp/file\0.txt',
+          newPath: path.join(testFilesDir, 'new.txt'),
+        }),
+      ).rejects.toThrow('null bytes')
+    })
+
+    it('should reject null bytes in delete path', async () => {
+      await expect(
+        mockIpcMain._invoke('fs:delete', { path: '/tmp/file\0.txt' }),
+      ).rejects.toThrow('null bytes')
+    })
+
+    it('should reject null bytes in copy paths', async () => {
+      await expect(
+        mockIpcMain._invoke('fs:copy', {
+          src: '/tmp/file\0.txt',
+          dest: path.join(testFilesDir, 'dest.txt'),
+        }),
+      ).rejects.toThrow('null bytes')
+    })
+
+    it('should reject null bytes in mkdir path', async () => {
+      await expect(
+        mockIpcMain._invoke('fs:mkdir', { path: '/tmp/dir\0name' }),
+      ).rejects.toThrow('null bytes')
+    })
+
+    it('should reject null bytes in exists path', async () => {
+      await expect(
+        mockIpcMain._invoke('fs:exists', { path: '/tmp/file\0.txt' }),
+      ).rejects.toThrow('null bytes')
+    })
+
+    it('should reject non-string path in readDir', async () => {
+      const result = await mockIpcMain._invoke('fs:readDir', { path: 123 })
+      // readDir catches errors and returns empty array
+      expect(result).toEqual([])
+    })
+
+    it('should reject non-string path in mkdir', async () => {
+      await expect(
+        mockIpcMain._invoke('fs:mkdir', { path: null }),
+      ).rejects.toThrow('non-empty string')
+    })
+
+    it('should still work with legitimate paths containing special characters', async () => {
+      const dirName = 'dossier-spécial éàü'
+      const specialDir = path.join(testFilesDir, dirName)
+      await mockIpcMain._invoke('fs:mkdir', { path: specialDir })
+      expect(fs.existsSync(specialDir)).toBe(true)
+
+      const filePath = path.join(specialDir, 'fichier.txt')
+      await mockIpcMain._invoke('fs:writeFile', { path: filePath, content: 'contenu' })
+      expect(fs.readFileSync(filePath, 'utf-8')).toBe('contenu')
+    })
+
+    it('should still work with paths containing dots in filenames', async () => {
+      const filePath = path.join(testFilesDir, 'file.backup.2024.txt')
+      await mockIpcMain._invoke('fs:writeFile', { path: filePath, content: 'backup' })
+
+      const result = await mockIpcMain._invoke('fs:readFile', { path: filePath })
+      expect(result.content).toBe('backup')
+    })
+  })
+
   describe('operations chainees (simulation menu contextuel)', () => {
     it('copie un fichier puis le colle dans un dossier', async () => {
       // Setup: creer un fichier et un dossier cible

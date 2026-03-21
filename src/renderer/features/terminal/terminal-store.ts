@@ -241,7 +241,6 @@ export const useTerminalTabStore = create<TerminalTabStore>((set, get) => ({
   createTab: (workspaceId: string, cwd: string, label?: string, initialCommand?: string, activate = true, shell?: string) => {
     const workspaceTabs = get().tabs.filter((t) => t.workspaceId === workspaceId)
     if (workspaceTabs.length >= MAX_TERMINALS_PER_WORKSPACE) {
-      // eslint-disable-next-line no-console
       console.warn(`Terminal limit (${MAX_TERMINALS_PER_WORKSPACE}) reached for workspace ${workspaceId}`)
       return ''
     }
@@ -273,7 +272,6 @@ export const useTerminalTabStore = create<TerminalTabStore>((set, get) => ({
   createSplitTab: (workspaceId: string, cwd: string, label: string, leftCommand: string | null, rightCommand: string | null) => {
     const workspaceTabs = get().tabs.filter((t) => t.workspaceId === workspaceId)
     if (workspaceTabs.length >= MAX_TERMINALS_PER_WORKSPACE) {
-      // eslint-disable-next-line no-console
       console.warn(`Terminal limit (${MAX_TERMINALS_PER_WORKSPACE}) reached for workspace ${workspaceId}`)
       return ''
     }
@@ -314,7 +312,6 @@ export const useTerminalTabStore = create<TerminalTabStore>((set, get) => ({
   createViewOnlyTab: (workspaceId: string, cwd: string, label: string, externalSessionId: string) => {
     const workspaceTabs = get().tabs.filter((t) => t.workspaceId === workspaceId)
     if (workspaceTabs.length >= MAX_TERMINALS_PER_WORKSPACE) {
-      // eslint-disable-next-line no-console
       console.warn(`Terminal limit (${MAX_TERMINALS_PER_WORKSPACE}) reached for workspace ${workspaceId}`)
       return ''
     }
@@ -342,7 +339,6 @@ export const useTerminalTabStore = create<TerminalTabStore>((set, get) => ({
   createPixelAgentsTab: (workspaceId: string, cwd: string) => {
     const workspaceTabs = get().tabs.filter((t) => t.workspaceId === workspaceId)
     if (workspaceTabs.length >= MAX_TERMINALS_PER_WORKSPACE) {
-      // eslint-disable-next-line no-console
       console.warn(`Terminal limit (${MAX_TERMINALS_PER_WORKSPACE}) reached for workspace ${workspaceId}`)
       return ''
     }
@@ -370,7 +366,6 @@ export const useTerminalTabStore = create<TerminalTabStore>((set, get) => ({
   createPixelAgentsSplitTab: (workspaceId: string, cwd: string) => {
     const workspaceTabs = get().tabs.filter((t) => t.workspaceId === workspaceId)
     if (workspaceTabs.length >= MAX_TERMINALS_PER_WORKSPACE) {
-      // eslint-disable-next-line no-console
       console.warn(`Terminal limit (${MAX_TERMINALS_PER_WORKSPACE}) reached for workspace ${workspaceId}`)
       return ''
     }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useI18n } from '../../../../../../lib/i18n'
 import { RulesManager } from '../../components/rules-manager'
 import { MemoryEditor } from './memory-editor'
@@ -40,11 +40,11 @@ export function MemoryTab({ projectPath, rulesPath }: Props) {
   const [localMd, setLocalMd] = useState<string | null>(null)
   const [managedMd, setManagedMd] = useState<string | null>(null)
 
-  const filePaths = {
+  const filePaths = useMemo(() => ({
     project: projectPath + '/CLAUDE.md',
     user: '~/.claude/CLAUDE.md',
     local: projectPath + '/CLAUDE.local.md',
-  }
+  }), [projectPath])
 
   const load = useCallback(async () => {
     const [proj, user, local, managed] = await Promise.all([
@@ -57,24 +57,24 @@ export function MemoryTab({ projectPath, rulesPath }: Props) {
     setUserMd(user)
     setLocalMd(local)
     setManagedMd(managed)
-  }, [projectPath])
+  }, [filePaths])
 
   useEffect(() => { load() }, [load])
 
   const handleSaveProject = useCallback(async (content: string) => {
     await window.kanbai.claudeMemory.writeFile(filePaths.project, content)
     setProjectMd(content)
-  }, [projectPath])
+  }, [filePaths])
 
   const handleSaveUser = useCallback(async (content: string) => {
     await window.kanbai.claudeMemory.writeFile(filePaths.user, content)
     setUserMd(content)
-  }, [])
+  }, [filePaths])
 
   const handleSaveLocal = useCallback(async (content: string) => {
     await window.kanbai.claudeMemory.writeFile(filePaths.local, content)
     setLocalMd(content)
-  }, [projectPath])
+  }, [filePaths])
 
   const handleCreate = useCallback(async (tab: 'project' | 'user' | 'local') => {
     const template = FILE_TEMPLATES[tab] || ''
@@ -83,7 +83,7 @@ export function MemoryTab({ projectPath, rulesPath }: Props) {
     if (tab === 'project') setProjectMd(template)
     else if (tab === 'user') setUserMd(template)
     else if (tab === 'local') setLocalMd(template)
-  }, [projectPath])
+  }, [filePaths])
 
   const tabs: { key: SubTab; label: string; exists: boolean | null }[] = [
     { key: 'rules', label: t('claude.rulesTab'), exists: null },

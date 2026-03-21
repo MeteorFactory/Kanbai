@@ -290,7 +290,6 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
 
       return workspace
     } catch (err) {
-      // eslint-disable-next-line no-console
       console.error('Failed to create workspace:', err)
       return null
     }
@@ -372,7 +371,6 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
 
       return workspace
     } catch (err) {
-      // eslint-disable-next-line no-console
       console.error('Failed to create workspace from new project:', err)
       return null
     }
@@ -616,7 +614,6 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
               termStore.createSplitTab(id, cwd, aiLabel, aiCmd, null)
             })
             .catch((err) => {
-              // eslint-disable-next-line no-console
               console.error('Failed to get workspace cwd:', err)
               // Fallback to first project path
               termStore.createSplitTab(id, firstProject.path, aiLabel, aiCmd, null)

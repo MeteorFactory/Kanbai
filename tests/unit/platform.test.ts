@@ -6,6 +6,7 @@ import {
   getDefaultShell,
   getDefaultShellArgs,
   getPlaySoundCommand,
+  getPlaySoundArgs,
   getExtendedToolPaths,
   getDbToolPaths,
   getAnalysisToolPaths,
@@ -102,6 +103,38 @@ describe('platform module', () => {
       it('uses afplay on macOS', () => {
         const cmd = getPlaySoundCommand('/tmp/test.wav')
         expect(cmd).toContain('afplay')
+      })
+    }
+  })
+
+  describe('getPlaySoundArgs()', () => {
+    it('returns command and args without shell interpolation', () => {
+      const result = getPlaySoundArgs('/tmp/test.wav')
+      expect(result.command).toBeTruthy()
+      expect(Array.isArray(result.args)).toBe(true)
+      expect(result.args.some((a) => a.includes('test.wav'))).toBe(true)
+    })
+
+    it('passes path as a separate argument (no shell metacharacter risk)', () => {
+      const maliciousPath = '/tmp/test"; rm -rf / #.wav'
+      const result = getPlaySoundArgs(maliciousPath)
+      // The path must appear as a standalone array element, not interpolated in a shell string
+      expect(result.args).toContain(maliciousPath)
+    })
+
+    if (TEST_IS_MAC) {
+      it('uses afplay on macOS', () => {
+        const result = getPlaySoundArgs('/tmp/test.wav')
+        expect(result.command).toBe('afplay')
+        expect(result.args).toEqual(['/tmp/test.wav'])
+      })
+    }
+
+    if (TEST_IS_WIN) {
+      it('uses powershell on Windows', () => {
+        const result = getPlaySoundArgs('C:\\test.wav')
+        expect(result.command).toBe('powershell')
+        expect(result.args[0]).toBe('-c')
       })
     }
   })

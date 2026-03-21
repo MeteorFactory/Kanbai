@@ -6,10 +6,10 @@ import './styles/global.css'
 
 // Catch unhandled errors to prevent blank screens
 window.addEventListener('error', (e) => {
-  console.error('Unhandled error:', e.error) // eslint-disable-line no-console
+  console.error('Unhandled error:', e.error)
 })
 window.addEventListener('unhandledrejection', (e) => {
-  console.error('Unhandled rejection:', e.reason) // eslint-disable-line no-console
+  console.error('Unhandled rejection:', e.reason)
 })
 
 const root = document.getElementById('root')

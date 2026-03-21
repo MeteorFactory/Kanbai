@@ -151,7 +151,8 @@ export function registerClaudeMemoryHandlers(ipcMain: IpcMain): void {
   ipcMain.handle(
     IPC_CHANNELS.CLAUDE_MEMORY_READ_RULE,
     async (_event, { projectPath, filename }: { projectPath: string; filename: string }) => {
-      const filePath = path.join(projectPath, '.claude', 'rules', filename)
+      const rulesDir = path.join(projectPath, '.claude', 'rules')
+      const filePath = validatePath(rulesDir, filename)
       if (!fs.existsSync(filePath)) return null
       return fs.readFileSync(filePath, 'utf-8')
     },
@@ -162,7 +163,7 @@ export function registerClaudeMemoryHandlers(ipcMain: IpcMain): void {
     IPC_CHANNELS.CLAUDE_MEMORY_WRITE_RULE,
     async (_event, { projectPath, filename, content }: { projectPath: string; filename: string; content: string }) => {
       const rulesDir = path.join(projectPath, '.claude', 'rules')
-      const filePath = path.join(rulesDir, filename)
+      const filePath = validatePath(rulesDir, filename)
       const dir = path.dirname(filePath)
       if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
       fs.writeFileSync(filePath, content, 'utf-8')
@@ -191,7 +192,7 @@ export function registerClaudeMemoryHandlers(ipcMain: IpcMain): void {
     IPC_CHANNELS.CLAUDE_MEMORY_DELETE_RULE,
     async (_event, { projectPath, filename }: { projectPath: string; filename: string }) => {
       const rulesDir = path.join(projectPath, '.claude', 'rules')
-      const filePath = path.join(rulesDir, filename)
+      const filePath = validatePath(rulesDir, filename)
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath)
         cleanEmptyParents(filePath, rulesDir)
@@ -495,7 +496,8 @@ export function registerClaudeMemoryHandlers(ipcMain: IpcMain): void {
     IPC_CHANNELS.CLAUDE_MEMORY_WRITE_SHARED_RULE,
     async (_event, { filename, content }: { filename: string; content: string }) => {
       if (!fs.existsSync(sharedRulesDir)) fs.mkdirSync(sharedRulesDir, { recursive: true })
-      fs.writeFileSync(path.join(sharedRulesDir, filename), content, 'utf-8')
+      const filePath = validatePath(sharedRulesDir, filename)
+      fs.writeFileSync(filePath, content, 'utf-8')
       return { success: true }
     },
   )
@@ -504,7 +506,7 @@ export function registerClaudeMemoryHandlers(ipcMain: IpcMain): void {
   ipcMain.handle(
     IPC_CHANNELS.CLAUDE_MEMORY_DELETE_SHARED_RULE,
     async (_event, { filename }: { filename: string }) => {
-      const filePath = path.join(sharedRulesDir, filename)
+      const filePath = validatePath(sharedRulesDir, filename)
       if (fs.existsSync(filePath)) fs.unlinkSync(filePath)
       return { success: true }
     },

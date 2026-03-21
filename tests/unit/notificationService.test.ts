@@ -15,10 +15,10 @@ vi.mock('os', async () => {
   }
 })
 
-// Mock child_process.exec to capture sound playback calls
-const mockExec = vi.fn()
+// Mock child_process.execFile to capture sound playback calls
+const mockExecFile = vi.fn()
 vi.mock('child_process', () => ({
-  exec: (...args: unknown[]) => mockExec(...args),
+  execFile: (...args: unknown[]) => mockExecFile(...args),
 }))
 
 // Mock electron APIs
@@ -89,7 +89,7 @@ describe('notificationService', () => {
 
       playBellRepeat(3)
 
-      expect(mockExec).not.toHaveBeenCalled()
+      expect(mockExecFile).not.toHaveBeenCalled()
     })
 
     it('genere le fichier WAV si inexistant', () => {
@@ -103,36 +103,39 @@ describe('notificationService', () => {
       expect(header).toBe('RIFF')
     })
 
-    it('appelle exec N fois via setTimeout pour jouer le son', () => {
+    it('appelle execFile N fois via setTimeout pour jouer le son', () => {
       playBellRepeat(3, 200)
 
       // At t=0, first setTimeout fires
       vi.advanceTimersByTime(0)
-      expect(mockExec).toHaveBeenCalledTimes(1)
-      expect(mockExec.mock.calls[0]![0]).toContain('bell.wav')
+      expect(mockExecFile).toHaveBeenCalledTimes(1)
+      // execFile(command, args, callback) — args array contains the wav path
+      expect(mockExecFile.mock.calls[0]![1]).toEqual(
+        expect.arrayContaining([expect.stringContaining('bell.wav')]),
+      )
 
       // At t=200, second setTimeout fires
       vi.advanceTimersByTime(200)
-      expect(mockExec).toHaveBeenCalledTimes(2)
+      expect(mockExecFile).toHaveBeenCalledTimes(2)
 
       // At t=400, third setTimeout fires
       vi.advanceTimersByTime(200)
-      expect(mockExec).toHaveBeenCalledTimes(3)
+      expect(mockExecFile).toHaveBeenCalledTimes(3)
     })
 
     it('utilise le delai par defaut de 300ms', () => {
       playBellRepeat(2)
 
       vi.advanceTimersByTime(0)
-      expect(mockExec).toHaveBeenCalledTimes(1)
+      expect(mockExecFile).toHaveBeenCalledTimes(1)
 
       // At 299ms, second call should not have fired yet
       vi.advanceTimersByTime(299)
-      expect(mockExec).toHaveBeenCalledTimes(1)
+      expect(mockExecFile).toHaveBeenCalledTimes(1)
 
       // At 300ms, second call fires
       vi.advanceTimersByTime(1)
-      expect(mockExec).toHaveBeenCalledTimes(2)
+      expect(mockExecFile).toHaveBeenCalledTimes(2)
     })
 
     it('ne regenere pas le WAV si deja present', () => {
@@ -248,8 +251,10 @@ describe('notificationService', () => {
       sendNotification('Titre', 'Corps')
 
       // playBellSound calls exec to play the sound
-      expect(mockExec).toHaveBeenCalledTimes(1)
-      expect(mockExec.mock.calls[0]![0]).toContain('bell.wav')
+      expect(mockExecFile).toHaveBeenCalledTimes(1)
+      expect(mockExecFile.mock.calls[0]![1]).toEqual(
+        expect.arrayContaining([expect.stringContaining('bell.wav')]),
+      )
     })
 
     it('ne joue pas le son si notificationSound est desactive', () => {
@@ -264,7 +269,7 @@ describe('notificationService', () => {
       // Notification is still sent
       expect(mockNotificationInstance.show).toHaveBeenCalledOnce()
       // But no sound played
-      expect(mockExec).not.toHaveBeenCalled()
+      expect(mockExecFile).not.toHaveBeenCalled()
     })
 
     it('genere le WAV avant de jouer le son', () => {

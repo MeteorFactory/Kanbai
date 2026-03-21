@@ -4,6 +4,7 @@ import type { editor } from 'monaco-editor'
 import { useViewStore } from '../../lib/stores/viewStore'
 import { useI18n } from '../../lib/i18n'
 import { CopyableError } from '../../shared/ui/copyable-error'
+import { markdownToHtml } from '../../lib/markdown-to-html'
 
 const EXT_TO_LANGUAGE: Record<string, string> = {
   '.ts': 'typescript',
@@ -59,55 +60,6 @@ function isMarkdownFile(filePath: string): boolean {
 
 function isJsonFile(filePath: string): boolean {
   return getExtension(filePath) === '.json'
-}
-
-// Simple markdown to HTML converter
-function markdownToHtml(md: string): string {
-  let html = md
-  // Escape HTML entities first
-  html = html.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-
-  // Code blocks (fenced)
-  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_match, lang, code) => {
-    return `<pre class="md-code-block" data-lang="${lang}"><code>${code.trim()}</code></pre>`
-  })
-
-  // Inline code
-  html = html.replace(/`([^`]+)`/g, '<code class="md-inline-code">$1</code>')
-
-  // Headers
-  html = html.replace(/^######\s+(.+)$/gm, '<h6>$1</h6>')
-  html = html.replace(/^#####\s+(.+)$/gm, '<h5>$1</h5>')
-  html = html.replace(/^####\s+(.+)$/gm, '<h4>$1</h4>')
-  html = html.replace(/^###\s+(.+)$/gm, '<h3>$1</h3>')
-  html = html.replace(/^##\s+(.+)$/gm, '<h2>$1</h2>')
-  html = html.replace(/^#\s+(.+)$/gm, '<h1>$1</h1>')
-
-  // Bold and italic
-  html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
-  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>')
-
-  // Links
-  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="md-link">$1</a>')
-
-  // Blockquotes
-  html = html.replace(/^&gt;\s+(.+)$/gm, '<blockquote class="md-blockquote">$1</blockquote>')
-
-  // Unordered lists
-  html = html.replace(/^[-*]\s+(.+)$/gm, '<li>$1</li>')
-  html = html.replace(/(<li>.*<\/li>\n?)+/g, (match) => `<ul>${match}</ul>`)
-
-  // Ordered lists
-  html = html.replace(/^\d+\.\s+(.+)$/gm, '<li>$1</li>')
-
-  // Horizontal rules
-  html = html.replace(/^---+$/gm, '<hr />')
-
-  // Paragraphs - wrap remaining text blocks
-  html = html.replace(/^(?!<[a-z]|<\/|$)(.+)$/gm, '<p>$1</p>')
-
-  return html
 }
 
 // JSON validation helper

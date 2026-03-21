@@ -37,6 +37,9 @@ npm-debug.log*
 .claude/plans/
 .claude/plan-documentation.md
 .claude/worktrees/
+.claude/.ai-rules.json
+.claude/backups/
+.claude/skills/
 
 # AI tools — track config files, ignore local state
 .codex/*.local.*

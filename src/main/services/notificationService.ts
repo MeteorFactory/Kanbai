@@ -1,10 +1,10 @@
 import fs from 'fs'
 import path from 'path'
 import os from 'os'
-import { exec } from 'child_process'
+import { execFile } from 'child_process'
 import { app, BrowserWindow, Notification } from 'electron'
 import { StorageService } from './storage'
-import { IS_WIN, getPlaySoundCommand } from '../../shared/platform'
+import { IS_WIN, getPlaySoundArgs } from '../../shared/platform'
 
 const ASSETS_DIR = path.join(os.homedir(), '.kanbai', 'assets')
 const BELL_WAV_PATH = path.join(ASSETS_DIR, 'bell.wav')
@@ -83,7 +83,8 @@ function playBellSound(): void {
   if (!settings.notificationSound) return
 
   ensureBellSound()
-  exec(getPlaySoundCommand(BELL_WAV_PATH), () => { /* fire and forget */ })
+  const { command, args } = getPlaySoundArgs(BELL_WAV_PATH)
+  execFile(command, args, () => { /* fire and forget */ })
 }
 
 /**
@@ -97,7 +98,8 @@ export function playBellRepeat(count: number, delayMs = 300): void {
   ensureBellSound()
   for (let i = 0; i < count; i++) {
     setTimeout(() => {
-      exec(getPlaySoundCommand(BELL_WAV_PATH), () => { /* fire and forget */ })
+      const { command, args } = getPlaySoundArgs(BELL_WAV_PATH)
+      execFile(command, args, () => { /* fire and forget */ })
     }, i * delayMs)
   }
 }

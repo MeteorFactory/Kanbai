@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { createMockIpcMain } from '../mocks/electron'
 import type { ApiResponse, ApiTestAssertion, ApiTestResult } from '../../src/shared/types'
 

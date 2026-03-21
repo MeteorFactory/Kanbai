@@ -40,7 +40,6 @@ function cleanUpdaterCache(): void {
         // Ignore individual file deletion errors
       }
     }
-    // eslint-disable-next-line no-console
     console.log('[appUpdate] Cleaned updater cache:', cacheDir)
   } catch {
     // Cache dir may not exist or be inaccessible — not critical
@@ -99,7 +98,6 @@ export function registerAppUpdateHandlers(ipcMain: IpcMain): void {
 
   autoUpdater.on('error', (err) => {
     if (updatePhase === 'downloaded') {
-      // eslint-disable-next-line no-console
       console.warn('[appUpdate] Ignoring late error after download completed:', err.message)
       return
     }
@@ -158,7 +156,6 @@ export function registerAppUpdateHandlers(ipcMain: IpcMain): void {
         try {
           autoUpdater.quitAndInstall(false, true)
         } catch (err) {
-          // eslint-disable-next-line no-console
           console.error('[appUpdate] quitAndInstall failed:', err)
         }
 
@@ -166,7 +163,6 @@ export function registerAppUpdateHandlers(ipcMain: IpcMain): void {
         // (e.g. install() returned false), force a relaunch + quit so
         // autoInstallOnAppQuit can apply the update on exit.
         setTimeout(() => {
-          // eslint-disable-next-line no-console
           console.warn('[appUpdate] quitAndInstall did not exit — forcing relaunch')
           app.relaunch()
           app.quit()

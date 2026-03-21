@@ -99,7 +99,6 @@ function FileTreeNode({ entry, depth, sortField, onRename, onRefreshParent: _onR
 
   const handleCopyPath = useCallback(() => {
     navigator.clipboard.writeText(entry.path).catch(() => {
-      // eslint-disable-next-line no-console
       console.error('Failed to copy path to clipboard')
     })
   }, [entry.path])
@@ -142,7 +141,6 @@ function FileTreeNode({ entry, depth, sortField, onRename, onRefreshParent: _onR
       }
       await loadChildren()
     } catch (err) {
-      // eslint-disable-next-line no-console
       console.error(`Failed to create ${isCreating}:`, err)
     }
     setIsCreating(null)
@@ -320,7 +318,6 @@ export function FileExplorer() {
         await window.kanbai.fs.rename(oldPath, newPath)
         await refreshEntries()
       } catch (err) {
-        // eslint-disable-next-line no-console
         console.error('Rename failed:', err)
       }
     },
@@ -348,7 +345,6 @@ export function FileExplorer() {
       }
       await refreshEntries()
     } catch (err) {
-      // eslint-disable-next-line no-console
       console.error(`Failed to create ${isCreating}:`, err)
     }
     setIsCreating(null)
@@ -368,7 +364,6 @@ export function FileExplorer() {
           label: 'Copy path',
           action: () => {
             navigator.clipboard.writeText(activeProject.path).catch(() => {
-              // eslint-disable-next-line no-console
               console.error('Failed to copy path to clipboard')
             })
           },

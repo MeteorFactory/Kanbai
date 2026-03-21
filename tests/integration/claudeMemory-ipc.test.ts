@@ -431,6 +431,30 @@ coAuthors:
 
       expect(result).toBe('# Go Rules')
     })
+
+    it('detecte le path traversal avec ../', async () => {
+      const rulesDir = path.join(projectDir, '.claude', 'rules')
+      fs.mkdirSync(rulesDir, { recursive: true })
+
+      await expect(
+        mockIpcMain._invoke('claude:memoryReadRule', {
+          projectPath: projectDir,
+          filename: '../../../etc/passwd',
+        }),
+      ).rejects.toThrow('Path traversal detected')
+    })
+
+    it('detecte le path traversal avec chemin absolu', async () => {
+      const rulesDir = path.join(projectDir, '.claude', 'rules')
+      fs.mkdirSync(rulesDir, { recursive: true })
+
+      await expect(
+        mockIpcMain._invoke('claude:memoryReadRule', {
+          projectPath: projectDir,
+          filename: '/etc/passwd',
+        }),
+      ).rejects.toThrow('Path traversal detected')
+    })
   })
 
   describe('claude:memoryWriteRule', () => {
@@ -460,6 +484,26 @@ coAuthors:
       })
 
       expect(fs.readFileSync(path.join(rulesDir, 'existing.md'), 'utf-8')).toBe('new content')
+    })
+
+    it('detecte le path traversal avec ../', async () => {
+      await expect(
+        mockIpcMain._invoke('claude:memoryWriteRule', {
+          projectPath: projectDir,
+          filename: '../../../.bashrc',
+          content: 'malicious content',
+        }),
+      ).rejects.toThrow('Path traversal detected')
+    })
+
+    it('detecte le path traversal avec chemin absolu', async () => {
+      await expect(
+        mockIpcMain._invoke('claude:memoryWriteRule', {
+          projectPath: projectDir,
+          filename: '/tmp/evil.md',
+          content: 'malicious content',
+        }),
+      ).rejects.toThrow('Path traversal detected')
     })
   })
 
@@ -509,6 +553,30 @@ coAuthors:
       })
 
       expect(result).toEqual({ success: true })
+    })
+
+    it('detecte le path traversal avec ../', async () => {
+      const rulesDir = path.join(projectDir, '.claude', 'rules')
+      fs.mkdirSync(rulesDir, { recursive: true })
+
+      await expect(
+        mockIpcMain._invoke('claude:memoryDeleteRule', {
+          projectPath: projectDir,
+          filename: '../../../.ssh/id_rsa',
+        }),
+      ).rejects.toThrow('Path traversal detected')
+    })
+
+    it('detecte le path traversal avec chemin absolu', async () => {
+      const rulesDir = path.join(projectDir, '.claude', 'rules')
+      fs.mkdirSync(rulesDir, { recursive: true })
+
+      await expect(
+        mockIpcMain._invoke('claude:memoryDeleteRule', {
+          projectPath: projectDir,
+          filename: '/etc/passwd',
+        }),
+      ).rejects.toThrow('Path traversal detected')
     })
   })
 
@@ -1048,6 +1116,24 @@ coAuthors:
 
       expect(fs.existsSync(sharedDir)).toBe(true)
     })
+
+    it('detecte le path traversal avec ../', async () => {
+      await expect(
+        mockIpcMain._invoke('claude:memoryWriteSharedRule', {
+          filename: '../../.bashrc',
+          content: 'malicious content',
+        }),
+      ).rejects.toThrow('Path traversal detected')
+    })
+
+    it('detecte le path traversal avec chemin absolu', async () => {
+      await expect(
+        mockIpcMain._invoke('claude:memoryWriteSharedRule', {
+          filename: '/tmp/evil.md',
+          content: 'malicious content',
+        }),
+      ).rejects.toThrow('Path traversal detected')
+    })
   })
 
   describe('claude:memoryDeleteSharedRule', () => {
@@ -1071,6 +1157,22 @@ coAuthors:
       })
 
       expect(result).toEqual({ success: true })
+    })
+
+    it('detecte le path traversal avec ../', async () => {
+      await expect(
+        mockIpcMain._invoke('claude:memoryDeleteSharedRule', {
+          filename: '../../.ssh/id_rsa',
+        }),
+      ).rejects.toThrow('Path traversal detected')
+    })
+
+    it('detecte le path traversal avec chemin absolu', async () => {
+      await expect(
+        mockIpcMain._invoke('claude:memoryDeleteSharedRule', {
+          filename: '/etc/passwd',
+        }),
+      ).rejects.toThrow('Path traversal detected')
     })
   })
 

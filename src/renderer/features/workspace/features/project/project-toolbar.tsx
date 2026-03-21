@@ -200,7 +200,7 @@ export function ProjectToolbar() {
         window.kanbai.terminal.write(att.sessionId, command)
       }
     },
-    [activeWorkspaceId, tabs, buildMakeCommand, isAttachmentValid, findFreeTerminal, interruptAndRun, setActiveTab, createTab, renameTab],
+    [activeWorkspaceId, buildMakeCommand, isAttachmentValid, findFreeTerminal, interruptAndRun, setActiveTab, createTab, renameTab],
   )
 
   /** Check if a button has an active attachment */

@@ -20,6 +20,7 @@ const mockBrowserWindowInstance = {
   webContents: {
     send: mockSend,
     toggleDevTools: mockToggleDevTools,
+    on: vi.fn(),
   },
 }
 
@@ -60,6 +61,13 @@ vi.mock('electron', () => ({
   Menu: {
     buildFromTemplate: (...args: unknown[]) => mockBuildFromTemplate(...args),
     setApplicationMenu: (...args: unknown[]) => mockSetApplicationMenu(...args),
+  },
+  session: {
+    defaultSession: {
+      webRequest: {
+        onHeadersReceived: vi.fn(),
+      },
+    },
   },
   shell: {
     openExternal: (...args: unknown[]) => mockShellOpenExternal(...args),

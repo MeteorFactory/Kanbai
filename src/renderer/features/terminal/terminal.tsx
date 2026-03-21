@@ -233,9 +233,12 @@ export function Terminal({ cwd, shell, initialCommand, externalSessionId, worksp
     }
 
     // Track scroll position for scroll-to-bottom button
+    let scrollViewport: Element | null = null
+    let handleScroll: (() => void) | null = null
     const viewport = containerRef.current.querySelector('.xterm-viewport')
     if (viewport) {
-      const handleScroll = () => {
+      scrollViewport = viewport
+      handleScroll = () => {
         const el = viewport as HTMLElement
         const isAtBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 10
         setShowScrollToBottom(!isAtBottom)
@@ -475,6 +478,9 @@ export function Terminal({ cwd, shell, initialCommand, externalSessionId, worksp
     resizeObserver.observe(containerRef.current)
 
     return () => {
+      if (scrollViewport && handleScroll) {
+        scrollViewport.removeEventListener('scroll', handleScroll)
+      }
       resizeObserver.disconnect()
       if (xtermTextarea) {
         xtermTextarea.removeEventListener('paste', preventDuplicatePaste, true)

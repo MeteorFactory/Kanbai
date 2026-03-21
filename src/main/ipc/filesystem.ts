@@ -5,15 +5,75 @@ import { createInterface } from 'readline'
 import { execFile } from 'child_process'
 import { IPC_CHANNELS, FileEntry, SearchResult } from '../../shared/types'
 
+// ---------------------------------------------------------------------------
+// Path validation (CWE-22 defense — path traversal prevention)
+// ---------------------------------------------------------------------------
+
+/**
+ * Validate that a filesystem path is safe and stays within the allowed base directory.
+ * - Rejects null bytes (poison null byte attack)
+ * - Resolves the absolute path and verifies it starts with basePath
+ * - Rejects paths containing '..' segments after normalization
+ *
+ * @param basePath - The allowed root directory (must be absolute)
+ * @param requestedPath - The path to validate (absolute or relative to basePath)
+ * @returns The resolved, validated absolute path
+ * @throws Error if the path is invalid or escapes basePath
+ */
+export function validatePath(basePath: string, requestedPath: string): string {
+  if (typeof requestedPath !== 'string' || requestedPath.length === 0) {
+    throw new Error('Invalid path: path must be a non-empty string')
+  }
+
+  if (typeof basePath !== 'string' || basePath.length === 0) {
+    throw new Error('Invalid basePath: basePath must be a non-empty string')
+  }
+
+  // Reject null bytes — poison null byte attack (CWE-626)
+  if (requestedPath.includes('\0') || basePath.includes('\0')) {
+    throw new Error('Invalid path: path contains null bytes')
+  }
+
+  const resolvedBase = path.resolve(basePath)
+  const resolvedPath = path.resolve(resolvedBase, requestedPath)
+
+  // Ensure the resolved path is within the base directory (or is the base itself)
+  if (!resolvedPath.startsWith(resolvedBase + path.sep) && resolvedPath !== resolvedBase) {
+    throw new Error(
+      `Path traversal detected: "${requestedPath}" resolves outside allowed directory`,
+    )
+  }
+
+  return resolvedPath
+}
+
+/**
+ * Sanitize a single path for basic safety without a base directory constraint.
+ * Used for handlers where the renderer sends absolute paths and we only need
+ * to reject obviously malicious input (null bytes, non-string).
+ */
+export function sanitizePath(requestedPath: string): string {
+  if (typeof requestedPath !== 'string' || requestedPath.length === 0) {
+    throw new Error('Invalid path: path must be a non-empty string')
+  }
+
+  if (requestedPath.includes('\0')) {
+    throw new Error('Invalid path: path contains null bytes')
+  }
+
+  return path.resolve(requestedPath)
+}
+
 export function registerFilesystemHandlers(ipcMain: IpcMain): void {
   ipcMain.handle(IPC_CHANNELS.FS_READ_DIR, async (_event, { path: dirPath }: { path: string }) => {
     try {
-      const entries = fs.readdirSync(dirPath, { withFileTypes: true })
+      const safePath = sanitizePath(dirPath)
+      const entries = fs.readdirSync(safePath, { withFileTypes: true })
       const result: FileEntry[] = []
 
       for (const entry of entries) {
         try {
-          const fullPath = path.join(dirPath, entry.name)
+          const fullPath = path.join(safePath, entry.name)
           const fileEntry: FileEntry = {
             name: entry.name,
             path: fullPath,
@@ -46,11 +106,12 @@ export function registerFilesystemHandlers(ipcMain: IpcMain): void {
 
   ipcMain.handle(IPC_CHANNELS.FS_READ_FILE, async (_event, { path: filePath }: { path: string }) => {
     try {
-      const stat = fs.statSync(filePath)
+      const safePath = sanitizePath(filePath)
+      const stat = fs.statSync(safePath)
       if (stat.size > 5 * 1024 * 1024) {
         return { content: null, error: null, isLargeFile: true, fileSize: stat.size }
       }
-      const content = fs.readFileSync(filePath, 'utf-8')
+      const content = fs.readFileSync(safePath, 'utf-8')
       return { content, error: null }
     } catch (err) {
       return { content: null, error: String(err) }
@@ -61,7 +122,8 @@ export function registerFilesystemHandlers(ipcMain: IpcMain): void {
     IPC_CHANNELS.FS_WRITE_FILE,
     async (_event, { path: filePath, content }: { path: string; content: string }) => {
       try {
-        fs.writeFileSync(filePath, content, 'utf-8')
+        const safePath = sanitizePath(filePath)
+        fs.writeFileSync(safePath, content, 'utf-8')
         return { success: true, error: null }
       } catch (err) {
         return { success: false, error: String(err) }
@@ -72,7 +134,9 @@ export function registerFilesystemHandlers(ipcMain: IpcMain): void {
   ipcMain.handle(
     IPC_CHANNELS.FS_RENAME,
     async (_event, { oldPath, newPath }: { oldPath: string; newPath: string }) => {
-      fs.renameSync(oldPath, newPath)
+      const safeOldPath = sanitizePath(oldPath)
+      const safeNewPath = sanitizePath(newPath)
+      fs.renameSync(safeOldPath, safeNewPath)
       return true
     },
   )
@@ -80,7 +144,8 @@ export function registerFilesystemHandlers(ipcMain: IpcMain): void {
   ipcMain.handle(
     IPC_CHANNELS.FS_DELETE,
     async (_event, { path: targetPath }: { path: string }) => {
-      fs.rmSync(targetPath, { recursive: true, force: true })
+      const safePath = sanitizePath(targetPath)
+      fs.rmSync(safePath, { recursive: true, force: true })
       return true
     },
   )
@@ -88,7 +153,9 @@ export function registerFilesystemHandlers(ipcMain: IpcMain): void {
   ipcMain.handle(
     IPC_CHANNELS.FS_COPY,
     async (_event, { src, dest }: { src: string; dest: string }) => {
-      fs.cpSync(src, dest, { recursive: true })
+      const safeSrc = sanitizePath(src)
+      const safeDest = sanitizePath(dest)
+      fs.cpSync(safeSrc, safeDest, { recursive: true })
       return true
     },
   )
@@ -96,7 +163,8 @@ export function registerFilesystemHandlers(ipcMain: IpcMain): void {
   ipcMain.handle(
     IPC_CHANNELS.FS_MKDIR,
     async (_event, { path: targetPath }: { path: string }) => {
-      fs.mkdirSync(targetPath, { recursive: true })
+      const safePath = sanitizePath(targetPath)
+      fs.mkdirSync(safePath, { recursive: true })
       return true
     },
   )
@@ -104,7 +172,8 @@ export function registerFilesystemHandlers(ipcMain: IpcMain): void {
   ipcMain.handle(
     IPC_CHANNELS.FS_EXISTS,
     async (_event, { path: targetPath }: { path: string }) => {
-      return fs.existsSync(targetPath)
+      const safePath = sanitizePath(targetPath)
+      return fs.existsSync(safePath)
     },
   )
 
@@ -112,13 +181,14 @@ export function registerFilesystemHandlers(ipcMain: IpcMain): void {
     IPC_CHANNELS.FS_READ_BASE64,
     async (_event, { path: filePath }: { path: string }) => {
       try {
-        const stat = fs.statSync(filePath)
+        const safePath = sanitizePath(filePath)
+        const stat = fs.statSync(safePath)
         if (stat.size > 20 * 1024 * 1024) {
           return { data: null, error: 'Fichier trop volumineux (>20 Mo)' }
         }
-        const buffer = fs.readFileSync(filePath)
+        const buffer = fs.readFileSync(safePath)
         const base64 = buffer.toString('base64')
-        const ext = path.extname(filePath).toLowerCase()
+        const ext = path.extname(safePath).toLowerCase()
         const mimeTypes: Record<string, string> = {
           '.png': 'image/png',
           '.jpg': 'image/jpeg',
@@ -141,7 +211,8 @@ export function registerFilesystemHandlers(ipcMain: IpcMain): void {
   ipcMain.handle(
     IPC_CHANNELS.FS_OPEN_IN_FINDER,
     async (_event, { path: targetPath }: { path: string }) => {
-      shell.showItemInFolder(targetPath)
+      const safePath = sanitizePath(targetPath)
+      shell.showItemInFolder(safePath)
       return true
     },
   )
@@ -153,6 +224,8 @@ export function registerFilesystemHandlers(ipcMain: IpcMain): void {
       { cwd, query, fileTypes, caseSensitive }: { cwd: string; query: string; fileTypes?: string[]; caseSensitive?: boolean },
     ): Promise<SearchResult[]> => {
       if (!query || query.trim().length === 0) return []
+
+      const safeCwd = sanitizePath(cwd)
 
       return new Promise((resolve) => {
         const args: string[] = [
@@ -181,7 +254,7 @@ export function registerFilesystemHandlers(ipcMain: IpcMain): void {
 
         args.push('--', query, '.')
 
-        const proc = execFile('grep', args, { cwd, maxBuffer: 10 * 1024 * 1024, timeout: 10000 }, (err, stdout) => {
+        const proc = execFile('grep', args, { cwd: safeCwd, maxBuffer: 10 * 1024 * 1024, timeout: 10000 }, (err, stdout) => {
           if (err || !stdout) {
             resolve([])
             return
@@ -199,7 +272,7 @@ export function registerFilesystemHandlers(ipcMain: IpcMain): void {
             const match = line.match(/^\.\/(.+?):(\d+):(\d+):(.*)$/)
             if (match) {
               results.push({
-                file: path.join(cwd, match[1]!),
+                file: path.join(safeCwd, match[1]!),
                 line: parseInt(match[2]!, 10),
                 column: parseInt(match[3]!, 10),
                 text: match[4]!,

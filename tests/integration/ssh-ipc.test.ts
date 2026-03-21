@@ -883,4 +883,198 @@ describe('SSH IPC Handlers', () => {
       expect(listResult.keys[1].name).toBe('zeta_key')
     })
   })
+
+  // ─── Path Traversal Security Tests ────────────────────────────────────
+
+  describe('path traversal prevention', () => {
+    const TRAVERSAL_NAMES = [
+      '../etc/passwd',
+      '../../tmp/evil',
+      'key/../../../etc/shadow',
+      'key/subdir',
+      'key\\backslash',
+      '',
+      'key with spaces',
+      'key.with.dots',
+      'name\0null',
+    ]
+
+    describe('ssh:generateKey rejects invalid names', () => {
+      it.each(TRAVERSAL_NAMES)(
+        'rejects name: %s',
+        async (maliciousName) => {
+          fs.mkdirSync(sshDir, { recursive: true })
+          mockExecFileSync.mockReturnValue('')
+
+          const result = await mockIpcMain._invoke<{ success: boolean; error: string }>(
+            'ssh:generateKey',
+            { name: maliciousName, type: 'ed25519', comment: '' },
+          )
+
+          expect(result.success).toBe(false)
+          expect(result.error).toBeDefined()
+          expect(mockExecFileSync).not.toHaveBeenCalled()
+        },
+      )
+
+      it('rejects non-string name', async () => {
+        fs.mkdirSync(sshDir, { recursive: true })
+
+        const result = await mockIpcMain._invoke<{ success: boolean; error: string }>(
+          'ssh:generateKey',
+          { name: 123 as unknown as string, type: 'ed25519', comment: '' },
+        )
+
+        expect(result.success).toBe(false)
+        expect(result.error).toContain('string')
+      })
+    })
+
+    describe('ssh:importKey rejects invalid names', () => {
+      it.each(TRAVERSAL_NAMES)(
+        'rejects name: %s',
+        async (maliciousName) => {
+          fs.mkdirSync(sshDir, { recursive: true })
+
+          const result = await mockIpcMain._invoke<{ success: boolean; error: string }>(
+            'ssh:importKey',
+            { name: maliciousName, privateKey: PRIVATE_KEY_CONTENT },
+          )
+
+          expect(result.success).toBe(false)
+          expect(result.error).toBeDefined()
+
+          // Verify no files were created outside sshDir
+          if (maliciousName.includes('..')) {
+            const dangerousPath = path.resolve(sshDir, maliciousName)
+            expect(fs.existsSync(dangerousPath)).toBe(false)
+          }
+        },
+      )
+    })
+
+    describe('ssh:deleteKey rejects invalid names', () => {
+      it.each(TRAVERSAL_NAMES)(
+        'rejects name: %s',
+        async (maliciousName) => {
+          fs.mkdirSync(sshDir, { recursive: true })
+
+          const result = await mockIpcMain._invoke<{ success: boolean; error: string }>(
+            'ssh:deleteKey',
+            { name: maliciousName },
+          )
+
+          expect(result.success).toBe(false)
+          expect(result.error).toBeDefined()
+        },
+      )
+    })
+
+    describe('ssh:readPublicKey rejects invalid paths', () => {
+      it('rejects absolute path outside ~/.ssh', async () => {
+        const result = await mockIpcMain._invoke<{ success: boolean; error: string }>(
+          'ssh:readPublicKey',
+          { keyPath: '/etc/passwd' },
+        )
+
+        expect(result.success).toBe(false)
+        expect(result.error).toContain('~/.ssh')
+      })
+
+      it('rejects path traversal via ../', async () => {
+        const result = await mockIpcMain._invoke<{ success: boolean; error: string }>(
+          'ssh:readPublicKey',
+          { keyPath: path.join(sshDir, '../../etc/passwd') },
+        )
+
+        expect(result.success).toBe(false)
+      })
+
+      it('rejects file without .pub extension', async () => {
+        fs.mkdirSync(sshDir, { recursive: true })
+        fs.writeFileSync(path.join(sshDir, 'id_ed25519'), PRIVATE_KEY_CONTENT)
+
+        const result = await mockIpcMain._invoke<{ success: boolean; error: string }>(
+          'ssh:readPublicKey',
+          { keyPath: path.join(sshDir, 'id_ed25519') },
+        )
+
+        expect(result.success).toBe(false)
+        expect(result.error).toContain('.pub')
+      })
+
+      it('rejects path with null bytes', async () => {
+        const result = await mockIpcMain._invoke<{ success: boolean; error: string }>(
+          'ssh:readPublicKey',
+          { keyPath: path.join(sshDir, 'key\0.pub') },
+        )
+
+        expect(result.success).toBe(false)
+        expect(result.error).toContain('null bytes')
+      })
+
+      it('rejects non-string keyPath', async () => {
+        const result = await mockIpcMain._invoke<{ success: boolean; error: string }>(
+          'ssh:readPublicKey',
+          { keyPath: 123 as unknown as string },
+        )
+
+        expect(result.success).toBe(false)
+        expect(result.error).toContain('string')
+      })
+
+      it('accepts valid .pub path under ~/.ssh', async () => {
+        fs.mkdirSync(sshDir, { recursive: true })
+        const pubPath = path.join(sshDir, 'id_ed25519.pub')
+        fs.writeFileSync(pubPath, PUBLIC_KEY_CONTENT, { mode: 0o644 })
+
+        const result = await mockIpcMain._invoke<{ success: boolean; content: string }>(
+          'ssh:readPublicKey',
+          { keyPath: pubPath },
+        )
+
+        expect(result.success).toBe(true)
+        expect(result.content).toBe(PUBLIC_KEY_CONTENT)
+      })
+    })
+
+    describe('legitimate operations still work', () => {
+      it('generateKey accepts valid alphanumeric name', async () => {
+        fs.mkdirSync(sshDir, { recursive: true })
+        mockExecFileSync.mockReturnValue('')
+
+        const result = await mockIpcMain._invoke<{ success: boolean }>(
+          'ssh:generateKey',
+          { name: 'my_deploy-key-2024', type: 'ed25519', comment: 'test' },
+        )
+
+        expect(result.success).toBe(true)
+      })
+
+      it('importKey accepts valid name with hyphens and underscores', async () => {
+        fs.mkdirSync(sshDir, { recursive: true })
+
+        const result = await mockIpcMain._invoke<{ success: boolean }>(
+          'ssh:importKey',
+          { name: 'github-deploy_key', privateKey: PRIVATE_KEY_CONTENT },
+        )
+
+        expect(result.success).toBe(true)
+        expect(fs.existsSync(path.join(sshDir, 'github-deploy_key'))).toBe(true)
+      })
+
+      it('deleteKey accepts valid name', async () => {
+        fs.mkdirSync(sshDir, { recursive: true })
+        fs.writeFileSync(path.join(sshDir, 'temp-key'), PRIVATE_KEY_CONTENT)
+
+        const result = await mockIpcMain._invoke<{ success: boolean }>(
+          'ssh:deleteKey',
+          { name: 'temp-key' },
+        )
+
+        expect(result.success).toBe(true)
+        expect(fs.existsSync(path.join(sshDir, 'temp-key'))).toBe(false)
+      })
+    })
+  })
 })

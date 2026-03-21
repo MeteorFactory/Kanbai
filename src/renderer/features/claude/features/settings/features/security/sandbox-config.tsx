@@ -21,8 +21,8 @@ export function SandboxConfig({ settings, onSettingsChange }: Props) {
 
   const enabled = sandboxObj.enabled ?? false
   const autoAllow = sandboxObj.autoAllowBashIfSandboxed ?? false
-  const excluded = sandboxObj.excludedCommands ?? []
-  const allowedDomains = sandboxObj.network?.allowedDomains ?? []
+  const excluded = useMemo(() => sandboxObj.excludedCommands ?? [], [sandboxObj.excludedCommands])
+  const allowedDomains = useMemo(() => sandboxObj.network?.allowedDomains ?? [], [sandboxObj.network?.allowedDomains])
 
   const [newExcluded, setNewExcluded] = useState('')
   const [newDomain, setNewDomain] = useState('')
