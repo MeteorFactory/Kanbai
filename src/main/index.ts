@@ -142,7 +142,7 @@ function createMainWindow(): BrowserWindow {
 app.whenReady().then(() => {
   // Content Security Policy — strict by default, relaxed for Vite dev server
   const cspDirectives = VITE_DEV_SERVER_URL
-    ? "default-src 'self' pixel-agents:; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' ws:"
+    ? "default-src 'self' pixel-agents:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' ws:"
     : "default-src 'self' pixel-agents:; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:"
 
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
