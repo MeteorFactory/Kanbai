@@ -1509,6 +1509,26 @@ export const fr = {
   'updates.missingToolsLabel': 'Outils manquants',
   'updates.availableUpdatesLabel': 'Mises a jour disponibles',
 
+  // Claude Plugins
+  'plugins.title': 'Plugins Claude',
+  'plugins.description': 'Extensions pour Claude Code',
+  'plugins.loading': 'Chargement des plugins...',
+  'plugins.empty': 'Aucun plugin disponible. Installez Claude et relancez la vérification.',
+  'plugins.installed': 'Installé',
+  'plugins.notInstalled': 'Non installé',
+  'plugins.install': 'Installer',
+  'plugins.uninstall': 'Désinstaller',
+  'plugins.installing': 'Installation...',
+  'plugins.uninstalling': 'Désinstallation...',
+  'plugins.installSuccess': 'Plugin {plugin} installé',
+  'plugins.installError': 'Échec installation {plugin}: {error}',
+  'plugins.uninstallSuccess': 'Plugin {plugin} désinstallé',
+  'plugins.uninstallError': 'Échec désinstallation {plugin}: {error}',
+  'plugins.official': 'Officiel',
+  'plugins.external': 'Externe',
+  'plugins.refresh': 'Actualiser',
+  'plugins.claudeRequired': 'Claude doit être installé pour gérer les plugins.',
+
   // About
   'about.version': 'Version',
   'about.developer': 'Développeur',

@@ -64,3 +64,14 @@ export interface UpdateInfo {
   canInstall?: boolean
   canUninstall?: boolean
 }
+
+export interface ClaudePlugin {
+  name: string
+  marketplace: string
+  description: string
+  installed: boolean
+  enabled: boolean
+  version?: string
+  installedAt?: string
+  type: 'official' | 'external'
+}

@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react'
-import type { AppSettings } from '../../../../shared/types'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import type { AppSettings, ClaudePlugin } from '../../../../shared/types'
 import { useI18n } from '../../../lib/i18n'
 import { useAppUpdateStore } from '../../updates/app-update-store'
 import { useUpdateStore } from '../../updates/update-store'
@@ -34,6 +34,74 @@ export function ToolsSettings({ settings, updateSetting, appVersion }: ToolsSett
 
   const [toolErrorCopied, setToolErrorCopied] = useState(false)
   const toolErrorCopiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Claude Plugins state
+  const [plugins, setPlugins] = useState<ClaudePlugin[]>([])
+  const [pluginsLoading, setPluginsLoading] = useState(false)
+  const [pluginsExpanded, setPluginsExpanded] = useState(false)
+  const [pluginAction, setPluginAction] = useState<string | null>(null)
+  const [pluginStatus, setPluginStatus] = useState<{ plugin: string; success: boolean; error?: string } | null>(null)
+
+  const isClaudeInstalled = toolUpdates.some((u) => u.tool === 'claude' && u.installed)
+
+  const loadPlugins = useCallback(async () => {
+    setPluginsLoading(true)
+    try {
+      const result = await window.kanbai.claudePlugins.list()
+      setPlugins(result)
+    } catch {
+      setPlugins([])
+    } finally {
+      setPluginsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!isClaudeInstalled || !pluginsExpanded || plugins.length > 0) return
+    loadPlugins()
+  }, [isClaudeInstalled, pluginsExpanded, plugins.length, loadPlugins])
+
+  useEffect(() => {
+    if (!pluginStatus?.success) return
+    const timer = setTimeout(() => setPluginStatus(null), 5000)
+    return () => clearTimeout(timer)
+  }, [pluginStatus])
+
+  const handlePluginInstall = async (pluginName: string) => {
+    setPluginAction(pluginName)
+    setPluginStatus(null)
+    try {
+      const result = await window.kanbai.claudePlugins.install(pluginName)
+      if (result.success) {
+        setPluginStatus({ plugin: pluginName, success: true })
+        await loadPlugins()
+      } else {
+        setPluginStatus({ plugin: pluginName, success: false, error: result.error })
+      }
+    } catch (err: unknown) {
+      setPluginStatus({ plugin: pluginName, success: false, error: err instanceof Error ? err.message : String(err) })
+    } finally {
+      setPluginAction(null)
+    }
+  }
+
+  const handlePluginUninstall = async (pluginName: string) => {
+    setPluginAction(pluginName)
+    setPluginStatus(null)
+    try {
+      const result = await window.kanbai.claudePlugins.uninstall(pluginName)
+      if (result.success) {
+        setPluginStatus({ plugin: pluginName, success: true })
+        await loadPlugins()
+      } else {
+        setPluginStatus({ plugin: pluginName, success: false, error: result.error })
+      }
+    } catch (err: unknown) {
+      setPluginStatus({ plugin: pluginName, success: false, error: err instanceof Error ? err.message : String(err) })
+    } finally {
+      setPluginAction(null)
+    }
+  }
 
   useEffect(() => {
     if (toolUpdates.length > 0) return
@@ -231,6 +299,108 @@ export function ToolsSettings({ settings, updateSetting, appVersion }: ToolsSett
           </div>
         )}
       </div>
+
+      {/* Claude Plugins sub-section */}
+      {isClaudeInstalled && (
+        <div className="settings-card">
+          <div
+            className="settings-row settings-row--clickable"
+            onClick={() => setPluginsExpanded(!pluginsExpanded)}
+          >
+            <div className="settings-row-info">
+              <label className="settings-label">{t('plugins.title')}</label>
+              <span className="settings-hint">{t('plugins.description')}</span>
+            </div>
+            <span className={`settings-chevron${pluginsExpanded ? ' settings-chevron--open' : ''}`}>
+              {'\u25B6'}
+            </span>
+          </div>
+
+          {pluginsExpanded && (
+            <div className="plugins-section">
+              <div className="plugins-section-header">
+                <button
+                  className="settings-btn"
+                  onClick={loadPlugins}
+                  disabled={pluginsLoading}
+                >
+                  {pluginsLoading ? t('plugins.loading') : t('plugins.refresh')}
+                </button>
+              </div>
+
+              {pluginStatus && (
+                <div
+                  className={`notification-status ${pluginStatus.success ? 'notification-status--success' : 'notification-status--error'}`}
+                >
+                  <span className="notification-status-text" onClick={() => setPluginStatus(null)}>
+                    {pluginStatus.success
+                      ? `\u2713 ${t('plugins.installSuccess', { plugin: pluginStatus.plugin })}`
+                      : `\u2717 ${t('plugins.installError', { plugin: pluginStatus.plugin, error: pluginStatus.error || '' })}`
+                    }
+                  </span>
+                </div>
+              )}
+
+              {plugins.length === 0 && !pluginsLoading ? (
+                <p className="notification-empty">{t('plugins.empty')}</p>
+              ) : (
+                <div className="notification-panel-content">
+                  {plugins.map((plugin) => (
+                    <div
+                      key={`${plugin.name}-${plugin.marketplace}`}
+                      className={`notification-item${plugin.installed ? '' : ' notification-item--missing'}`}
+                    >
+                      <div className="notification-item-info">
+                        <span className="notification-item-name">{plugin.name}</span>
+                        {plugin.installed ? (
+                          <span className="notification-item-version">
+                            {plugin.version ?? t('plugins.installed')}
+                          </span>
+                        ) : (
+                          <span className="notification-item-version notification-item-version--missing">
+                            {t('plugins.notInstalled')}
+                          </span>
+                        )}
+                        <span className="notification-item-scope">
+                          {plugin.type === 'official' ? t('plugins.official') : t('plugins.external')}
+                        </span>
+                      </div>
+                      <div className="notification-item-actions">
+                        {plugin.installed ? (
+                          <button
+                            className="notification-item-btn notification-item-btn--uninstall"
+                            onClick={() => handlePluginUninstall(plugin.name)}
+                            disabled={pluginAction === plugin.name}
+                          >
+                            {pluginAction === plugin.name ? (
+                              <span className="notification-spinner">{'\u21BB'}</span>
+                            ) : t('plugins.uninstall')}
+                          </button>
+                        ) : (
+                          <button
+                            className="notification-item-btn notification-item-btn--install"
+                            onClick={() => handlePluginInstall(plugin.name)}
+                            disabled={pluginAction === plugin.name}
+                          >
+                            {pluginAction === plugin.name ? (
+                              <span className="notification-spinner">{'\u21BB'}</span>
+                            ) : t('plugins.install')}
+                          </button>
+                        )}
+                      </div>
+                      {plugin.description && (
+                        <div className="notification-item-description">
+                          {plugin.description}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }

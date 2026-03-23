@@ -36,6 +36,7 @@ import { registerDevOpsHandlers } from './ipc/devops'
 import { registerNotesHandlers } from './ipc/notes'
 import { initCompanionFeatures } from './companion'
 import { registerSkillsStoreHandlers, prefetchSkillsStore } from './ipc/skillsStore'
+import { registerClaudePluginsHandlers } from './ipc/claude-plugins'
 import { cleanupTerminals } from './ipc/terminal'
 import { ensureActivityHookScript, ensureAutoApproveScript, ensureKanbanDoneScript, ensurePixelAgentsHookScript, syncAllWorkspaceEnvHooks, startActivityWatcher } from './services/activityHooks'
 import { clearDockBadge } from './services/notificationService'
@@ -210,6 +211,7 @@ app.whenReady().then(() => {
   registerPixelAgentsHandlers(ipcMain, () => mainWindow)
   registerDevOpsHandlers(ipcMain)
   registerNotesHandlers(ipcMain)
+  registerClaudePluginsHandlers(ipcMain)
   registerCompanionHandlers(ipcMain, () => mainWindow)
   initCompanionFeatures()
   tryReconnectCompanion(() => mainWindow)

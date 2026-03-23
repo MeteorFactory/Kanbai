@@ -434,6 +434,16 @@ const api = {
     },
   },
 
+  // Claude Plugins
+  claudePlugins: {
+    list: (): Promise<import('../shared/types').ClaudePlugin[]> =>
+      ipcRenderer.invoke(IPC_CHANNELS.CLAUDE_PLUGINS_LIST),
+    install: (pluginName: string): Promise<{ success: boolean; error?: string }> =>
+      ipcRenderer.invoke(IPC_CHANNELS.CLAUDE_PLUGINS_INSTALL, { pluginName }),
+    uninstall: (pluginName: string): Promise<{ success: boolean; error?: string }> =>
+      ipcRenderer.invoke(IPC_CHANNELS.CLAUDE_PLUGINS_UNINSTALL, { pluginName }),
+  },
+
   // Git Config (per-namespace profiles)
   gitConfig: {
     get: (namespaceId: string): Promise<{ userName: string; userEmail: string; isCustom: boolean }> =>

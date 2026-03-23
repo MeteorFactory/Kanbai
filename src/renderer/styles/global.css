@@ -672,6 +672,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   padding: 8px 10px;
   border-radius: 6px;
   transition: background 0.15s ease;
@@ -782,6 +783,27 @@ body {
 .notification-item-btn--uninstall:hover {
   background: #ef4444;
   color: var(--bg-tertiary);
+}
+
+.notification-item-description {
+  width: 100%;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  padding-top: 2px;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.plugins-section {
+  padding: 4px 0;
+}
+
+.plugins-section-header {
+  display: flex;
+  justify-content: flex-end;
+  padding: 4px 12px 8px;
 }
 
 .notification-panel-footer {
@@ -6688,6 +6710,27 @@ body {
   justify-content: space-between;
   gap: 16px;
   min-height: 38px;
+}
+
+.settings-row--clickable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.settings-row--clickable:hover {
+  background: var(--bg-hover);
+  border-radius: 4px;
+}
+
+.settings-chevron {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+}
+
+.settings-chevron--open {
+  transform: rotate(90deg);
 }
 
 .settings-row-info {

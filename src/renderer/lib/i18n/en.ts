@@ -1509,6 +1509,26 @@ export const en = {
   'updates.missingToolsLabel': 'Missing tools',
   'updates.availableUpdatesLabel': 'Available updates',
 
+  // Claude Plugins
+  'plugins.title': 'Claude Plugins',
+  'plugins.description': 'Extensions for Claude Code',
+  'plugins.loading': 'Loading plugins...',
+  'plugins.empty': 'No plugins available. Install Claude and refresh.',
+  'plugins.installed': 'Installed',
+  'plugins.notInstalled': 'Not installed',
+  'plugins.install': 'Install',
+  'plugins.uninstall': 'Uninstall',
+  'plugins.installing': 'Installing...',
+  'plugins.uninstalling': 'Uninstalling...',
+  'plugins.installSuccess': 'Plugin {plugin} installed',
+  'plugins.installError': 'Failed to install {plugin}: {error}',
+  'plugins.uninstallSuccess': 'Plugin {plugin} uninstalled',
+  'plugins.uninstallError': 'Failed to uninstall {plugin}: {error}',
+  'plugins.official': 'Official',
+  'plugins.external': 'External',
+  'plugins.refresh': 'Refresh',
+  'plugins.claudeRequired': 'Claude must be installed to manage plugins.',
+
   // About
   'about.version': 'Version',
   'about.developer': 'Developer',
