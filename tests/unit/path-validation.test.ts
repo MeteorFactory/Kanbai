@@ -4,31 +4,32 @@ import { validatePath, sanitizePath } from '../../src/main/ipc/filesystem'
 
 describe('validatePath', () => {
   const basePath = '/Users/test/projects/myapp'
+  const resolvedBase = path.resolve(basePath)
 
   describe('valid paths', () => {
     it('should accept a path within the base directory', () => {
       const result = validatePath(basePath, '/Users/test/projects/myapp/src/index.ts')
-      expect(result).toBe('/Users/test/projects/myapp/src/index.ts')
+      expect(result).toBe(path.resolve('/Users/test/projects/myapp/src/index.ts'))
     })
 
     it('should accept the base directory itself', () => {
       const result = validatePath(basePath, basePath)
-      expect(result).toBe(basePath)
+      expect(result).toBe(resolvedBase)
     })
 
     it('should accept a relative path within the base directory', () => {
       const result = validatePath(basePath, 'src/index.ts')
-      expect(result).toBe(path.join(basePath, 'src/index.ts'))
+      expect(result).toBe(path.resolve(basePath, 'src/index.ts'))
     })
 
     it('should accept nested subdirectories', () => {
       const result = validatePath(basePath, '/Users/test/projects/myapp/src/components/App.tsx')
-      expect(result).toBe('/Users/test/projects/myapp/src/components/App.tsx')
+      expect(result).toBe(path.resolve('/Users/test/projects/myapp/src/components/App.tsx'))
     })
 
     it('should resolve relative path with . segments within base', () => {
       const result = validatePath(basePath, '/Users/test/projects/myapp/src/./index.ts')
-      expect(result).toBe('/Users/test/projects/myapp/src/index.ts')
+      expect(result).toBe(path.resolve('/Users/test/projects/myapp/src/index.ts'))
     })
   })
 
@@ -101,7 +102,7 @@ describe('sanitizePath', () => {
   describe('valid paths', () => {
     it('should accept and resolve an absolute path', () => {
       const result = sanitizePath('/Users/test/file.txt')
-      expect(result).toBe('/Users/test/file.txt')
+      expect(result).toBe(path.resolve('/Users/test/file.txt'))
     })
 
     it('should resolve a relative path to absolute', () => {
@@ -111,12 +112,12 @@ describe('sanitizePath', () => {
 
     it('should normalize paths with . segments', () => {
       const result = sanitizePath('/Users/test/./file.txt')
-      expect(result).toBe('/Users/test/file.txt')
+      expect(result).toBe(path.resolve('/Users/test/file.txt'))
     })
 
     it('should resolve paths with .. segments', () => {
       const result = sanitizePath('/Users/test/sub/../file.txt')
-      expect(result).toBe('/Users/test/file.txt')
+      expect(result).toBe(path.resolve('/Users/test/file.txt'))
     })
   })
 

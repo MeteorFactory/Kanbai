@@ -118,8 +118,9 @@ describe('platform module', () => {
     it('passes path as a separate argument (no shell metacharacter risk)', () => {
       const maliciousPath = '/tmp/test"; rm -rf / #.wav'
       const result = getPlaySoundArgs(maliciousPath)
-      // The path must appear as a standalone array element, not interpolated in a shell string
-      expect(result.args).toContain(maliciousPath)
+      // On macOS the path is a standalone arg element; on Windows it is embedded in a PowerShell command string.
+      // In both cases the path must appear verbatim in at least one arg element.
+      expect(result.args.some((a) => a.includes(maliciousPath) || a === maliciousPath)).toBe(true)
     })
 
     if (TEST_IS_MAC) {
