@@ -56,10 +56,12 @@ export function ToolsSettings({ settings, updateSetting, appVersion }: ToolsSett
     }
   }, [])
 
+  const [pluginsInitLoaded, setPluginsInitLoaded] = useState(false)
   useEffect(() => {
-    if (!isClaudeInstalled || !pluginsExpanded || plugins.length > 0) return
+    if (!pluginsExpanded || pluginsInitLoaded) return
+    setPluginsInitLoaded(true)
     loadPlugins()
-  }, [isClaudeInstalled, pluginsExpanded, plugins.length, loadPlugins])
+  }, [pluginsExpanded, pluginsInitLoaded, loadPlugins])
 
   useEffect(() => {
     if (!pluginStatus?.success) return
@@ -301,106 +303,110 @@ export function ToolsSettings({ settings, updateSetting, appVersion }: ToolsSett
       </div>
 
       {/* Claude Plugins sub-section */}
-      {isClaudeInstalled && (
-        <div className="settings-card">
-          <div
-            className="settings-row settings-row--clickable"
-            onClick={() => setPluginsExpanded(!pluginsExpanded)}
-          >
-            <div className="settings-row-info">
-              <label className="settings-label">{t('plugins.title')}</label>
-              <span className="settings-hint">{t('plugins.description')}</span>
-            </div>
-            <span className={`settings-chevron${pluginsExpanded ? ' settings-chevron--open' : ''}`}>
-              {'\u25B6'}
-            </span>
+      <div className="settings-card">
+        <div
+          className="settings-row settings-row--clickable"
+          onClick={() => setPluginsExpanded(!pluginsExpanded)}
+        >
+          <div className="settings-row-info">
+            <label className="settings-label">{t('plugins.title')}</label>
+            <span className="settings-hint">{t('plugins.description')}</span>
           </div>
-
-          {pluginsExpanded && (
-            <div className="plugins-section">
-              <div className="plugins-section-header">
-                <button
-                  className="settings-btn"
-                  onClick={loadPlugins}
-                  disabled={pluginsLoading}
-                >
-                  {pluginsLoading ? t('plugins.loading') : t('plugins.refresh')}
-                </button>
-              </div>
-
-              {pluginStatus && (
-                <div
-                  className={`notification-status ${pluginStatus.success ? 'notification-status--success' : 'notification-status--error'}`}
-                >
-                  <span className="notification-status-text" onClick={() => setPluginStatus(null)}>
-                    {pluginStatus.success
-                      ? `\u2713 ${t('plugins.installSuccess', { plugin: pluginStatus.plugin })}`
-                      : `\u2717 ${t('plugins.installError', { plugin: pluginStatus.plugin, error: pluginStatus.error || '' })}`
-                    }
-                  </span>
-                </div>
-              )}
-
-              {plugins.length === 0 && !pluginsLoading ? (
-                <p className="notification-empty">{t('plugins.empty')}</p>
-              ) : (
-                <div className="notification-panel-content">
-                  {plugins.map((plugin) => (
-                    <div
-                      key={`${plugin.name}-${plugin.marketplace}`}
-                      className={`notification-item${plugin.installed ? '' : ' notification-item--missing'}`}
-                    >
-                      <div className="notification-item-info">
-                        <span className="notification-item-name">{plugin.name}</span>
-                        {plugin.installed ? (
-                          <span className="notification-item-version">
-                            {plugin.version ?? t('plugins.installed')}
-                          </span>
-                        ) : (
-                          <span className="notification-item-version notification-item-version--missing">
-                            {t('plugins.notInstalled')}
-                          </span>
-                        )}
-                        <span className="notification-item-scope">
-                          {plugin.type === 'official' ? t('plugins.official') : t('plugins.external')}
-                        </span>
-                      </div>
-                      <div className="notification-item-actions">
-                        {plugin.installed ? (
-                          <button
-                            className="notification-item-btn notification-item-btn--uninstall"
-                            onClick={() => handlePluginUninstall(plugin.name)}
-                            disabled={pluginAction === plugin.name}
-                          >
-                            {pluginAction === plugin.name ? (
-                              <span className="notification-spinner">{'\u21BB'}</span>
-                            ) : t('plugins.uninstall')}
-                          </button>
-                        ) : (
-                          <button
-                            className="notification-item-btn notification-item-btn--install"
-                            onClick={() => handlePluginInstall(plugin.name)}
-                            disabled={pluginAction === plugin.name}
-                          >
-                            {pluginAction === plugin.name ? (
-                              <span className="notification-spinner">{'\u21BB'}</span>
-                            ) : t('plugins.install')}
-                          </button>
-                        )}
-                      </div>
-                      {plugin.description && (
-                        <div className="notification-item-description">
-                          {plugin.description}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+          <span className={`settings-chevron${pluginsExpanded ? ' settings-chevron--open' : ''}`}>
+            {'\u25B6'}
+          </span>
         </div>
-      )}
+
+        {pluginsExpanded && (
+          <div className="plugins-section">
+            {!isClaudeInstalled && toolUpdates.length > 0 ? (
+              <p className="notification-empty">{t('plugins.claudeRequired')}</p>
+            ) : (
+              <>
+                <div className="plugins-section-header">
+                  <button
+                    className="settings-btn"
+                    onClick={loadPlugins}
+                    disabled={pluginsLoading}
+                  >
+                    {pluginsLoading ? t('plugins.loading') : t('plugins.refresh')}
+                  </button>
+                </div>
+
+                {pluginStatus && (
+                  <div
+                    className={`notification-status ${pluginStatus.success ? 'notification-status--success' : 'notification-status--error'}`}
+                  >
+                    <span className="notification-status-text" onClick={() => setPluginStatus(null)}>
+                      {pluginStatus.success
+                        ? `\u2713 ${t('plugins.installSuccess', { plugin: pluginStatus.plugin })}`
+                        : `\u2717 ${t('plugins.installError', { plugin: pluginStatus.plugin, error: pluginStatus.error || '' })}`
+                      }
+                    </span>
+                  </div>
+                )}
+
+                {plugins.length === 0 && !pluginsLoading ? (
+                  <p className="notification-empty">{t('plugins.empty')}</p>
+                ) : (
+                  <div className="notification-panel-content">
+                    {plugins.map((plugin) => (
+                      <div
+                        key={`${plugin.name}-${plugin.marketplace}`}
+                        className={`notification-item${plugin.installed ? '' : ' notification-item--missing'}`}
+                      >
+                        <div className="notification-item-info">
+                          <span className="notification-item-name">{plugin.name}</span>
+                          {plugin.installed ? (
+                            <span className="notification-item-version">
+                              {plugin.version ?? t('plugins.installed')}
+                            </span>
+                          ) : (
+                            <span className="notification-item-version notification-item-version--missing">
+                              {t('plugins.notInstalled')}
+                            </span>
+                          )}
+                          <span className="notification-item-scope">
+                            {plugin.type === 'official' ? t('plugins.official') : t('plugins.external')}
+                          </span>
+                        </div>
+                        <div className="notification-item-actions">
+                          {plugin.installed ? (
+                            <button
+                              className="notification-item-btn notification-item-btn--uninstall"
+                              onClick={() => handlePluginUninstall(plugin.name)}
+                              disabled={pluginAction === plugin.name}
+                            >
+                              {pluginAction === plugin.name ? (
+                                <span className="notification-spinner">{'\u21BB'}</span>
+                              ) : t('plugins.uninstall')}
+                            </button>
+                          ) : (
+                            <button
+                              className="notification-item-btn notification-item-btn--install"
+                              onClick={() => handlePluginInstall(plugin.name)}
+                              disabled={pluginAction === plugin.name}
+                            >
+                              {pluginAction === plugin.name ? (
+                                <span className="notification-spinner">{'\u21BB'}</span>
+                              ) : t('plugins.install')}
+                            </button>
+                          )}
+                        </div>
+                        {plugin.description && (
+                          <div className="notification-item-description">
+                            {plugin.description}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
