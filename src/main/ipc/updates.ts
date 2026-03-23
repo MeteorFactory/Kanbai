@@ -135,6 +135,16 @@ interface ToolCheck {
 }
 
 const TOOLS_TO_CHECK: ToolCheck[] = [
+  // Homebrew — macOS only, prerequisite for many other tools
+  ...(!IS_WIN
+    ? [
+        {
+          name: 'brew',
+          checkCommand: 'brew',
+          checkArgs: ['--version'],
+        },
+      ]
+    : []),
   {
     name: 'node',
     checkCommand: 'node',
@@ -235,6 +245,7 @@ interface ToolInstallResolution {
 }
 
 const TOOL_METADATA: Record<string, ToolMetadata> = {
+  brew: {},
   node: {
     brewCandidates: ['node'],
   },
@@ -299,6 +310,7 @@ async function getVersion(command: string, args: string[]): Promise<string | nul
       .replace(/^go version go/, '')
       .replace(/^Python /, '')
       .replace(/^Claude Code /, '')
+      .replace(/^Homebrew /, '')
       .replace(/^cargo /, '')
       .replace(/^codex\s+/i, '')
       .replace(/^copilot\s+/i, '')
@@ -506,6 +518,9 @@ async function ensureNpmForInstall(
 async function resolveToolInstallSource(tool: string): Promise<ToolInstallResolution> {
   const meta = TOOL_METADATA[tool] ?? {}
 
+  if (tool === 'brew') {
+    return { source: 'system' }
+  }
   if (tool === 'pixel-agents') {
     return { source: 'internal' }
   }
@@ -582,6 +597,11 @@ async function getLatestVersionForTool(
   currentVersion: string,
   resolution: ToolInstallResolution,
 ): Promise<string | null> {
+  // brew — self-updates via `brew update`, no "latest version" API to check
+  if (tool === 'brew') {
+    return null
+  }
+
   // cargo does not expose reliable "latest" through a simple command.
   if (tool === 'cargo') {
     return null
@@ -667,6 +687,7 @@ async function getLatestVersionForTool(
 
 function canInstallTool(tool: string): boolean {
   return [
+    'brew',
     'node',
     'npm',
     'pnpm',
@@ -830,7 +851,8 @@ async function checkToolUpdates(): Promise<UpdateInfo[]> {
 
       if (!result.version) {
         const fallbackSource: ToolInstallSource =
-          result.name === 'cargo' ? (IS_WIN ? 'winget' : 'rustup')
+          result.name === 'brew' ? 'system'
+            : result.name === 'cargo' ? (IS_WIN ? 'winget' : 'rustup')
             : result.name === 'pixel-agents' ? 'internal'
               : (result.name === 'node'
                   || result.name === 'git'
@@ -1036,6 +1058,35 @@ export function registerUpdateHandlers(ipcMain: IpcMain): void {
         }
 
         switch (tool) {
+          case 'brew': {
+            if (IS_WIN) {
+              throw new Error('Homebrew is only available on macOS')
+            }
+            if (isInstalled) {
+              // Run `brew update` to self-update Homebrew
+              command = 'brew'
+              args = ['update']
+            } else {
+              // Install Homebrew via the official install script
+              sendStatus('installing', 20)
+              await crossExecFile(
+                '/bin/bash',
+                ['-c', 'NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'],
+                { timeout: 300000, env: { ...enrichedEnv(), NONINTERACTIVE: '1' } },
+              )
+              // Add brew to current process PATH
+              const brewPaths = ['/opt/homebrew/bin', '/usr/local/bin']
+              const currentPath = process.env.PATH || ''
+              for (const p of brewPaths) {
+                if (!currentPath.includes(p)) {
+                  process.env.PATH = `${p}:${currentPath}`
+                }
+              }
+              sendStatus('completed', 100)
+              return { success: true }
+            }
+            break
+          }
           case 'node':
             if (IS_WIN) {
               command = 'winget'

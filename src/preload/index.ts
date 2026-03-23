@@ -434,6 +434,19 @@ const api = {
     },
   },
 
+  // Installer (cascade prerequisites)
+  installer: {
+    check: (): Promise<import('../shared/types').PrerequisiteInfo[]> =>
+      ipcRenderer.invoke(IPC_CHANNELS.INSTALLER_CHECK),
+    cascade: (): Promise<import('../shared/types').InstallerResult> =>
+      ipcRenderer.invoke(IPC_CHANNELS.INSTALLER_CASCADE),
+    onProgress: (callback: (data: import('../shared/types').InstallerProgress) => void) => {
+      const listener = (_event: Electron.IpcRendererEvent, payload: import('../shared/types').InstallerProgress) => callback(payload)
+      ipcRenderer.on(IPC_CHANNELS.INSTALLER_PROGRESS, listener)
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.INSTALLER_PROGRESS, listener)
+    },
+  },
+
   // Git Config (per-namespace profiles)
   gitConfig: {
     get: (namespaceId: string): Promise<{ userName: string; userEmail: string; isCustom: boolean }> =>

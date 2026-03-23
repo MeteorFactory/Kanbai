@@ -21,6 +21,7 @@ import { DevOpsPanel } from './features/devops'
 import { NotesPanel } from './features/notes'
 import { MultiAgentView } from './features/multi-agent'
 import { useAppUpdateStore } from './features/updates'
+import { SetupWizard } from './features/installer'
 import { useI18n } from './lib/i18n'
 import { AI_PROVIDERS, type AiProviderId } from '../shared/types/ai-provider'
 import type { AppSettings, SessionData, SessionTab } from '../shared/types'
@@ -497,6 +498,7 @@ export function App() {
         onClose={() => { setCommandPaletteOpen(false); setQuickSwitchOpen(false) }}
       />
       <ToastContainer />
+      <SetupWizard />
       {tutorialSection !== null && (
         <TutorialModal
           section={tutorialSection}

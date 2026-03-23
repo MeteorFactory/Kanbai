@@ -2115,4 +2115,15 @@ export const fr = {
   'notes.contentPlaceholder': 'Ecrivez votre note en Markdown...',
   'notes.preview': 'Apercu',
   'notes.startWriting': 'Commencer a ecrire',
+
+  // Installer (prerequis en cascade)
+  'installer.title': 'Configuration requise',
+  'installer.description': 'Certains prerequis sont manquants. Installez-les pour utiliser toutes les fonctionnalites.',
+  'installer.installAll': 'Tout installer',
+  'installer.installing': 'Installation...',
+  'installer.skip': 'Ignorer',
+  'installer.continue': 'Continuer',
+  'installer.allInstalled': 'Tous les prerequis sont installes !',
+  'installer.notDetected': 'Non detecte',
+  'installer.skipped': 'N/A',
 } as const

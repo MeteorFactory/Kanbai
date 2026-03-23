@@ -14709,3 +14709,96 @@ body {
   color: var(--text-muted);
   font-size: 12px;
 }
+
+/* === Installer (Setup Wizard) === */
+
+.installer-dialog {
+  min-width: 420px;
+  max-width: 520px;
+}
+
+.installer-description {
+  margin: 0 0 14px;
+  line-height: 1.5;
+}
+
+.installer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 8px 0;
+}
+
+.installer-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--bg-surface);
+  font-size: 13px;
+}
+
+.installer-row-icon {
+  width: 20px;
+  text-align: center;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.installer-status--ok .installer-row-icon {
+  color: var(--accent-green, #22c55e);
+}
+
+.installer-status--missing .installer-row-icon {
+  color: var(--text-muted);
+}
+
+.installer-status--progress .installer-row-icon {
+  color: var(--accent, #C15F3C);
+}
+
+.installer-status--error .installer-row-icon {
+  color: var(--accent-red, #ef4444);
+}
+
+.installer-status--skipped .installer-row-icon {
+  color: var(--text-muted);
+}
+
+.installer-row-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 100px;
+}
+
+.installer-row-version {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-family: 'Menlo', 'Monaco', 'SF Mono', monospace;
+}
+
+.installer-row-error {
+  color: var(--accent-red, #ef4444);
+  font-size: 11px;
+  margin-left: auto;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.installer-success {
+  color: var(--accent-green, #22c55e);
+  font-weight: 600;
+  margin: 0 0 10px;
+}
+
+.installer-error {
+  color: var(--accent-red, #ef4444);
+  font-size: 12px;
+  margin: 10px 0 0;
+  padding: 8px 12px;
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: 8px;
+}

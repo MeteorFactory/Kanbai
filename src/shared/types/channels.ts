@@ -458,6 +458,11 @@ export const IPC_CHANNELS = {
   DEVOPS_APPROVE: 'devops:approve',
   DEVOPS_GET_BUILD_LOG: 'devops:getBuildLog',
 
+  // Installer (cascade prerequisites)
+  INSTALLER_CHECK: 'installer:check',
+  INSTALLER_CASCADE: 'installer:cascade',
+  INSTALLER_PROGRESS: 'installer:progress',
+
   // Companion
   COMPANION_REGISTER: 'companion:register',
   COMPANION_CANCEL: 'companion:cancel',
