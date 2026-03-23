@@ -869,10 +869,13 @@ export function registerKanbanHandlers(ipcMain: IpcMain): void {
       writeKanbanTasks(data.workspaceId, tasks)
       bumpCompanionChangeVersion()
 
-      // Auto-create memory refactor ticket every 10 tickets (checks setting internally)
-      maybeCreateMemoryRefactorTicket(data.workspaceId, readKanbanTasks(data.workspaceId))
+      // Auto-create memory refactor ticket every N tickets (checks setting internally)
+      const memoryRefactorTask = maybeCreateMemoryRefactorTicket(data.workspaceId, readKanbanTasks(data.workspaceId))
+      if (memoryRefactorTask) {
+        bumpCompanionChangeVersion()
+      }
 
-      return task
+      return { task, memoryRefactorTask: memoryRefactorTask ?? undefined }
     },
   )
 

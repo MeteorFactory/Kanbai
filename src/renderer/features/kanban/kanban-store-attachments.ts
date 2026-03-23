@@ -63,7 +63,7 @@ export function createAcceptSplit(get: Get, set: Set) {
     // Create child tickets from split suggestions, inheriting metadata from the original
     const childIds: string[] = []
     for (const suggestion of task.splitSuggestions) {
-      const child = await window.kanbai.kanban.create({
+      const childResult = await window.kanbai.kanban.create({
         workspaceId: currentWorkspaceId,
         targetProjectId: task.targetProjectId,
         title: suggestion.title,
@@ -75,7 +75,7 @@ export function createAcceptSplit(get: Get, set: Set) {
         aiProvider: task.aiProvider,
         splitFromId: task.id,
       })
-      childIds.push(child.id)
+      childIds.push(childResult.task.id)
     }
 
     // Archive the original ticket instead of deleting — preserves audit trail

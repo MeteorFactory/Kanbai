@@ -1,5 +1,5 @@
 import { v4 as uuid } from 'uuid'
-import { readKanbanTasks, writeKanbanTasks, getNextTicketNumber } from '../../../mcp-server/lib/kanban-store'
+import { readKanbanTasks, writeKanbanTasks, getNextTicketNumber, maybeCreateMemoryRefactorTicket } from '../../../mcp-server/lib/kanban-store'
 import type { KanbanTask } from '../../../shared/types'
 import type { CompanionFeature, CompanionContext, CompanionResult, CompanionCommandDef } from '../../../shared/types/companion'
 
@@ -103,6 +103,10 @@ export const kanbanFeature: CompanionFeature = {
       }
       tasks.push(task)
       writeKanbanTasks(ctx.workspaceId, tasks)
+
+      // Auto-create memory refactor ticket (same as IPC handler)
+      maybeCreateMemoryRefactorTicket(ctx.workspaceId, readKanbanTasks(ctx.workspaceId))
+
       return { success: true, data: task }
     }
 

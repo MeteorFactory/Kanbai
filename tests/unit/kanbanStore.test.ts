@@ -207,7 +207,7 @@ describe('useKanbanStore', () => {
   describe('createTask', () => {
     it('appelle kanban.create et ajoute la tache au store', async () => {
       const newTask = makeTask({ id: 'new-1' })
-      mockKanbanApi.create.mockResolvedValue(newTask)
+      mockKanbanApi.create.mockResolvedValue({ task: newTask, memoryRefactorTask: undefined })
       mockKanbanApi.getConfig.mockResolvedValue(null)
 
       await useKanbanStore.getState().createTask('ws-1', 'Titre', 'Desc', 'medium', 'feature')
@@ -229,7 +229,7 @@ describe('useKanbanStore', () => {
 
     it('utilise feature comme type par defaut si non specifie', async () => {
       const newTask = makeTask()
-      mockKanbanApi.create.mockResolvedValue(newTask)
+      mockKanbanApi.create.mockResolvedValue({ task: newTask, memoryRefactorTask: undefined })
 
       await useKanbanStore.getState().createTask('ws-1', 'T', 'D', 'low')
 
@@ -240,7 +240,7 @@ describe('useKanbanStore', () => {
 
     it('passe isCtoTicket et aiProvider a la creation', async () => {
       const newTask = makeTask()
-      mockKanbanApi.create.mockResolvedValue(newTask)
+      mockKanbanApi.create.mockResolvedValue({ task: newTask, memoryRefactorTask: undefined })
 
       await useKanbanStore.getState().createTask('ws-1', 'CTO', 'D', 'high', 'bug', 'proj-1', true, 'claude')
 
@@ -398,7 +398,7 @@ describe('useKanbanStore', () => {
       const original = makeTask({ id: 'orig-1', title: 'Bug critique', priority: 'high', type: 'bug' })
       const duplicate = makeTask({ id: 'dup-1', title: 'Copy of Bug critique' })
       useKanbanStore.setState({ tasks: [original], currentWorkspaceId: 'ws-1' })
-      mockKanbanApi.create.mockResolvedValue(duplicate)
+      mockKanbanApi.create.mockResolvedValue({ task: duplicate, memoryRefactorTask: undefined })
 
       await useKanbanStore.getState().duplicateTask(original)
 
@@ -427,7 +427,7 @@ describe('useKanbanStore', () => {
       const original = makeTask({ description: 'Details importants', type: 'test', dueDate: 1234567890 })
       const dup = makeTask({ id: 'dup-2' })
       useKanbanStore.setState({ currentWorkspaceId: 'ws-1' })
-      mockKanbanApi.create.mockResolvedValue(dup)
+      mockKanbanApi.create.mockResolvedValue({ task: dup, memoryRefactorTask: undefined })
 
       await useKanbanStore.getState().duplicateTask(original)
 

@@ -65,14 +65,14 @@ describe('Kanban IPC Handlers', () => {
   })
 
   it('cree une tache avec statut par defaut TODO', async () => {
-    const task = await mockIpcMain._invoke('kanban:create', {
+    const result = await mockIpcMain._invoke('kanban:create', {
       workspaceId: 'ws-1',
       title: 'Ma tache',
       description: 'Description de la tache',
       priority: 'medium',
     })
 
-    expect(task).toMatchObject({
+    expect(result.task).toMatchObject({
       id: 'kanban-uuid-1',
       workspaceId: 'ws-1',
       title: 'Ma tache',
@@ -80,12 +80,12 @@ describe('Kanban IPC Handlers', () => {
       status: 'TODO',
       priority: 'medium',
     })
-    expect(task.createdAt).toBeDefined()
-    expect(task.updatedAt).toBeDefined()
+    expect(result.task.createdAt).toBeDefined()
+    expect(result.task.updatedAt).toBeDefined()
   })
 
   it('cree une tache avec un statut specifique', async () => {
-    const task = await mockIpcMain._invoke('kanban:create', {
+    const result = await mockIpcMain._invoke('kanban:create', {
       workspaceId: 'ws-1',
       title: 'En cours',
       description: 'Deja commencee',
@@ -93,7 +93,7 @@ describe('Kanban IPC Handlers', () => {
       status: 'WORKING',
     })
 
-    expect(task.status).toBe('WORKING')
+    expect(result.task.status).toBe('WORKING')
   })
 
   it('filtre les taches par workspaceId', async () => {
@@ -118,7 +118,7 @@ describe('Kanban IPC Handlers', () => {
   })
 
   it('met a jour une tache existante', async () => {
-    const task = await mockIpcMain._invoke('kanban:create', {
+    const result = await mockIpcMain._invoke('kanban:create', {
       workspaceId: 'ws-1',
       title: 'Original',
       description: 'Desc',
@@ -127,14 +127,14 @@ describe('Kanban IPC Handlers', () => {
 
     const updated = await mockIpcMain._invoke('kanban:update', {
       workspaceId: 'ws-1',
-      id: task.id,
+      id: result.task.id,
       status: 'DONE',
       title: 'Terminee',
     })
 
     expect(updated.status).toBe('DONE')
     expect(updated.title).toBe('Terminee')
-    expect(updated.updatedAt).toBeGreaterThanOrEqual(task.updatedAt)
+    expect(updated.updatedAt).toBeGreaterThanOrEqual(result.task.updatedAt)
   })
 
   it('echoue si on met a jour une tache inexistante', async () => {
@@ -144,14 +144,14 @@ describe('Kanban IPC Handlers', () => {
   })
 
   it('supprime une tache', async () => {
-    const task = await mockIpcMain._invoke('kanban:create', {
+    const result = await mockIpcMain._invoke('kanban:create', {
       workspaceId: 'ws-1',
       title: 'A supprimer',
       description: '',
       priority: 'low',
     })
 
-    await mockIpcMain._invoke('kanban:delete', { id: task.id, workspaceId: 'ws-1' })
+    await mockIpcMain._invoke('kanban:delete', { id: result.task.id, workspaceId: 'ws-1' })
 
     const list = await mockIpcMain._invoke('kanban:list', { workspaceId: 'ws-1' })
     expect(list).toHaveLength(0)

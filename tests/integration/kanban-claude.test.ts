@@ -663,7 +663,7 @@ describe('Kanban → Claude Integration (PTY interactif)', () => {
       })
 
       const newTask = makeTask({ id: 'task-new', status: 'TODO' })
-      mockKanbanCreate.mockResolvedValue(newTask)
+      mockKanbanCreate.mockResolvedValue({ task: newTask, memoryRefactorTask: undefined })
       mockKanbanUpdate.mockResolvedValue(undefined)
 
       await useKanbanStore.getState().createTask('ws-1', 'New task', 'desc', 'critical')

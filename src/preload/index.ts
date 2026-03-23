@@ -345,7 +345,7 @@ const api = {
   kanban: {
     list: (workspaceId: string) =>
       ipcRenderer.invoke(IPC_CHANNELS.KANBAN_LIST, { workspaceId }),
-    create: (task: Omit<KanbanTask, 'id' | 'createdAt' | 'updatedAt'> & { workspaceId: string }) =>
+    create: (task: Omit<KanbanTask, 'id' | 'createdAt' | 'updatedAt'> & { workspaceId: string }): Promise<{ task: KanbanTask; memoryRefactorTask?: KanbanTask }> =>
       ipcRenderer.invoke(IPC_CHANNELS.KANBAN_CREATE, task),
     update: (task: Partial<KanbanTask> & { id: string; workspaceId: string }) =>
       ipcRenderer.invoke(IPC_CHANNELS.KANBAN_UPDATE, task),

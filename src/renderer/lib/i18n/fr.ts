@@ -1089,6 +1089,7 @@ export const fr = {
   'kanban.prequalify': 'Pré-qualifier',
   'kanban.prequalifyRunning': 'Pré-qualification en cours...',
   'kanban.prequalifyFailed': 'Pré-qualification échouée',
+  'kanban.memoryRefactorCreated': 'Ticket de refonte mémoire IA créé automatiquement',
   'kanban.prequalifyErrorDetail': 'Cliquer pour voir le rapport d\'erreur',
   'kanban.prequalifySuggestions': 'Suggestions IA',
   'kanban.splitDetected': 'Découpage suggéré',

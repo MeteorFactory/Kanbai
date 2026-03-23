@@ -26,7 +26,7 @@ export function createCreateTask(get: Get, set: Set) {
       workspacePaused = kanbanConfig?.paused === true
     } catch { /* default to false */ }
 
-    const task: KanbanTask = await window.kanbai.kanban.create({
+    const createResult = await window.kanbai.kanban.create({
       workspaceId,
       targetProjectId,
       title,
@@ -37,12 +37,25 @@ export function createCreateTask(get: Get, set: Set) {
       isCtoTicket,
       aiProvider,
     })
+    const task = createResult.task
+    const memoryRefactorTask = createResult.memoryRefactorTask
 
     // Mark as prequalifying if enabled (in-memory flag, not persisted)
     if (prequalifyEnabled) {
       task.isPrequalifying = true
     }
-    set((state) => ({ tasks: [...state.tasks, task] }))
+    const newTasks = [task]
+    if (memoryRefactorTask) {
+      newTasks.push(memoryRefactorTask)
+    }
+    set((state) => ({ tasks: [...state.tasks, ...newTasks] }))
+
+    // Notify user about auto-created memory refactor ticket
+    if (memoryRefactorTask) {
+      const t = useI18n.getState().t
+      const ticketLabel = formatTicketLabel(memoryRefactorTask)
+      pushNotification('info', ticketLabel, t('kanban.memoryRefactorCreated'))
+    }
 
     if (prequalifyEnabled) {
     // Run prequalification in the background
@@ -104,7 +117,7 @@ export function createCreateTask(get: Get, set: Set) {
             // Auto-split: create child tickets inheriting metadata from the original
             const childIds: string[] = []
             for (const suggestion of successResult.splitSuggestions) {
-              const child = await window.kanbai.kanban.create({
+              const childResult = await window.kanbai.kanban.create({
                 workspaceId,
                 targetProjectId: task.targetProjectId,
                 title: suggestion.title,
@@ -116,7 +129,7 @@ export function createCreateTask(get: Get, set: Set) {
                 aiProvider: task.aiProvider,
                 splitFromId: task.id,
               })
-              childIds.push(child.id)
+              childIds.push(childResult.task.id)
             }
             // Archive the original ticket instead of deleting — preserves audit trail
             await window.kanbai.kanban.update({
@@ -279,7 +292,7 @@ export function createDuplicateTask(get: Get, set: Set) {
   return async (task: KanbanTask) => {
     const { currentWorkspaceId } = get()
     if (!currentWorkspaceId) return
-    const newTask: KanbanTask = await window.kanbai.kanban.create({
+    const createResult = await window.kanbai.kanban.create({
       workspaceId: currentWorkspaceId,
       targetProjectId: task.targetProjectId,
       title: `Copy of ${task.title}`,
@@ -293,6 +306,15 @@ export function createDuplicateTask(get: Get, set: Set) {
       question: task.question,
       comments: task.comments,
     })
-    set((state) => ({ tasks: [...state.tasks, newTask] }))
+    const newTasks = [createResult.task]
+    if (createResult.memoryRefactorTask) {
+      newTasks.push(createResult.memoryRefactorTask)
+    }
+    set((state) => ({ tasks: [...state.tasks, ...newTasks] }))
+    if (createResult.memoryRefactorTask) {
+      const t = useI18n.getState().t
+      const ticketLabel = formatTicketLabel(createResult.memoryRefactorTask)
+      pushNotification('info', ticketLabel, t('kanban.memoryRefactorCreated'))
+    }
   }
 }

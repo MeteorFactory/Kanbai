@@ -1089,6 +1089,7 @@ export const en = {
   'kanban.prequalify': 'Pre-qualify',
   'kanban.prequalifyRunning': 'Pre-qualifying...',
   'kanban.prequalifyFailed': 'Pre-qualification failed',
+  'kanban.memoryRefactorCreated': 'AI memory refactor ticket auto-created',
   'kanban.prequalifyErrorDetail': 'Click to view the error report',
   'kanban.prequalifySuggestions': 'AI Suggestions',
   'kanban.splitDetected': 'Split suggested',
