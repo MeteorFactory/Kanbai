@@ -133,8 +133,27 @@ export interface PipelineApprovalStep {
   comment: string
 }
 
+export interface TemplateRepository {
+  id: string
+  name: string
+  url: string
+  description: string
+  provider: 'github' | 'azure-devops'
+}
+
+export const DEFAULT_TEMPLATE_REPOSITORIES: TemplateRepository[] = [
+  {
+    id: 'meteorfactory-pipelines',
+    name: 'Pipelines',
+    url: 'https://github.com/MeteorFactory/Pipelines',
+    description: 'MeteorFactory reusable workflow templates with Azure Key Vault integration',
+    provider: 'github',
+  },
+]
+
 export interface DevOpsFile {
   version: 1
   connections: DevOpsConnection[]
   pipelineOrder?: Record<string, number[]>
+  templateRepositories?: TemplateRepository[]
 }

@@ -15,10 +15,11 @@ import {
   PipelineStatus,
   PipelineApproval,
   ApprovalStatus,
+  DEFAULT_TEMPLATE_REPOSITORIES,
 } from '../../shared/types'
 
 function defaultDevOpsFile(): DevOpsFile {
-  return { version: 1, connections: [] }
+  return { version: 1, connections: [], templateRepositories: DEFAULT_TEMPLATE_REPOSITORIES }
 }
 
 function getDevOpsPath(projectPath: string): string {

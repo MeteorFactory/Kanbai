@@ -15,6 +15,7 @@ vi.stubGlobal('fetch', mockFetch)
 
 import { registerDevOpsHandlers } from '../../src/main/ipc/devops'
 import type { DevOpsConnection, DevOpsFile } from '../../src/shared/types'
+import { DEFAULT_TEMPLATE_REPOSITORIES } from '../../src/shared/types'
 
 function createTestConnection(overrides: Partial<DevOpsConnection> = {}): DevOpsConnection {
   return {
@@ -83,7 +84,7 @@ describe('DevOps IPC Handlers', () => {
   it('devops:load retourne le fichier par defaut quand aucun fichier n existe', async () => {
     const result = await mockIpcMain._invoke('devops:load', { projectPath: TEST_DIR })
 
-    expect(result).toEqual({ version: 1, connections: [] })
+    expect(result).toEqual({ version: 1, connections: [], templateRepositories: DEFAULT_TEMPLATE_REPOSITORIES })
   })
 
   it('devops:load lit les donnees sauvegardees depuis le disque', async () => {
@@ -107,7 +108,7 @@ describe('DevOps IPC Handlers', () => {
 
     const result = await mockIpcMain._invoke('devops:load', { projectPath: TEST_DIR })
 
-    expect(result).toEqual({ version: 1, connections: [] })
+    expect(result).toEqual({ version: 1, connections: [], templateRepositories: DEFAULT_TEMPLATE_REPOSITORIES })
   })
 
   // --- DEVOPS_SAVE ---
