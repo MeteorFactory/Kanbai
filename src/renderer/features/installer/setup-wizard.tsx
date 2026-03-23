@@ -135,11 +135,11 @@ export function SetupWizard() {
           {isTerminalActive && (
             <div className="installer-terminal">
               <Terminal
-                cwd="~"
                 initialCommand={terminalCommand}
                 workspaceId={activeWorkspaceId}
                 isVisible={true}
                 fontSize={12}
+                isSplit={true}
                 onClose={handleTerminalClose}
               />
             </div>
