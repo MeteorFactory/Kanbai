@@ -100,6 +100,11 @@ export function SetupWizard() {
     setTerminalDone(true)
   }, [])
 
+  const handleBack = useCallback(() => {
+    setTerminalCommand(null)
+    setTerminalDone(false)
+  }, [])
+
   const handleRecheck = useCallback(() => {
     setTerminalCommand(null)
     setTerminalDone(false)
@@ -155,6 +160,11 @@ export function SetupWizard() {
                 {t('installer.installAll')}
               </button>
             </>
+          )}
+          {isTerminalActive && (
+            <button className="modal-btn modal-btn--secondary" onClick={handleBack}>
+              {t('installer.back')}
+            </button>
           )}
           {isTerminalActive && terminalDone && (
             <button className="modal-btn modal-btn--primary" onClick={handleRecheck}>
