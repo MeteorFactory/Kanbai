@@ -1,15 +1,22 @@
 name: Kanbai — Release
 
 on:
-  workflow_run:
-    workflows: ["Kanbai — CI"]
-    types: [completed]
+  push:
+    branches: [main]
+  pull_request:
     branches: [main]
   workflow_dispatch:
 
 jobs:
+  ci:
+    uses: MeteorFactory/Pipelines/.github/workflows/ci-electron.yml@main
+    with:
+      node-version: "22"
+      os-matrix: '["macos-latest", "windows-latest"]'
+
   release:
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    needs: [ci]
+    if: github.ref == 'refs/heads/main'
     uses: MeteorFactory/Pipelines/.github/workflows/release-electron.yml@main
     with:
       node-version: "22"
