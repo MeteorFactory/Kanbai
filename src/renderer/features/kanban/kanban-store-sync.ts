@@ -310,6 +310,7 @@ export function createSyncTasksFromFile(get: Get, set: Set) {
           termStore.setTabColor(tabId, '#fbbf24')
           termStore.setTabActivity(tabId, true)
           termStore.killTabProcesses(tabId)
+          termStore.clearTabSessions(tabId)
         }
       }
 

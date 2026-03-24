@@ -54,7 +54,8 @@ export function createSendToAi(get: Get, set: Set) {
             reuseSessionId = sessionId
           }
         } else if (!sessionId && tab.paneTree.type === 'leaf') {
-          // Tab exists but no session yet — fall through to create new tab
+          // Tab exists but session was killed (e.g. PENDING) — close the dead tab and create a new one
+          termStore.closeTab(existingTabId)
           const newTabIds = { ...get().kanbanTabIds }
           delete newTabIds[task.id]
           set({ kanbanTabIds: newTabIds })

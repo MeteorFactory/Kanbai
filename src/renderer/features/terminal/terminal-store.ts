@@ -52,6 +52,7 @@ interface TerminalTabActions {
   createPixelAgentsSplitTab: (workspaceId: string, cwd: string) => string
   closeTab: (id: string) => void
   killTabProcesses: (id: string) => void
+  clearTabSessions: (id: string) => void
   setActiveTab: (id: string) => void
   renameTab: (id: string, label: string) => void
   setTabColor: (id: string, color: string | null) => void
@@ -440,6 +441,16 @@ export const useTerminalTabStore = create<TerminalTabStore>((set, get) => ({
     for (const sessionId of collectSessionIds(tab.paneTree)) {
       window.kanbai.terminal.close(sessionId).catch(() => { /* best-effort */ })
     }
+  },
+
+  clearTabSessions: (id: string) => {
+    const clearSessions = (node: PaneNode): PaneNode => {
+      if (node.type === 'leaf') return { ...node, sessionId: null }
+      return { ...node, children: [clearSessions(node.children[0]), clearSessions(node.children[1])] }
+    }
+    set((state) => ({
+      tabs: state.tabs.map((t) => (t.id === id ? { ...t, paneTree: clearSessions(t.paneTree) } : t)),
+    }))
   },
 
   setActiveTab: (id: string) => {
