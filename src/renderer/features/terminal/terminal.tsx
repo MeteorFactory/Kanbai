@@ -215,23 +215,6 @@ export function Terminal({ cwd, shell, initialCommand, externalSessionId, worksp
     fitAddonRef.current = fitAddon
     searchAddonRef.current = searchAddon
 
-    // Prevent the browser native paste event from reaching xterm.js.
-    // Without this, Cmd+V triggers BOTH the custom key handler (which
-    // writes clipboard text to the PTY) AND xterm's internal paste
-    // listener (which sends the same text again via onData), causing
-    // the pasted text to appear twice.
-    // We use capture phase + stopImmediatePropagation because xterm
-    // registers its own paste listener in open(), so a bubbling listener
-    // added after open() would fire AFTER xterm's — too late.
-    const xtermTextarea = containerRef.current.querySelector('.xterm-helper-textarea')
-    const preventDuplicatePaste = (e: Event) => {
-      e.preventDefault()
-      e.stopImmediatePropagation()
-    }
-    if (xtermTextarea) {
-      xtermTextarea.addEventListener('paste', preventDuplicatePaste, true)
-    }
-
     // Track scroll position for scroll-to-bottom button
     let scrollViewport: Element | null = null
     let handleScroll: (() => void) | null = null
@@ -318,16 +301,11 @@ export function Terminal({ cwd, shell, initialCommand, externalSessionId, worksp
           return isMac ? false : true
         }
 
-        // Paste: Cmd+V (macOS) or Ctrl+Shift+V (Windows/Linux)
-        // Use toLowerCase() because Shift makes e.key uppercase on Windows
-        if (e.key.toLowerCase() === 'v' && ((isMac && modKey) || (!isMac && e.ctrlKey && e.shiftKey))) {
-          const text = window.kanbai.clipboard.readText()
-          if (text && sessionIdRef.current) {
-            // Use bracketed paste mode for safe pasting
-            window.kanbai.terminal.write(sessionIdRef.current, text)
-          }
-          return false
-        }
+        // Paste: handled natively by xterm.js via the DOM paste event.
+        // The Electron menu's role:'paste' triggers webContents.paste()
+        // on Cmd+V (macOS) / Ctrl+V (Windows), which fires a paste event
+        // that xterm picks up through its internal listener and forwards
+        // via onData → PTY. No custom interception needed here.
 
         return true
       })
@@ -482,9 +460,6 @@ export function Terminal({ cwd, shell, initialCommand, externalSessionId, worksp
         scrollViewport.removeEventListener('scroll', handleScroll)
       }
       resizeObserver.disconnect()
-      if (xtermTextarea) {
-        xtermTextarea.removeEventListener('paste', preventDuplicatePaste, true)
-      }
       cleanupDataRef.current?.()
       cleanupCloseRef.current?.()
       if (!externalSessionId && sessionIdRef.current) {
