@@ -327,10 +327,15 @@ describe('platform module', () => {
         expect(cmds.node.command).toBe('brew')
       })
 
-      it('does not include cargo or rtk on macOS', () => {
+      it('does not include cargo on macOS', () => {
         const cmds = getUpdateCommands()
         expect(cmds.cargo).toBeUndefined()
-        expect(cmds.rtk).toBeUndefined()
+      })
+
+      it('uses brew for rtk on macOS', () => {
+        const cmds = getUpdateCommands()
+        expect(cmds.rtk.command).toBe('brew')
+        expect(cmds.rtk.args).toContain('rtk')
       })
     }
   })

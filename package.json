@@ -28,7 +28,7 @@
     "pixel-agents:update": "cd vendor/pixel-agents && git pull && cd webview-ui && npm install && npm run build && cd ../../.. && node scripts/patch-pixel-agents-html.js",
     "rtk:setup": "bash scripts/setup-rtk.sh",
     "rtk:setup:windows": "powershell -ExecutionPolicy Bypass -File scripts/setup-rtk-windows.ps1",
-    "rtk:update": "cd vendor/rtk && git pull"
+    "rtk:update": "bash scripts/setup-rtk.sh"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.27.1",

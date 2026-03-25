@@ -61,6 +61,8 @@ export interface UpdateInfo {
   scope: 'global' | 'project' | 'unit'
   projectId?: string
   installSource?: string
+  packageManager?: string
+  binaryPath?: string
   canInstall?: boolean
   canUninstall?: boolean
 }

@@ -260,6 +260,9 @@ export function ToolsSettings({ settings, updateSetting, appVersion }: ToolsSett
                       </span>
                     )}
                     <span className="notification-item-scope">{update.scope}</span>
+                    {update.packageManager && update.installed && (
+                      <span className="notification-item-scope" title={update.binaryPath || ''}>{update.packageManager}{update.binaryPath ? ` — ${update.binaryPath}` : ''}</span>
+                    )}
                   </div>
                   <div className="notification-item-actions">
                     {update.installed && update.updateAvailable && (

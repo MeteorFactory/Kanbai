@@ -344,6 +344,7 @@ export function getUpdateCommands(): Record<string, { command: string; args: str
     npm_brew: { command: 'brew', args: ['upgrade', 'node'] },
     npm: { command: 'npm', args: ['install', '-g', 'npm@latest'] },
     claude: { command: 'npm', args: ['install', '-g', '@anthropic-ai/claude-code@latest'] },
+    rtk: { command: 'brew', args: ['upgrade', 'rtk'] },
   }
 }
 

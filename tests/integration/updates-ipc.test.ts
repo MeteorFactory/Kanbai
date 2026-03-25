@@ -250,18 +250,21 @@ describe('Update IPC Handlers', () => {
       }))
     })
 
-    it('installe rtk via git clone en mode release', async () => {
-      // which rtk → not found (not brew-managed)
-      // brew info → not found
-      // git clone → success
+    it('installe rtk via brew quand brew est disponible', async () => {
+      // which rtk → not found (not installed)
+      // which brew → found (brew available)
+      // brew info → not found (no brew rtk package yet)
+      // brew install → success
       mockExecFile.mockImplementation((cmd: string, args: string[]) => {
         if (cmd === (IS_WIN ? 'where' : 'which')) {
+          const target = args[0]
+          if (target === 'brew') return Promise.resolve({ stdout: '/opt/homebrew/bin/brew\n', stderr: '' })
           return Promise.reject(new Error('not found'))
         }
-        if (cmd === 'brew') {
+        if (cmd === 'brew' && args[0] === 'info') {
           return Promise.reject(new Error('not found'))
         }
-        if (cmd === 'git') {
+        if (cmd === 'brew' && args[0] === 'install') {
           return Promise.resolve({ stdout: '', stderr: '' })
         }
         return Promise.resolve({ stdout: '', stderr: '' })
@@ -274,18 +277,19 @@ describe('Update IPC Handlers', () => {
 
       expect(result).toEqual({ success: true })
 
-      // Verify git clone was called with the correct repo URL
-      const cloneCall = mockExecFile.mock.calls.find(
-        (call: unknown[]) => call[0] === 'git' && (call[1] as string[]).includes('clone'),
+      // Verify brew install was called
+      const brewCall = mockExecFile.mock.calls.find(
+        (call: unknown[]) => call[0] === 'brew' && (call[1] as string[])[0] === 'install',
       )
-      expect(cloneCall).toBeDefined()
-      const args = cloneCall![1] as string[]
-      expect(args).toContain('clone')
-      expect(args).toContain('--depth=1')
-      expect(args).toContain('https://github.com/rtk-ai/rtk.git')
+      expect(brewCall).toBeDefined()
+      expect((brewCall![1] as string[])).toContain('rtk')
     })
 
-    it('echoue pour rtk si git clone echoue', async () => {
+    it('installe rtk via curl quand brew est indisponible', async () => {
+      // which rtk → not found
+      // which brew → not found (no brew)
+      // brew info → not found
+      // sh -c curl → success
       mockExecFile.mockImplementation((cmd: string, args: string[]) => {
         if (cmd === (IS_WIN ? 'where' : 'which')) {
           return Promise.reject(new Error('not found'))
@@ -293,8 +297,8 @@ describe('Update IPC Handlers', () => {
         if (cmd === 'brew') {
           return Promise.reject(new Error('not found'))
         }
-        if (cmd === 'git' && args[0] === 'clone') {
-          return Promise.reject(new Error('git clone failed'))
+        if (cmd === 'sh') {
+          return Promise.resolve({ stdout: '', stderr: '' })
         }
         return Promise.resolve({ stdout: '', stderr: '' })
       })
@@ -304,10 +308,13 @@ describe('Update IPC Handlers', () => {
         scope: 'global',
       })
 
-      expect(result).toEqual({
-        success: false,
-        error: expect.stringContaining('git clone failed'),
-      })
+      expect(result).toEqual({ success: true })
+
+      // Verify curl install was called via sh
+      const shCall = mockExecFile.mock.calls.find(
+        (call: unknown[]) => call[0] === 'sh' && (call[1] as string[]).some((a: string) => a.includes('curl')),
+      )
+      expect(shCall).toBeDefined()
     })
 
     it('installe une mise a jour node', async () => {
@@ -500,12 +507,14 @@ describe('Update IPC Handlers', () => {
   })
 
   describe('uninstall', () => {
-    it('desinstalle rtk en supprimant le repertoire source', async () => {
-      // which rtk → found (system install, not brew)
+    it('desinstalle rtk en supprimant le binaire local', async () => {
+      const home = process.env.HOME || process.env.USERPROFILE || ''
+      const rtkBinPath = `${home}/.local/bin/rtk`
+      // which rtk → found in ~/.local/bin (curl install)
       // brew info → not found
       mockExecFile.mockImplementation((cmd: string) => {
         if (cmd === (IS_WIN ? 'where' : 'which')) {
-          return Promise.resolve({ stdout: '/usr/local/bin/rtk\n', stderr: '' })
+          return Promise.resolve({ stdout: `${rtkBinPath}\n`, stderr: '' })
         }
         if (cmd === 'brew') {
           return Promise.reject(new Error('not found'))
@@ -517,8 +526,8 @@ describe('Update IPC Handlers', () => {
 
       expect(result).toEqual({ success: true })
       expect(mockFsRm).toHaveBeenCalledWith(
-        expect.stringMatching(/vendor[/\\]rtk/),
-        expect.objectContaining({ recursive: true, force: true }),
+        rtkBinPath,
+        expect.objectContaining({ force: true }),
       )
     })
 
@@ -532,9 +541,10 @@ describe('Update IPC Handlers', () => {
     })
 
     it('envoie les notifications de statut pour la desinstallation', async () => {
+      const home = process.env.HOME || process.env.USERPROFILE || ''
       mockExecFile.mockImplementation((cmd: string) => {
         if (cmd === (IS_WIN ? 'where' : 'which')) {
-          return Promise.resolve({ stdout: '/usr/local/bin/rtk\n', stderr: '' })
+          return Promise.resolve({ stdout: `${home}/.local/bin/rtk\n`, stderr: '' })
         }
         if (cmd === 'brew') {
           return Promise.reject(new Error('not found'))

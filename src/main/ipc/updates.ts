@@ -772,65 +772,44 @@ async function getRemotePixelAgentsCommit(): Promise<string | null> {
   }
 }
 
-/** In dev, rtk source lives under vendor/. In release, under userData/. */
-function getRtkSourcePath(): string {
-  if (VITE_DEV_SERVER_URL) {
-    return path.join(__dirname, '../../vendor/rtk')
-  }
-  return path.join(app.getPath('userData'), 'vendor', 'rtk')
-}
-
 async function isRtkInstalled(): Promise<boolean> {
-  // Check vendor directory first (source-based install)
-  try {
-    const rtkPath = getRtkSourcePath()
-    await fs.access(path.join(rtkPath, 'Cargo.toml'))
-    return true
-  } catch {
-    // Fallback: check if rtk binary is in PATH (brew/system install)
-    return (await getCommandPath('rtk')) !== null
-  }
+  return (await getCommandPath('rtk')) !== null
 }
 
 async function getRtkVersion(): Promise<string> {
-  // Try binary version first
   const binaryVersion = await getVersion('rtk', ['--version'])
-  if (binaryVersion) return binaryVersion
-
-  // Fallback: read version from Cargo.toml in vendor source
-  try {
-    const cargoPath = path.join(getRtkSourcePath(), 'Cargo.toml')
-    const content = await fs.readFile(cargoPath, 'utf-8')
-    const match = content.match(/^version\s*=\s*"([^"]+)"/m)
-    return match?.[1] || 'installed'
-  } catch {
-    return 'installed'
-  }
+  return binaryVersion || 'installed'
 }
 
-async function getLocalRtkCommit(): Promise<string | null> {
-  try {
-    const repoPath = getRtkSourcePath()
-    const { stdout } = await enrichedExecFile(
-      'git', ['-C', repoPath, 'rev-parse', '--short=7', 'HEAD'], 5000,
-    )
-    return stdout.trim() || null
-  } catch {
-    return null
-  }
-}
+/**
+ * Detect how RTK was installed and return the package manager name.
+ * Checks: brew > ~/.local/bin (curl install) > ~/.cargo/bin (cargo) > system
+ */
+async function resolveRtkPackageManager(): Promise<{ packageManager: string; binaryPath: string | null }> {
+  const commandPath = await getCommandPath('rtk')
+  if (!commandPath) return { packageManager: 'unknown', binaryPath: null }
 
-async function getRemoteRtkCommit(): Promise<string | null> {
-  try {
-    const { stdout } = await enrichedExecFile(
-      'git', ['ls-remote', 'https://github.com/rtk-ai/rtk.git', 'HEAD'],
-      8000,
-    )
-    const hash = stdout.trim().split('\t')[0]
-    return hash?.substring(0, 7) || null
-  } catch {
-    return null
+  const home = process.env.HOME || process.env.USERPROFILE || ''
+
+  // Check brew first (macOS)
+  if (!IS_WIN) {
+    const rtkBrew = await findInstalledBrewPackage(['rtk'])
+    if (rtkBrew && isBrewBinPath(commandPath)) {
+      return { packageManager: 'brew', binaryPath: commandPath }
+    }
   }
+
+  // Check if installed via curl (to ~/.local/bin)
+  if (commandPath.startsWith(path.join(home, '.local', 'bin'))) {
+    return { packageManager: 'curl', binaryPath: commandPath }
+  }
+
+  // Check if installed via cargo
+  if (commandPath.startsWith(path.join(home, '.cargo', 'bin'))) {
+    return { packageManager: 'cargo', binaryPath: commandPath }
+  }
+
+  return { packageManager: 'system', binaryPath: commandPath }
 }
 
 async function checkToolUpdates(): Promise<UpdateInfo[]> {
@@ -931,27 +910,31 @@ async function checkToolUpdates(): Promise<UpdateInfo[]> {
     canUninstall: true,
   })
 
-  // rtk — directory-based detection (like pixel-agents), compare git commits
+  // rtk — binary-based detection with package manager tracking
   const rtkInstalled = await isRtkInstalled()
+  const rtkPkgInfo = await resolveRtkPackageManager()
 
   let rtkCurrentVersion = ''
   let rtkLatestVersion = ''
   let rtkUpdateAvailable = false
+  let rtkInstallSource: ToolInstallSource = 'unknown'
 
   if (rtkInstalled) {
-    const baseVersion = await getRtkVersion()
-    const [localCommit, remoteCommit] = await Promise.all([
-      getLocalRtkCommit(),
-      getRemoteRtkCommit(),
-    ])
+    rtkCurrentVersion = await getRtkVersion()
+    rtkLatestVersion = rtkCurrentVersion
 
-    rtkCurrentVersion = localCommit ? `${baseVersion} (${localCommit})` : baseVersion
-
-    if (localCommit && remoteCommit && localCommit !== remoteCommit) {
-      rtkUpdateAvailable = true
-      rtkLatestVersion = `${baseVersion} (${remoteCommit})`
+    // Determine install source from package manager
+    if (rtkPkgInfo.packageManager === 'brew') {
+      rtkInstallSource = 'brew-formula'
+      const latestBrew = await getLatestBrewVersion('rtk')
+      if (latestBrew && latestBrew !== rtkCurrentVersion) {
+        rtkUpdateAvailable = true
+        rtkLatestVersion = latestBrew
+      }
+    } else if (rtkPkgInfo.packageManager === 'cargo') {
+      rtkInstallSource = 'cargo'
     } else {
-      rtkLatestVersion = rtkCurrentVersion
+      rtkInstallSource = 'system'
     }
   }
 
@@ -962,7 +945,9 @@ async function checkToolUpdates(): Promise<UpdateInfo[]> {
     updateAvailable: rtkUpdateAvailable,
     installed: rtkInstalled,
     scope: 'global',
-    installSource: 'internal',
+    installSource: rtkInstallSource,
+    packageManager: rtkPkgInfo.packageManager,
+    binaryPath: rtkPkgInfo.binaryPath ?? undefined,
     canInstall: true,
     canUninstall: true,
   })
@@ -1302,38 +1287,29 @@ export function registerUpdateHandlers(ipcMain: IpcMain): void {
                 args = [isInstalled ? 'upgrade' : 'install', 'rtk']
               }
             } else {
-              // Use vendor/ setup script
-              if (VITE_DEV_SERVER_URL) {
-                // Dev mode: run the setup script from the project tree
-                const projectRoot = path.join(__dirname, '../..')
-                await crossExecFile(
-                  'bash',
-                  [path.join(projectRoot, 'scripts/setup-rtk.sh')],
-                  { timeout: 300000, env: enrichedEnv() },
-                )
-              } else {
-                // Release mode: clone/pull to userData
-                const sourcePath = getRtkSourcePath()
-                const parentDir = path.dirname(sourcePath)
-                await fs.mkdir(parentDir, { recursive: true })
-                
-                sendStatus('installing', 30)
-                if (fsSync.existsSync(path.join(sourcePath, '.git'))) {
-                  // Reset local modifications before pulling
-                  await crossExecFile('git', ['reset', '--hard', 'HEAD'], { cwd: sourcePath, timeout: 10000, env: enrichedEnv() })
-                  await crossExecFile('git', ['clean', '-fd'], { cwd: sourcePath, timeout: 10000, env: enrichedEnv() })
-                  await crossExecFile('git', ['pull'], { cwd: sourcePath, timeout: 60000, env: enrichedEnv() })
+              // Install via brew (preferred) or curl fallback
+              if (!IS_WIN) {
+                // Check if brew is available
+                const hasBrew = await getCommandPath('brew') !== null
+                if (hasBrew) {
+                  command = 'brew'
+                  args = [isInstalled ? 'upgrade' : 'install', 'rtk']
                 } else {
-                  // Clone for the first time
-                  await fs.rm(sourcePath, { recursive: true, force: true }).catch(() => {})
+                  // Use curl quick install script
+                  sendStatus('installing', 20)
                   await crossExecFile(
-                    'git', ['clone', '--depth=1', 'https://github.com/rtk-ai/rtk.git', sourcePath],
-                    { timeout: 60000, env: enrichedEnv() },
+                    'sh',
+                    ['-c', 'curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/install.sh | sh'],
+                    { timeout: 120000, env: enrichedEnv() },
                   )
+                  sendStatus('completed', 100)
+                  return { success: true }
                 }
+              } else {
+                // Windows: use cargo install
+                command = 'cargo'
+                args = ['install', '--git', 'https://github.com/rtk-ai/rtk']
               }
-              sendStatus('completed', 100)
-              return { success: true }
             }
             break
           }
@@ -1460,17 +1436,27 @@ export function registerUpdateHandlers(ipcMain: IpcMain): void {
                 args = ['uninstall', 'rtk']
               }
             } else {
-              // Remove vendor/ setup
-              if (VITE_DEV_SERVER_URL) {
-                // Dev mode: remove from vendor/
-                const vendorPath = path.join(__dirname, '../../vendor/rtk')
-                await fs.rm(vendorPath, { recursive: true, force: true })
+              // Remove binary directly based on detected path
+              const rtkPath = await getCommandPath('rtk')
+              if (rtkPath) {
+                const home = process.env.HOME || process.env.USERPROFILE || ''
+                // Only remove if in user-controlled locations (~/.local/bin or ~/.cargo/bin)
+                if (rtkPath.startsWith(path.join(home, '.local', 'bin')) || rtkPath.startsWith(path.join(home, '.cargo', 'bin'))) {
+                  await fs.rm(rtkPath, { force: true })
+                  sendStatus('completed')
+                  return { success: true }
+                }
+                // If installed via cargo, use cargo uninstall
+                if (rtkPath.startsWith(path.join(home, '.cargo', 'bin'))) {
+                  command = 'cargo'
+                  args = ['uninstall', 'rtk']
+                } else {
+                  throw new Error(`Cannot uninstall RTK from ${rtkPath} — uninstall manually`)
+                }
               } else {
-                // Release mode: remove cloned source
-                await fs.rm(getRtkSourcePath(), { recursive: true, force: true }).catch(() => {})
+                sendStatus('completed')
+                return { success: true }
               }
-              sendStatus('completed')
-              return { success: true }
             }
             break
           }
