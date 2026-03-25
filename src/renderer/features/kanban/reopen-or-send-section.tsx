@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react'
 import { useI18n } from '../../lib/i18n'
 import type { KanbanTask, KanbanComment } from '../../../shared/types/index'
+import { useKanbanStore } from './kanban-store'
 
 export function ReopenOrSendSection({
   task,
@@ -15,9 +16,23 @@ export function ReopenOrSendSection({
   const canReopen = task.status === 'DONE' || task.status === 'FAILED' || task.status === 'PENDING'
   const [reopenMode, setReopenMode] = useState(false)
   const [reopenComment, setReopenComment] = useState('')
+  const kanbanTabIds = useKanbanStore((s) => s.kanbanTabIds)
+  const reactivateIfDone = useKanbanStore((s) => s.reactivateIfDone)
 
   const handleReopen = useCallback(() => {
     const text = reopenComment.trim()
+    setReopenComment('')
+    setReopenMode(false)
+
+    // If the ticket is DONE and has an open terminal, write the message
+    // directly to that terminal and reactivate the ticket
+    const existingTabId = kanbanTabIds[task.id]
+    if (task.status === 'DONE' && existingTabId) {
+      reactivateIfDone(existingTabId, text || undefined, { skipGracePeriod: true })
+      return
+    }
+
+    // No open terminal — fall through to full sendToAi flow
     if (text) {
       const newComment: KanbanComment = {
         id: crypto.randomUUID(),
@@ -26,10 +41,8 @@ export function ReopenOrSendSection({
       }
       onUpdate({ comments: [...(task.comments ?? []), newComment] })
     }
-    setReopenComment('')
-    setReopenMode(false)
     onSendToAi()
-  }, [reopenComment, task.comments, onUpdate, onSendToAi])
+  }, [reopenComment, task.id, task.status, task.comments, kanbanTabIds, reactivateIfDone, onUpdate, onSendToAi])
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {

@@ -109,7 +109,7 @@ export function createHandleTabClosed(get: Get, set: Set) {
 }
 
 export function createReactivateIfDone(get: Get, set: Set) {
-  return (tabId: string, message?: string) => {
+  return (tabId: string, message?: string, options?: { skipGracePeriod?: boolean }) => {
     const { kanbanTabIds } = get()
     const taskId = Object.keys(kanbanTabIds).find((id) => kanbanTabIds[id] === tabId)
     if (!taskId || reactivatingTaskIds.has(taskId)) return
@@ -137,8 +137,11 @@ export function createReactivateIfDone(get: Get, set: Set) {
     // Grace period: don't reactivate a ticket marked DONE less than 30s ago.
     // This prevents accidental reactivation when the user presses Enter
     // right after an AI agent finishes and marks the ticket as DONE.
-    const REACTIVATION_GRACE_PERIOD_MS = 30_000
-    if (task.updatedAt && Date.now() - task.updatedAt < REACTIVATION_GRACE_PERIOD_MS) return
+    // Skip the grace period when the user explicitly reopens from the kanban UI.
+    if (!options?.skipGracePeriod) {
+      const REACTIVATION_GRACE_PERIOD_MS = 30_000
+      if (task.updatedAt && Date.now() - task.updatedAt < REACTIVATION_GRACE_PERIOD_MS) return
+    }
 
     const isCurrentWorkspace = workspaceId === currentWorkspaceId
 
@@ -169,8 +172,20 @@ export function createReactivateIfDone(get: Get, set: Set) {
       }))
     }
 
-    // Reset tab color to provider detection color
     const termStore = useTerminalTabStore.getState()
+
+    // Write the message to the terminal if provided
+    if (commentText) {
+      const tab = termStore.tabs.find((t) => t.id === tabId)
+      if (tab) {
+        const sessionId = tab.paneTree.type === 'leaf' ? tab.paneTree.sessionId : null
+        if (sessionId) {
+          window.kanbai.terminal.write(sessionId, commentText + '\r')
+        }
+      }
+    }
+
+    // Reset tab color to provider detection color
     const providerColor = AI_PROVIDERS[task.aiProvider ?? 'claude']?.detectionColor ?? null
     termStore.setTabColor(tabId, providerColor)
 

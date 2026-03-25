@@ -37,7 +37,7 @@ export interface KanbanActions {
   attachFromClipboard: (taskId: string, dataBase64: string, filename: string, mimeType: string) => Promise<void>
   removeAttachment: (taskId: string, attachmentId: string) => Promise<void>
   handleTabClosed: (tabId: string) => void
-  reactivateIfDone: (tabId: string, message?: string) => void
+  reactivateIfDone: (tabId: string, message?: string, options?: { skipGracePeriod?: boolean }) => void
   acceptSplit: (taskId: string) => Promise<void>
   dismissSplit: (taskId: string) => void
   applyCompanionUpdate: (task: KanbanTask) => void
