@@ -44,7 +44,7 @@ Three-process Electron model:
 
 1. **Main Process** (`src/main/`) — Node.js, full OS access
    - `index.ts` — App lifecycle, BrowserWindow creation
-   - `ipc/` — IPC handlers (1 file per domain, 32 handlers)
+   - `ipc/` — IPC handlers (1 file per domain, 40 handler files)
    - `services/` — storage.ts (StorageService singleton), healthCheckScheduler, notificationService, appUpdateState, activityHooks (AI provider hooks), ai-cli, pixel-agents-service, pixel-agents-assets, companion-server (AES-256-GCM encrypted data server), database/ (connection, queries, backup, crypto, NL queries, drivers/), packages/ (analysis, NL queries)
 
 2. **Preload** (`src/preload/`) — Bridge between processes
@@ -54,6 +54,7 @@ Three-process Electron model:
 3. **Renderer** (`src/renderer/`) — Chromium, sandboxed
    - Feature-based architecture: `features/` contains 26+ self-contained modules (terminal, workspace, claude, kanban, database, git, healthcheck, devops, packages, mcp, settings, skills-store, companion, notes, notifications, command-palette, prompts, search, ssh, etc.)
    - Each feature colocates its components, hooks, and store
+   - Features: terminal, workspace, claude, kanban, database, git, healthcheck, devops, code-analysis, packages, api-tester, mcp, files, updates, pixel-agents, multi-agent, settings, skills-store, companion, notes, ssh, installer, notifications, command-palette, prompts, search
    - `shared/ui/` — Base UI components (ConfirmModal, ContextMenu, ErrorBoundary...)
    - `shared/stores/` — Shared stores (notificationStore, viewStore)
    - `shared/layout/` — Layout components (ResizeDivider, SplitContainer, TitleBar)
@@ -84,7 +85,7 @@ Three-process Electron model:
 
 ### IPC Domains
 
-terminal, workspace, project, claude, kanban, git, filesystem, session, app, database, packages, analysis, ssh, healthcheck, devops, mcp, api, updates, appUpdate, workspaceEnv, claudeMemory, claudeDefaults, codexConfig, copilotConfig, geminiConfig, gitConfig, namespace, aiProvider, pixel-agents, skillsStore, companion, notes
+terminal, workspace, project, claude, kanban, git, filesystem, session, app, database, packages, analysis, ssh, healthcheck, devops, mcp, api, updates, appUpdate, workspaceEnv, claudeMemory, claudeDefaults, codexConfig, copilotConfig, geminiConfig, gitConfig, namespace, aiProvider, pixel-agents, skillsStore, companion, notes, installer, prompts
 
 ## State Management
 
@@ -123,7 +124,9 @@ Feature-local stores are colocated (e.g., `features/terminal/terminal-store.ts`)
 - **Companion** — External companion API pairing and registration system
 - **Notes** — Per-workspace note management with image support (paste, drag-drop, resize)
 - **SSH** — Remote SSH connection management
-- **Makefile Runner** — Makefile target buttons attached to terminal tabs (named "projectName - target")
+- **Installer** — Node.js package installer
+- **Prompts** — Prompt templates management
+- **Makefile Runner** — Makefile target buttons attached to terminal tabs
 
 ## AI Provider Integration
 

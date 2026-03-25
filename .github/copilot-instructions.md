@@ -42,7 +42,7 @@ When generating shell scripts or wrapper scripts, never use heredoc syntax insid
 
 Three-process Electron model:
 
-- **Main** (`src/main/`) — Node.js, IPC handlers in `ipc/` (32 handlers), services in `services/` (storage, healthCheck, notifications, appUpdateState, activityHooks, ai-cli, pixel-agents-service, pixel-agents-assets, companion-server [AES-256-GCM encrypted data server], database/ [connection, queries, backup, crypto, NL, drivers/], packages/ [analysis, NL])
+- **Main** (`src/main/`) — Node.js, IPC handlers in `ipc/` (40 handler files), services in `services/` (storage, healthCheck, notifications, appUpdateState, activityHooks, ai-cli, pixel-agents-service, pixel-agents-assets, companion-server [AES-256-GCM encrypted data server], database/ [connection, queries, backup, crypto, NL, drivers/], packages/ [analysis, NL])
 - **Preload** (`src/preload/`) — contextBridge, exposes `window.kanbai` API
 - **Renderer** (`src/renderer/`) — Feature-based architecture: `features/` with 26+ self-contained modules (terminal, workspace, claude, kanban, database, git, healthcheck, devops, packages, mcp, settings, skills-store, companion, notes, notifications, command-palette, prompts, search, ssh...). Each feature colocates components, hooks, and store. `shared/ui/` for base UI components, `shared/stores/` for shared stores, `shared/layout/` for layout components. `lib/stores/` for domain Zustand stores (14 stores)
 - **Shared** (`src/shared/`) — All types in `types/index.ts`, constants in `constants/`
@@ -62,7 +62,7 @@ Three-process Electron model:
 - Request-response: `ipcRenderer.invoke` / `ipcMain.handle`
 - Events only: `ipcRenderer.send` / `ipcMain.on`
 - Preload API: `window.kanbai.{domain}.{method}()`
-- Domains: terminal, workspace, project, claude, kanban, git, filesystem, session, app, database, packages, analysis, ssh, healthcheck, devops, mcp, api, updates, appUpdate, workspaceEnv, claudeMemory, claudeDefaults, codexConfig, copilotConfig, geminiConfig, gitConfig, namespace, aiProvider, pixel-agents, skillsStore, companion, notes
+- Domains: terminal, workspace, project, claude, kanban, git, filesystem, session, app, database, packages, analysis, ssh, healthcheck, devops, mcp, api, updates, appUpdate, workspaceEnv, claudeMemory, claudeDefaults, codexConfig, copilotConfig, geminiConfig, gitConfig, namespace, aiProvider, pixel-agents, skillsStore, companion, notes, installer, prompts
 
 ## State Management
 
@@ -93,6 +93,8 @@ Three-process Electron model:
 - Companion API pairing and registration
 - Workspace notes (with image support: paste, drag-drop, resize)
 - SSH remote connection management
+- Installer (Node.js package installer)
+- Prompt templates management
 - Makefile runner (terminal tab naming "projectName - target", button attachment)
 
 ## AI Provider Integration
