@@ -47,7 +47,7 @@ When generating shell scripts or wrapper scripts, never use heredoc syntax insid
 src/
   main/              # Main process (Node.js) — app lifecycle, IPC handlers, services
     index.ts         # App entry point, BrowserWindow creation
-    ipc/             # IPC handlers (1 file per domain, 32 handlers)
+    ipc/             # IPC handlers (1 file per domain, 40 handler files)
     services/        # Business logic services
       storage.ts     # StorageService singleton (~/.kanbai/data.json)
       healthCheckScheduler.ts
@@ -66,9 +66,10 @@ src/
     features/        # Feature-based modules (26+ self-contained features)
       terminal/      # Terminal emulator (components, hooks, store)
       workspace/     # Workspace/project management
-      claude/        # Claude AI integration (nested: agents, ai-providers, rules, settings)
+      claude/        # Claude AI integration (nested: agents, ai-providers, rules, settings, hooks, plugins)
       kanban/        # Kanban board
       database/      # Database explorer (nested: connection, nl-chat, query)
+      installer/     # Node.js package installer
       git/           # Git operations
       healthcheck/   # Health monitoring
       devops/        # DevOps CI/CD panel
@@ -135,7 +136,7 @@ Each feature module is self-contained with colocated components, hooks, and stor
 
 ### IPC Domains
 
-terminal, workspace, project, claude, kanban, git, filesystem, session, app, database, packages, analysis, ssh, healthcheck, devops, mcp, api, updates, appUpdate, workspaceEnv, claudeMemory, claudeDefaults, codexConfig, copilotConfig, geminiConfig, gitConfig, namespace, aiProvider, pixel-agents, skillsStore, companion, notes
+terminal, workspace, project, claude, kanban, git, filesystem, session, app, database, packages, analysis, ssh, healthcheck, devops, mcp, api, updates, appUpdate, workspaceEnv, claudeMemory, claudeDefaults, codexConfig, copilotConfig, geminiConfig, gitConfig, namespace, aiProvider, pixel-agents, skillsStore, companion, notes, installer, prompts
 
 ## State Management
 
@@ -155,7 +156,7 @@ Feature-local stores are colocated in their feature directory (e.g., `features/t
 |---------|-------------|-------|------------|
 | Terminal | terminal.ts | terminalTabStore | Terminal, TerminalArea, TabBar |
 | Workspace/Project | workspace.ts, project.ts | workspaceStore | Sidebar, WorkspaceItem, ProjectItem |
-| Claude Integration | claude.ts, claudeDefaults.ts, claudeMemory.ts | claudeStore | ClaudeSessionPanel, ClaudeInfoPanel, AutoClauder |
+| Claude Integration | claude.ts, claudeDefaults.ts, claudeMemory.ts, claude-assets-handler.ts, claude-config-handler.ts, claude-hooks-handler.ts, claude-plugins.ts | claudeStore | ClaudeSessionPanel, ClaudeInfoPanel, AutoClauder |
 | Kanban Board | kanban.ts | kanbanStore | KanbanBoard (with PDF preview, AI provider/model display) |
 | Git | git.ts, gitConfig.ts | — | GitPanel, FileDiffViewer |
 | Database Explorer | database.ts | databaseStore, databaseTabStore | DatabaseExplorer, DatabaseSidebar, DatabaseQueryArea |
@@ -175,6 +176,8 @@ Feature-local stores are colocated in their feature directory (e.g., `features/t
 | Companion | companion.ts | companionStore | CompanionIndicator |
 | Notes | notes.ts | notesStore | NotesPanel (with image support: paste, drag-drop, resize) |
 | SSH | ssh.ts | — | — |
+| Installer | installer.ts | — | InstallerPanel |
+| Prompts | prompts-handler.ts | — | PromptsPanel |
 | Makefile Runner | — | — | Makefile target buttons attached to terminal tabs |
 
 ## AI Provider Integration
@@ -217,6 +220,13 @@ Animated AI characters that visually represent active AI sessions:
 - Cards display update time (hours/minutes) and AI provider/model used
 - PDF preview in ticket attachments
 - Worktree isolation: each ticket runs in its own git worktree branch
+
+## Design System
+
+Kanbai Brand Identity v1.0 applied across the entire application:
+- Consistent color palette, typography, and spacing via CSS custom properties
+- Provider-colored accents for each AI tool (orange/green/pink/blue)
+- macOS-native feel with vibrancy and system fonts
 
 ## Design System
 
@@ -302,11 +312,9 @@ npm run rtk:update           # Update RTK
 | Persistence | JSON files (StorageService) | SQLite, IndexedDB |
 | Dev server | Vite + vite-plugin-electron | electron-vite |
 | Packaging | electron-builder | Electron Forge |
-| Terminal backend | node-pty | No alternatives considered |
+| Terminal backend | node-pty | — |
 | Code editor | Monaco Editor | CodeMirror |
-| Git panel | Multi-project dashboard | Single-project view |
-| Code analysis | Multi-project with parallel runs | Single-project |
-| CI/CD | GitHub Actions, auto-increment patch version | Manual versioning |
+| CI/CD | GitHub Actions, auto-increment patch | Manual versioning |
 
 ## Workflow
 

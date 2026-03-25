@@ -343,6 +343,9 @@ Full project architecture, stack, IPC conventions, features, and structure are i
 - Conventional Commits for git messages (in French)
 - No Co-Authored-By trailers in commits
 - Build: Vite 7 + vite-plugin-electron (NOT electron-vite)
+- Files: `kebab-case.ts`
+- Small functions (< 30 lines), max 3 nesting levels
+- CSS custom properties (no Tailwind, no CSS modules)
 
 ## Workflow Orchestration
 

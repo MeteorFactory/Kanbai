@@ -33,7 +33,7 @@ Kanbai is an AI-enhanced desktop terminal built with Electron. It combines a ful
 src/
   main/              # Main process (Node.js) — app lifecycle, IPC handlers, services
     index.ts         # App entry point, BrowserWindow creation
-    ipc/             # IPC handlers (1 file per domain, 32 handlers)
+    ipc/             # IPC handlers (1 file per domain, 40 handler files)
     services/        # Business logic services
       storage.ts     # StorageService singleton (~/.kanbai/data.json)
       healthCheckScheduler.ts
@@ -71,6 +71,7 @@ src/
       companion/     # Companion API integration
       notes/         # Workspace notes
       ssh/           # SSH connections
+      installer/     # Node.js package installer
       notifications/ # Toast & notification center
       command-palette/ # Command palette
       prompts/       # Prompt templates
@@ -115,7 +116,9 @@ Each feature module in `features/` is self-contained with its own components, ho
 
 ### IPC Domains
 
-terminal, workspace, project, claude, kanban, git, filesystem, session, app, database, packages, analysis, ssh, healthcheck, devops, mcp, api, updates, appUpdate, workspaceEnv, claudeMemory, claudeDefaults, codexConfig, copilotConfig, geminiConfig, gitConfig, namespace, aiProvider, pixel-agents, skillsStore, companion, notes
+terminal, workspace, project, claude, kanban, git, filesystem, session, app, database, packages, analysis, ssh, healthcheck, devops, mcp, api, updates, appUpdate, workspaceEnv, claudeMemory, claudeDefaults, codexConfig, copilotConfig, geminiConfig, gitConfig, namespace, aiProvider, pixel-agents, skillsStore, companion, notes, installer, prompts
+
+Claude-specific sub-handlers: claude-assets-handler, claude-config-handler, claude-hooks-handler, claude-plugins. Project sub-handlers: project-handler, project-scanning-handler.
 
 ## Security Defaults
 
@@ -143,7 +146,7 @@ Feature-local stores are colocated in their feature directory (e.g., `features/t
 |---------|-------------|-------|----------------|
 | Terminal | terminal.ts | terminalTabStore | Terminal, TerminalArea, TabBar |
 | Workspace/Project | workspace.ts, project.ts | workspaceStore | Sidebar, WorkspaceItem, ProjectItem |
-| Claude Integration | claude.ts, claudeDefaults.ts, claudeMemory.ts | claudeStore | ClaudeSessionPanel, ClaudeInfoPanel, AutoClauder |
+| Claude Integration | claude.ts, claudeDefaults.ts, claudeMemory.ts, claude-assets-handler.ts, claude-config-handler.ts, claude-hooks-handler.ts, claude-plugins.ts | claudeStore | ClaudeSessionPanel, ClaudeInfoPanel, AutoClauder |
 | Kanban Board | kanban.ts | kanbanStore | KanbanBoard (PDF preview, AI provider/model display) |
 | Git | git.ts, gitConfig.ts | — | GitPanel, FileDiffViewer |
 | Database Explorer | database.ts | databaseStore, databaseTabStore | DatabaseExplorer, DatabaseSidebar, DatabaseQueryArea |
@@ -163,6 +166,8 @@ Feature-local stores are colocated in their feature directory (e.g., `features/t
 | Companion | companion.ts | companionStore | CompanionIndicator |
 | Notes | notes.ts | notesStore | NotesPanel (images: paste, drag-drop, resize) |
 | SSH | ssh.ts | — | — |
+| Installer | installer.ts | — | InstallerPanel |
+| Prompts | prompts-handler.ts | — | PromptsPanel |
 
 ## Data Persistence
 
