@@ -71,7 +71,7 @@ export function usePrompts() {
     if (searchQuery) {
       const q = searchQuery.toLowerCase()
       result = result.filter(
-        (t) => t.name.toLowerCase().includes(q) || t.content.toLowerCase().includes(q),
+        (t) => (t.name ?? '').toLowerCase().includes(q) || (t.content ?? '').toLowerCase().includes(q),
       )
     }
     return result.sort((a, b) => a.name.localeCompare(b.name))

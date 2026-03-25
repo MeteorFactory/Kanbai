@@ -301,8 +301,8 @@ export function KanbanBoard() {
     return tasks.filter((t) => {
       if (searchQuery) {
         const q = searchQuery.toLowerCase()
-        const matchesTitle = t.title.toLowerCase().includes(q)
-        const matchesDescription = t.description.toLowerCase().includes(q)
+        const matchesTitle = (t.title ?? '').toLowerCase().includes(q)
+        const matchesDescription = (t.description ?? '').toLowerCase().includes(q)
         const matchesTicketNumber =
           t.ticketNumber != null &&
           (String(t.ticketNumber).includes(q) ||

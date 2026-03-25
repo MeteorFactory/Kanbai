@@ -62,9 +62,9 @@ export function useSkillsStore({ projectPath, installedSkillNames, onInstalled }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase()
       result = result.filter((s) =>
-        s.name.toLowerCase().includes(q) ||
-        s.description.toLowerCase().includes(q) ||
-        s.filename.toLowerCase().includes(q)
+        (s.name ?? '').toLowerCase().includes(q) ||
+        (s.description ?? '').toLowerCase().includes(q) ||
+        (s.filename ?? '').toLowerCase().includes(q)
       )
     }
     return result
