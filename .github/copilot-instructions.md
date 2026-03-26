@@ -44,7 +44,7 @@ Three-process Electron model:
 
 - **Main** (`src/main/`) — Node.js, IPC handlers in `ipc/` (40 handler files), services in `services/` (storage, healthCheck, notifications, appUpdateState, activityHooks, ai-cli, pixel-agents-service, pixel-agents-assets, companion-server [AES-256-GCM encrypted data server], database/ [connection, queries, backup, crypto, NL, drivers/], packages/ [analysis, NL])
 - **Preload** (`src/preload/`) — contextBridge, exposes `window.kanbai` API
-- **Renderer** (`src/renderer/`) — Feature-based architecture: `features/` with 26+ self-contained modules (terminal, workspace, claude, kanban, database, git, healthcheck, devops, packages, mcp, settings, skills-store, companion, notes, notifications, command-palette, prompts, search, ssh...). Each feature colocates components, hooks, and store. `shared/ui/` for base UI components, `shared/stores/` for shared stores, `shared/layout/` for layout components. `lib/stores/` for domain Zustand stores (14 stores)
+- **Renderer** (`src/renderer/`) — Feature-based architecture: `features/` with 26 self-contained modules (terminal, workspace, claude, kanban, database, git, healthcheck, devops, code-analysis, packages, api-tester, mcp, files, updates, pixel-agents, multi-agent, settings, skills-store, companion, notes, ssh, installer, notifications, command-palette, prompts, search). Each feature colocates components, hooks, and store. `shared/ui/` for base UI components, `shared/stores/` for shared stores, `shared/layout/` for layout components. `lib/stores/` for domain Zustand stores (14 stores)
 - **Shared** (`src/shared/`) — All types in `types/index.ts`, constants in `constants/`
 
 ## Security (Mandatory)

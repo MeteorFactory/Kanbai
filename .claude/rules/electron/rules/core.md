@@ -49,7 +49,7 @@ src/
     assets/          # Static assets (rule-templates)
   preload/           # Preload scripts — contextBridge, exposes window.kanbai
   renderer/          # Renderer process (React + Zustand)
-    features/        # Feature-based modules (26+ features)
+    features/        # Feature-based modules (26 features)
       terminal/      # Terminal emulator (components, hooks, store)
       workspace/     # Workspace/project management
       claude/        # Claude AI integration (nested features: agents, ai-providers, rules, settings)

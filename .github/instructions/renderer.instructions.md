@@ -6,7 +6,7 @@ applyTo: "src/renderer/**"
 
 ## Architecture
 
-- Feature-based architecture: `src/renderer/features/` with 26+ self-contained modules
+- Feature-based architecture: `src/renderer/features/` with 26 self-contained modules
 - Each feature colocates its components, hooks, and store (e.g., `features/terminal/use-terminal.ts`, `features/terminal/terminal-store.ts`)
 - Shared UI primitives: `src/renderer/shared/ui/` (ConfirmModal, ContextMenu, ErrorBoundary...)
 - Shared stores: `src/renderer/shared/stores/` (notificationStore, viewStore)

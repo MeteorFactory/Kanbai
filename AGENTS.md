@@ -63,7 +63,7 @@ src/
     assets/          # Static assets (rule-templates)
   preload/           # Preload scripts — contextBridge, exposes window.kanbai
   renderer/          # Renderer process (React + Zustand)
-    features/        # Feature-based modules (26+ self-contained features)
+    features/        # Feature-based modules (26 self-contained features)
       terminal/      # Terminal emulator (components, hooks, store)
       workspace/     # Workspace/project management
       claude/        # Claude AI integration (nested: agents, ai-providers, rules, settings, hooks, plugins)
@@ -228,13 +228,6 @@ Kanbai Brand Identity v1.0 applied across the entire application:
 - Provider-colored accents for each AI tool (orange/green/pink/blue)
 - macOS-native feel with vibrancy and system fonts
 
-## Design System
-
-Kanbai Brand Identity v1.0 applied across the entire application:
-- Consistent color palette, typography, and spacing via CSS custom properties
-- Provider-colored accents for each AI tool (orange/green/pink/blue)
-- macOS-native feel with vibrancy and system fonts
-
 ## Data Persistence
 
 | Path | Purpose |
@@ -245,7 +238,6 @@ Kanbai Brand Identity v1.0 applied across the entire application:
 | `~/.kanbai/notes-workspace/{workspaceId}.json` | Per-workspace notes (including embedded images) |
 | `~/.kanbai/envs/{Name}/` | Workspace environment root |
 | `~/.kanbai/hooks/` | Shared activity and automation hooks |
-| `src/shared/types/index.ts` | Main TypeScript type definitions |
 
 ## Code Conventions
 

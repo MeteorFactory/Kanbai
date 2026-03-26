@@ -52,7 +52,7 @@ Three-process Electron model:
    - Domain-grouped methods (terminal, workspace, project, fs, git, claude, kanban, database, etc.)
 
 3. **Renderer** (`src/renderer/`) — Chromium, sandboxed
-   - Feature-based architecture: `features/` contains 26+ self-contained modules (terminal, workspace, claude, kanban, database, git, healthcheck, devops, packages, mcp, settings, skills-store, companion, notes, notifications, command-palette, prompts, search, ssh, etc.)
+   - Feature-based architecture: `features/` contains 26 self-contained modules
    - Each feature colocates its components, hooks, and store
    - Features: terminal, workspace, claude, kanban, database, git, healthcheck, devops, code-analysis, packages, api-tester, mcp, files, updates, pixel-agents, multi-agent, settings, skills-store, companion, notes, ssh, installer, notifications, command-palette, prompts, search
    - `shared/ui/` — Base UI components (ConfirmModal, ContextMenu, ErrorBoundary...)
