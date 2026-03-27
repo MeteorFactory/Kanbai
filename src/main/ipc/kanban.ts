@@ -219,6 +219,7 @@ try {
     }
   }
   "WORKING" {
+    Auto-CommitWorktree
     node -e "
 const reason = 'RAPPEL: Tu n as pas mis a jour le ticket kanban !\\n'
   + 'Fichier: ' + process.env.KANBAI_KANBAN_FILE + '\\n'
@@ -344,7 +345,8 @@ try {
     fi
     ;;
   WORKING)
-    # Claude forgot to update the ticket — block and remind
+    # Claude forgot to update the ticket — auto-commit any work first, then block and remind
+    auto_commit_worktree
     node -e "
 const reason = 'RAPPEL: Tu n as pas mis a jour le ticket kanban !\\n'
   + 'Fichier: ' + process.env.KANBAI_KANBAN_FILE + '\\n'

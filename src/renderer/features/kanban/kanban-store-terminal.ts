@@ -4,7 +4,7 @@ import type { Get, Set } from './kanban-store-types'
 import { useTerminalTabStore } from '../terminal'
 import {
   repoPathFromWorktree, autoMergeWorktree,
-  reactivatingTaskIds,
+  reactivatingTaskIds, formatTicketLabel,
 } from './kanban-store-utils'
 
 export function createHandleTabClosed(get: Get, set: Set) {
@@ -60,6 +60,14 @@ export function createHandleTabClosed(get: Get, set: Set) {
     if (task && task.status === 'WORKING' && wsId) {
       const capturedTask = task
       const capturedWsId = wsId
+
+      // Safety net: auto-commit any uncommitted worktree changes before they are lost.
+      // The AI may have forgotten to commit, and without this the work is gone when the worktree is cleaned up.
+      if (capturedTask.worktreePath) {
+        const ticketLabel = formatTicketLabel(capturedTask)
+        window.kanbai.git.worktreeFinalize(capturedTask.worktreePath, ticketLabel).catch(() => { /* best-effort */ })
+      }
+
       window.kanbai.kanban.list(capturedWsId).then((fileTasks: KanbanTask[]) => {
         const fileTask = fileTasks.find((t) => t.id === taskId)
         if (fileTask && (fileTask.status === 'DONE' || fileTask.status === 'FAILED')) {

@@ -193,6 +193,23 @@ export async function buildRegularPrompt(params: RegularPromptParams): Promise<s
     } catch { /* multi-agent check is best-effort */ }
   }
 
+  // Add worktree-specific commit/merge instructions when the task uses a worktree
+  if (task.worktreePath && task.worktreeBranch) {
+    promptParts.push(
+      ``,
+      `## ⚠ WORKTREE — COMMIT OBLIGATOIRE`,
+      `Tu travailles dans un **worktree git isolé** sur la branche \`${task.worktreeBranch}\`.`,
+      `Tes changements seront **PERDUS** si tu ne les commites pas avant de terminer.`,
+      ``,
+      `**Séquence de fin OBLIGATOIRE (dans cet ordre exact) :**`,
+      `1. \`git add -A\``,
+      `2. \`git commit -m "feat(kanban): ${ticketLabel} - description courte"\``,
+      `3. Mettre a jour le ticket kanban (status DONE + result + aiModel + updatedAt)`,
+      ``,
+      `**NE JAMAIS terminer sans avoir execute les etapes 1 et 2.** Le merge sur la branche \`${task.worktreeBaseBranch ?? 'main'}\` sera fait automatiquement apres.`,
+    )
+  }
+
   promptParts.push(
     ``,
     `## Fichier Kanban`,
