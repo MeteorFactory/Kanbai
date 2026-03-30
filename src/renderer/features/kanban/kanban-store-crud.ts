@@ -280,11 +280,25 @@ export function createUpdateTask(get: Get, set: Set) {
 
 export function createDeleteTask(get: Get, set: Set) {
   return async (taskId: string) => {
-    const { currentWorkspaceId } = get()
+    const { currentWorkspaceId, kanbanTabIds } = get()
     if (!currentWorkspaceId) return
+
+    // Close linked terminal if active
+    const tabId = kanbanTabIds[taskId]
+    if (tabId) {
+      useTerminalTabStore.getState().killTabProcesses(tabId)
+      useTerminalTabStore.getState().closeTab(tabId)
+      const newTabIds = { ...kanbanTabIds }
+      delete newTabIds[taskId]
+      set({ kanbanTabIds: newTabIds })
+    }
+
+    // Soft-delete: archive the task (IPC handler sets archived: true)
     await window.kanbai.kanban.delete(taskId, currentWorkspaceId)
     set((state) => ({
-      tasks: state.tasks.filter((t) => t.id !== taskId),
+      tasks: state.tasks.map((t) =>
+        t.id === taskId ? { ...t, archived: true, updatedAt: Date.now() } : t,
+      ),
     }))
   }
 }

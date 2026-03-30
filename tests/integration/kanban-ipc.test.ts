@@ -143,7 +143,7 @@ describe('Kanban IPC Handlers', () => {
     ).rejects.toThrow('Kanban task inexistant not found')
   })
 
-  it('supprime une tache', async () => {
+  it('archive une tache au lieu de la supprimer (soft-delete)', async () => {
     const result = await mockIpcMain._invoke('kanban:create', {
       workspaceId: 'ws-1',
       title: 'A supprimer',
@@ -154,7 +154,9 @@ describe('Kanban IPC Handlers', () => {
     await mockIpcMain._invoke('kanban:delete', { id: result.task.id, workspaceId: 'ws-1' })
 
     const list = await mockIpcMain._invoke('kanban:list', { workspaceId: 'ws-1' })
-    expect(list).toHaveLength(0)
+    const archivedTask = list.find((t: { id: string }) => t.id === result.task.id)
+    expect(archivedTask).toBeDefined()
+    expect(archivedTask.archived).toBe(true)
   })
 
   it('persiste les taches sur disque', async () => {

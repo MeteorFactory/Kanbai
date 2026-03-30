@@ -319,7 +319,7 @@ export function KanbanBoard() {
 
   const doneTasks = useMemo(() => filteredTasks.filter((t) => t.status === 'DONE'), [filteredTasks])
   const activeDoneTasks = useMemo(() => doneTasks.filter((t) => !t.archived), [doneTasks])
-  const archivedTasks = useMemo(() => doneTasks.filter((t) => t.archived), [doneTasks])
+  const archivedTasks = useMemo(() => filteredTasks.filter((t) => t.archived), [filteredTasks])
 
   const sortTasks = useCallback(
     (taskList: KanbanTask[], newestFirst = false): KanbanTask[] => {
@@ -411,7 +411,7 @@ export function KanbanBoard() {
     ]
   }, [t, updateTaskStatus, updateTask, duplicateTask, handleSendToAi])
 
-  const handleRestoreFromArchive = useCallback((task: KanbanTask) => { updateTask(task.id, { archived: false }) }, [updateTask])
+  const handleRestoreFromArchive = useCallback((task: KanbanTask) => { updateTask(task.id, { archived: false, status: 'TODO' as KanbanStatus }) }, [updateTask])
   const handleArchiveTask = useCallback((task: KanbanTask) => { updateTask(task.id, { archived: true }) }, [updateTask])
 
   const handleOpenEditModal = useCallback((task: KanbanTask) => {
@@ -453,7 +453,7 @@ export function KanbanBoard() {
 
   const getTasksByStatus = (status: KanbanStatus): KanbanTask[] => {
     if (status === 'DONE') return sortTasks(activeDoneTasks, true)
-    return sortTasks(filteredTasks.filter((t) => t.status === status))
+    return sortTasks(filteredTasks.filter((t) => t.status === status && !t.archived))
   }
 
   return (

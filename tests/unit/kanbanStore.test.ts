@@ -359,14 +359,15 @@ describe('useKanbanStore', () => {
   // ─── deleteTask ────────────────────────────────────────────────────────
 
   describe('deleteTask', () => {
-    it('appelle kanban.delete et retire la tache du store', async () => {
+    it('appelle kanban.delete et archive la tache dans le store', async () => {
       const task = makeTask({ id: 'task-1' })
       useKanbanStore.setState({ tasks: [task], currentWorkspaceId: 'ws-1' })
 
       await useKanbanStore.getState().deleteTask('task-1')
 
       expect(mockKanbanApi.delete).toHaveBeenCalledWith('task-1', 'ws-1')
-      expect(useKanbanStore.getState().tasks).toHaveLength(0)
+      expect(useKanbanStore.getState().tasks).toHaveLength(1)
+      expect(useKanbanStore.getState().tasks[0]!.archived).toBe(true)
     })
 
     it('ne fait rien si currentWorkspaceId est null', async () => {
@@ -379,15 +380,16 @@ describe('useKanbanStore', () => {
       expect(useKanbanStore.getState().tasks).toHaveLength(1)
     })
 
-    it('ne retire que la tache ciblee, pas les autres', async () => {
+    it('archive uniquement la tache ciblee, pas les autres', async () => {
       const t1 = makeTask({ id: 't1' })
       const t2 = makeTask({ id: 't2' })
       useKanbanStore.setState({ tasks: [t1, t2], currentWorkspaceId: 'ws-1' })
 
       await useKanbanStore.getState().deleteTask('t1')
 
-      expect(useKanbanStore.getState().tasks).toHaveLength(1)
-      expect(useKanbanStore.getState().tasks[0]!.id).toBe('t2')
+      expect(useKanbanStore.getState().tasks).toHaveLength(2)
+      expect(useKanbanStore.getState().tasks.find((t) => t.id === 't1')!.archived).toBe(true)
+      expect(useKanbanStore.getState().tasks.find((t) => t.id === 't2')!.archived).toBeUndefined()
     })
   })
 
