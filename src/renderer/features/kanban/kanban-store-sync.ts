@@ -309,8 +309,8 @@ export function createSyncTasksFromFile(get: Get, set: Set) {
         if (newTask.status === 'PENDING') {
           termStore.setTabColor(tabId, '#fbbf24')
           termStore.setTabActivity(tabId, true)
-          termStore.killTabProcesses(tabId)
-          termStore.clearTabSessions(tabId)
+          // Do NOT kill processes or clear sessions — PENDING means the AI is asking
+          // a question and the terminal must remain interactive for the user to respond
         }
       }
 

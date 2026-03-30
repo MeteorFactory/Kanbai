@@ -292,7 +292,7 @@ describe('useKanbanStore', () => {
       )
     })
 
-    it('kill le processus terminal quand le status passe a PENDING', async () => {
+    it('ne kill PAS le processus terminal quand le status passe a PENDING (asking)', async () => {
       const task = makeTask({ id: 'task-1' })
       useKanbanStore.setState({
         tasks: [task],
@@ -302,7 +302,7 @@ describe('useKanbanStore', () => {
 
       await useKanbanStore.getState().updateTaskStatus('task-1', 'PENDING')
 
-      expect(mockTerminalState.killTabProcesses).toHaveBeenCalledWith('tab-1')
+      expect(mockTerminalState.killTabProcesses).not.toHaveBeenCalled()
     })
 
     it('kill le processus terminal quand le status passe a FAILED', async () => {

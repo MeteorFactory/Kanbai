@@ -243,8 +243,9 @@ export function createUpdateTaskStatus(get: Get, set: Set) {
     }
     const workspaceId = taskWorkspaceId ?? currentWorkspaceId
     if (!workspaceId) return
-    // Kill terminal process when ticket moves to PENDING or FAILED (not DONE — hooks handle that)
-    if (status === 'PENDING' || status === 'FAILED') {
+    // Kill terminal process when ticket moves to FAILED (not DONE — hooks handle that)
+    // PENDING means the AI is asking a question — keep the terminal alive so the user can respond
+    if (status === 'FAILED') {
       const tabId = kanbanTabIds[taskId]
       if (tabId) {
         useTerminalTabStore.getState().killTabProcesses(tabId)
