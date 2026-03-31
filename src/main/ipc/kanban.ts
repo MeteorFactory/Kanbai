@@ -215,7 +215,15 @@ try {
 } catch(e) { /* ignore */ }
 "
     } else {
+      # Block Claude from stopping — PENDING means the AI asked a question
+      # and the terminal must stay alive so the user can respond
       if (Test-Path $ActivityScript) { & $ActivityScript waiting }
+      node -e "
+const reason = 'Le ticket est en attente (PENDING) — une question a ete posee.\\n'
+  + 'Le terminal doit rester actif pour que l utilisateur puisse repondre.\\n'
+  + 'Attends la reponse de l utilisateur avant de continuer.';
+process.stdout.write(JSON.stringify({ decision: 'block', reason: reason }));
+"
     }
   }
   "WORKING" {
@@ -341,7 +349,15 @@ try {
 } catch(e) { /* ignore */ }
 "
     else
+      # Block Claude from stopping — PENDING means the AI asked a question
+      # and the terminal must stay alive so the user can respond
       bash "$ACTIVITY_SCRIPT" waiting
+      node -e "
+const reason = 'Le ticket est en attente (PENDING) — une question a ete posee.\\n'
+  + 'Le terminal doit rester actif pour que l utilisateur puisse repondre.\\n'
+  + 'Attends la reponse de l utilisateur avant de continuer.';
+process.stdout.write(JSON.stringify({ decision: 'block', reason: reason }));
+"
     fi
     ;;
   WORKING)
