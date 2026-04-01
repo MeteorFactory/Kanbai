@@ -193,6 +193,30 @@ export async function buildRegularPrompt(params: RegularPromptParams): Promise<s
     } catch { /* multi-agent check is best-effort */ }
   }
 
+  // Add Superpowers skill instructions for smarter, more thoughtful ticket execution
+  promptParts.push(
+    ``,
+    `## Methodologie Superpowers`,
+    `Tu DOIS utiliser les skills "superpowers" disponibles pour realiser cette tache de maniere intelligente et reflechie :`,
+    ``,
+    `1. **Brainstorming** : Avant de coder, invoque la skill \`superpowers:brainstorming\` pour explorer les besoins, les exigences et le design.`,
+    `2. **Plan** : Pour les taches multi-etapes, invoque \`superpowers:writing-plans\` pour structurer ton approche.`,
+    `3. **TDD** : Quand tu implementes une feature ou un bugfix, invoque \`superpowers:test-driven-development\` avant d'ecrire le code.`,
+    `4. **Debugging** : Face a un bug ou un test en echec, invoque \`superpowers:systematic-debugging\` avant de proposer un fix.`,
+    `5. **Verification** : Avant de declarer le travail termine, invoque \`superpowers:verification-before-completion\`.`,
+    ``,
+    `### REGLE IMPORTANTE : Tu es le boss`,
+    `Quand une skill (comme brainstorming) pose des questions pour clarifier le besoin, **reponds-y toi-meme**.`,
+    `Tu as le contexte du ticket, la description, les commentaires et le codebase a ta disposition.`,
+    `**Ne demande PAS a l'utilisateur** de repondre a ces questions — prends les decisions toi-meme en te basant sur :`,
+    `- La description et les commentaires du ticket`,
+    `- Le code existant et les patterns du projet`,
+    `- Les bonnes pratiques et ton expertise technique`,
+    `- Le bon sens et la simplicite (KISS, YAGNI)`,
+    ``,
+    `Tu es autonome. Prends des decisions, fais des choix, et avance. L'utilisateur veut un resultat, pas des questions.`,
+  )
+
   // Add worktree-specific commit/merge instructions when the task uses a worktree
   if (task.worktreePath && task.worktreeBranch) {
     promptParts.push(
