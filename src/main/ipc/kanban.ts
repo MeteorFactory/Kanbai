@@ -1103,6 +1103,7 @@ export function registerKanbanHandlers(ipcMain: IpcMain): void {
         ticketNumber: active.ticketNumber ?? null,
         isCtoTicket: isCto,
         type: active.type,
+        status: active.status,
       }
     },
   )

@@ -118,6 +118,16 @@ export function WorkspaceItem({ workspace, projects, isActive }: WorkspaceItemPr
     const unsubscribe = window.kanbai.kanban.onFileChanged(({ workspaceId }) => {
       if (workspaceId === workspace.id) {
         fetchWorkingTickets()
+        // Reconcile stale hook-based statuses with actual kanban state
+        const currentStatus = useClaudeStore.getState().workspaceClaudeStatus[workspace.id]
+        if (currentStatus === 'waiting' || currentStatus === 'failed') {
+          window.kanbai.kanban.getWorkingTicket(workspace.id).then((result) => {
+            if (!result || (currentStatus === 'waiting' && result.status !== 'PENDING') ||
+                (currentStatus === 'failed' && result.status !== 'FAILED')) {
+              useClaudeStore.getState().setWorkspaceClaudeStatus(workspace.id, 'idle')
+            }
+          }).catch(() => {})
+        }
       }
     })
     return () => { unsubscribe() }
