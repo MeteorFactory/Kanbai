@@ -1204,40 +1204,59 @@
 .kanban-card-progress {
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  margin-top: 4px;
+  gap: 4px;
+  margin-top: 6px;
+  padding: 6px 8px 4px;
+  background: var(--bg-surface, rgba(0, 0, 0, 0.08));
+  border-radius: 6px;
 }
 
 .kanban-card-progress-track {
   display: flex;
   align-items: center;
-  gap: 6px;
-  height: 14px;
+  gap: 8px;
+  height: 16px;
   position: relative;
 }
 
 .kanban-card-progress-track::before {
   content: '';
   flex: 1;
-  height: 4px;
-  border-radius: 2px;
+  height: 6px;
+  border-radius: 3px;
   background: var(--bg-hover);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .kanban-card-progress-fill {
   position: absolute;
   left: 0;
   top: 5px;
-  height: 4px;
-  border-radius: 2px;
-  transition: width 0.3s ease;
+  height: 6px;
+  border-radius: 3px;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.15) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: progress-shimmer 2s ease-in-out infinite;
+}
+
+@keyframes progress-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 .kanban-card-progress-text {
-  font-size: 9px;
-  font-weight: 600;
+  font-size: 10px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
   flex-shrink: 0;
+  letter-spacing: 0.02em;
 }
 
 .kanban-card-progress-message {
@@ -1254,26 +1273,27 @@
 .kanban-card-activity {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   min-width: 0;
 }
 
 .kanban-card-activity-dot {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   flex-shrink: 0;
   animation: activity-pulse 1.5s ease-in-out infinite;
+  box-shadow: 0 0 4px currentColor;
 }
 
-.kanban-card-activity-dot--thinking { background: #a78bfa; }
-.kanban-card-activity-dot--tool { background: #38bdf8; }
-.kanban-card-activity-dot--subagent { background: #34d399; }
-.kanban-card-activity-dot--text { background: #fb923c; }
+.kanban-card-activity-dot--thinking { background: #a78bfa; color: #a78bfa; }
+.kanban-card-activity-dot--tool { background: #38bdf8; color: #38bdf8; }
+.kanban-card-activity-dot--subagent { background: #34d399; color: #34d399; }
+.kanban-card-activity-dot--text { background: #fb923c; color: #fb923c; }
 
 @keyframes activity-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
 }
 
 .kanban-card-activity-label {
@@ -1281,6 +1301,7 @@
   color: var(--text-secondary);
   white-space: nowrap;
   flex-shrink: 0;
+  font-weight: 500;
 }
 
 .kanban-card-activity-detail {
