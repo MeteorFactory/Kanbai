@@ -2,13 +2,19 @@ import React from 'react'
 import { useI18n } from '../../lib/i18n'
 
 export function RefBadge({ refName }: { refName: string }) {
-  const isHead = refName.startsWith('HEAD')
+  const isHead = refName === 'HEAD' || refName.startsWith('HEAD')
   const isRemote = refName.startsWith('origin/')
   const isTag = refName.startsWith('tag:')
+  const isMain = refName === 'main' || refName === 'master'
+  const isWorktree = refName.startsWith('worktree/') || refName.startsWith('worktree-')
+  const isFix = refName.startsWith('fix/')
   let className = 'git-ref-badge'
   if (isHead) className += ' git-ref-badge--head'
-  else if (isRemote) className += ' git-ref-badge--remote'
   else if (isTag) className += ' git-ref-badge--tag'
+  else if (isMain) className += ' git-ref-badge--main'
+  else if (isWorktree) className += ' git-ref-badge--worktree'
+  else if (isFix) className += ' git-ref-badge--fix'
+  else if (isRemote) className += ' git-ref-badge--remote'
   else className += ' git-ref-badge--branch'
   return <span className={className}>{refName}</span>
 }
