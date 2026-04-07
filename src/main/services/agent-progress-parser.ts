@@ -31,6 +31,7 @@ const ACTIVITY_HOLD_MS = 3000
 // Minimum length for a thinking label to be displayed (excluding trailing …)
 // Below this, we show "Réflexion..." instead of garbled single-char labels like "t…"
 const MIN_THINKING_LABEL_LENGTH = 3
+const MIN_STANDALONE_LABEL_LENGTH = 4
 
 const THINKING_FALLBACK = 'Réflexion...'
 
@@ -228,7 +229,7 @@ export class AgentProgressParser {
     // Standalone thinking word — e.g. "Pollinating…" or "Mulling…"
     if (/^\w+…$/.test(clean)) {
       const labelText = clean.replace(/…$/, '')
-      const label = labelText.length >= MIN_THINKING_LABEL_LENGTH ? clean : THINKING_FALLBACK
+      const label = labelText.length >= MIN_STANDALONE_LABEL_LENGTH ? clean : THINKING_FALLBACK
       this.setActivity(state, { type: 'thinking', label })
       return true
     }
