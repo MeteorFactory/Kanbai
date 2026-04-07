@@ -140,9 +140,21 @@ export function WorkspaceItem({ workspace, projects, isActive }: WorkspaceItemPr
 
   useEffect(() => {
     if (workspaceClaudeStatus === 'ask' || workspaceClaudeStatus === 'waiting' || workspaceClaudeStatus === 'failed') {
-      window.kanbai.kanban.getWorkingTicket(workspace.id).then((result) => {
-        setWorkingTicketInfo(result ? { ticketNumber: result.ticketNumber, isCtoTicket: result.isCtoTicket, type: result.type } : null)
-      }).catch(() => setWorkingTicketInfo(null))
+      const reconcile = () => {
+        window.kanbai.kanban.getWorkingTicket(workspace.id).then((result) => {
+          setWorkingTicketInfo(result ? { ticketNumber: result.ticketNumber, isCtoTicket: result.isCtoTicket, type: result.type } : null)
+          // Clear stale waiting/failed badges when ticket no longer matches
+          if (workspaceClaudeStatus === 'waiting' && (!result || result.status !== 'PENDING')) {
+            useClaudeStore.getState().setWorkspaceClaudeStatus(workspace.id, 'idle')
+          } else if (workspaceClaudeStatus === 'failed' && (!result || result.status !== 'FAILED')) {
+            useClaudeStore.getState().setWorkspaceClaudeStatus(workspace.id, 'idle')
+          }
+        }).catch(() => setWorkingTicketInfo(null))
+      }
+      reconcile()
+      // Poll every 10s to catch missed file-change events
+      const interval = setInterval(reconcile, 10000)
+      return () => clearInterval(interval)
     } else {
       setWorkingTicketInfo(null)
     }
