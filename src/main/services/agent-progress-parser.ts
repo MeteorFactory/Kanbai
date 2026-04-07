@@ -211,6 +211,10 @@ export class AgentProgressParser {
       this.setActivity(state, { type: 'thinking', label })
       return true
     }
+    if (/^\w{1,3}…$/.test(clean)) {
+      this.setActivity(state, { type: 'thinking', label: 'Réflexion...' })
+      return true
+    }
 
     // "thinking" or "thought for Ns" in status line
     if (/thinking|thought\s+for/i.test(clean) && /·/.test(clean)) {
@@ -277,7 +281,7 @@ export class AgentProgressParser {
     }
 
     // 6. Generic bullet + tool call (e.g. "⏺ Update(...)")
-    const genericMatch = clean.match(/[⏺●]\s*([A-Z]\w+)\s*\(/)
+    const genericMatch = clean.match(/[⏺●]\s*([A-Z]\w{2,})\s*\(/)
     if (genericMatch && !clean.includes('bypass permissions') && !clean.includes('accept edits')) {
       this.setActivity(state, { type: 'tool', label: genericMatch[1]! })
       return true

@@ -41,6 +41,24 @@ describe('AgentProgressParser', () => {
       expect(result!.activity.label).toBe('Pollinating…')
     })
 
+    it('replaces short fragment labels with Réflexion...', () => {
+      const result = parser.feed('term-1', 't…\n')
+      expect(result!.activity.type).toBe('thinking')
+      expect(result!.activity.label).toBe('Réflexion...')
+    })
+
+    it('replaces 2-3 char fragment labels with Réflexion...', () => {
+      const result = parser.feed('term-1', 'Imp…\n')
+      expect(result!.activity.type).toBe('thinking')
+      expect(result!.activity.label).toBe('Réflexion...')
+    })
+
+    it('replaces short spinner labels with Réflexion...', () => {
+      const result = parser.feed('term-1', '✶ I…\n')
+      expect(result!.activity.type).toBe('thinking')
+      expect(result!.activity.label).toBe('Réflexion...')
+    })
+
     it('detects ANSI-wrapped spinner', () => {
       const result = parser.feed('term-1', '\x1b[38;2;215;119;87m✢\x1b[39m \x1b[38;2;235;159;127mMulling…\x1b[39m (thinking)\n')
       expect(result!.activity.type).toBe('thinking')
