@@ -1334,6 +1334,74 @@
   min-width: 0;
 }
 
+/* Subagent list on kanban cards */
+.kanban-card-subagents {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding-left: 4px;
+}
+
+.kanban-card-subagent {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9px;
+  color: var(--text-muted);
+  min-width: 0;
+}
+
+.kanban-card-subagent-branch {
+  color: var(--text-muted);
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+.kanban-card-subagent-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+/* Subagent list in detail panel */
+.kanban-detail-subagents {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-left: 14px;
+  margin-bottom: 8px;
+}
+
+.kanban-detail-subagent {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 12px;
+  min-width: 0;
+}
+
+.kanban-detail-subagent-branch {
+  color: var(--text-muted);
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+.kanban-detail-subagent-name {
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.kanban-detail-subagent-status {
+  color: var(--text-muted);
+  font-size: 11px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 /* Agent task list in detail panel */
 .kanban-detail-task-list {
   padding: 8px 18px 12px;

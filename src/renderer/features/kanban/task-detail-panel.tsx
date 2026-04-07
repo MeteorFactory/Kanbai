@@ -50,6 +50,7 @@ export function TaskDetailPanel({
     message?: string
     items?: Array<{ label: string; status: 'pending' | 'in_progress' | 'completed' }>
     activity?: { type: string; label: string; detail?: string }
+    subagents?: Array<{ name: string; status: string }>
   }
 }) {
   const { t, locale, localeCode } = useI18n()
@@ -130,7 +131,7 @@ export function TaskDetailPanel({
       </div>
 
       {/* Agent Activity & Task List */}
-      {task.status === 'WORKING' && agentProgress && (agentProgress.activity || (agentProgress.items && agentProgress.items.length > 0)) && (
+      {task.status === 'WORKING' && agentProgress && (agentProgress.activity || agentProgress.subagents?.length || (agentProgress.items && agentProgress.items.length > 0)) && (
         <div className="kanban-detail-task-list">
           {/* Current activity indicator */}
           {agentProgress.activity && agentProgress.activity.type !== 'idle' && (
@@ -140,6 +141,18 @@ export function TaskDetailPanel({
               {agentProgress.activity.detail && (
                 <span className="kanban-detail-activity-detail">{agentProgress.activity.detail}</span>
               )}
+            </div>
+          )}
+          {/* Subagents */}
+          {agentProgress.subagents && agentProgress.subagents.length > 0 && (
+            <div className="kanban-detail-subagents">
+              {agentProgress.subagents.map((sa, i) => (
+                <div key={i} className="kanban-detail-subagent">
+                  <span className="kanban-detail-subagent-branch">{i < agentProgress.subagents!.length - 1 ? '├' : '└'}</span>
+                  <span className="kanban-detail-subagent-name">{sa.name}</span>
+                  {sa.status && <span className="kanban-detail-subagent-status">{sa.status}</span>}
+                </div>
+              ))}
             </div>
           )}
           {/* Task items */}

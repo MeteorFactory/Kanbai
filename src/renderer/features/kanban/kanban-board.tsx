@@ -122,7 +122,7 @@ export function KanbanBoard() {
         return {
           agentProgress: {
             ...s.agentProgress,
-            [data.taskId]: { progress: data.progress, message: data.message, items: data.items, activity: data.activity },
+            [data.taskId]: { progress: data.progress, message: data.message, items: data.items, activity: data.activity, subagents: data.subagents },
           },
         }
       })

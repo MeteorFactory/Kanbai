@@ -37,7 +37,7 @@ export function KanbanCard({
   onGoToTerminal: (() => void) | null
   projects: Array<{ id: string; name: string; aiProvider?: AiProviderId | null; aiDefaults?: AiDefaults }>
   defaultAiProvider: AiProviderId
-  agentProgress?: { progress?: string; message?: string; activity?: { type: string; label: string; detail?: string } }
+  agentProgress?: { progress?: string; message?: string; activity?: { type: string; label: string; detail?: string }; subagents?: Array<{ name: string; status: string }> }
 }) {
   const { t, locale, localeCode } = useI18n()
   const clickTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -142,6 +142,16 @@ export function KanbanCard({
                 {agentProgress.activity.detail && (
                   <span className="kanban-card-activity-detail">{agentProgress.activity.detail}</span>
                 )}
+              </div>
+            )}
+            {agentProgress.subagents && agentProgress.subagents.length > 0 && (
+              <div className="kanban-card-subagents">
+                {agentProgress.subagents.map((sa, i) => (
+                  <div key={i} className="kanban-card-subagent">
+                    <span className="kanban-card-subagent-branch">{i < agentProgress.subagents!.length - 1 ? '├' : '└'}</span>
+                    <span className="kanban-card-subagent-name">{sa.name}</span>
+                  </div>
+                ))}
               </div>
             )}
           </div>

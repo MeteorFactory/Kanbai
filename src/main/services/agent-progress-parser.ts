@@ -11,10 +11,16 @@ export interface AgentActivity {
   detail?: string
 }
 
+export interface SubagentInfo {
+  name: string
+  status: string
+}
+
 interface TerminalState {
   taskId: string
   lineBuffer: string
   activity: AgentActivity
+  subagents: SubagentInfo[]
   items: AgentTaskItem[]
   completedCount: number
   totalCount: number
@@ -26,6 +32,7 @@ export interface ProgressUpdate {
   message: string
   items: AgentTaskItem[]
   activity: AgentActivity
+  subagents: SubagentInfo[]
 }
 
 // Strip ANSI escape codes from PTY output
@@ -111,6 +118,10 @@ const TASK_PENDING = /[◼○◻]\s+(.+)/
 // Generic ⏺ tool call fallback
 const GENERIC_TOOL = /⏺\s*(\S+)/
 
+// Subagent patterns — "● Running 2 Explore agents…" header + "├─ Name · stats" details
+const RUNNING_AGENTS = /Running\s+(\d+)\s+(\w+)\s+agents?…/
+const SUBAGENT_DETAIL = /[├└]─?\s+(.+?)(?:\s+·\s+(.+))?$/
+
 // "Reading N files" pattern
 const READING_FILES = /Reading\s+(\d+)\s+files?/
 
@@ -125,6 +136,7 @@ export class AgentProgressParser {
       taskId,
       lineBuffer: '',
       activity: { type: 'idle', label: '' },
+      subagents: [],
       items: [],
       completedCount: 0,
       totalCount: 0,
@@ -204,14 +216,44 @@ export class AgentProgressParser {
       return true
     }
 
-    // 5. Generic ⏺ tool
+    // 5. Running N agents — "● Running 2 Explore agents…"
+    const runningMatch = clean.match(RUNNING_AGENTS)
+    if (runningMatch) {
+      state.activity = {
+        type: 'subagent',
+        label: `${runningMatch[1]} ${runningMatch[2]} agents`,
+      }
+      state.subagents = []
+      return true
+    }
+
+    // 5b. Subagent detail lines — "├─ Explore v2 workspace/project UI · 10 tool uses · 44.9k tokens"
+    const detailMatch = clean.match(SUBAGENT_DETAIL)
+    if (detailMatch) {
+      const name = detailMatch[1]!.trim()
+      const stats = detailMatch[2]?.trim() ?? ''
+      const existing = state.subagents.find((s) => s.name === name)
+      if (existing) {
+        existing.status = stats
+      } else {
+        state.subagents.push({ name, status: stats })
+      }
+      state.activity = {
+        type: 'subagent',
+        label: `${state.subagents.length} agents`,
+        detail: state.subagents.map((s) => s.name).join(', '),
+      }
+      return true
+    }
+
+    // 6. Generic ⏺ tool
     const genericMatch = clean.match(GENERIC_TOOL)
     if (genericMatch && !clean.includes('bypass permissions') && !clean.includes('accept edits')) {
       state.activity = { type: 'tool', label: genericMatch[1]! }
       return true
     }
 
-    // 6. Task items — ✔ completed, ◼ pending
+    // 8. Task items — ✔ completed, ◼ pending
     const completedMatch = clean.match(TASK_COMPLETED)
     if (completedMatch) {
       this.updateTaskItem(state, completedMatch[1]!.trim(), 'completed')
@@ -230,7 +272,7 @@ export class AgentProgressParser {
       return true
     }
 
-    // 7. Text response (● bullet)
+    // 9. Text response (● bullet)
     if (clean.startsWith('●') && clean.length > 2) {
       state.activity = { type: 'text', label: 'Réponse...' }
       return true
@@ -257,6 +299,7 @@ export class AgentProgressParser {
       message: state.activity.label,
       items: [...state.items],
       activity: { ...state.activity },
+      subagents: [...state.subagents],
     }
   }
 }

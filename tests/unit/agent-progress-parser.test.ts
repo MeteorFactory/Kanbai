@@ -135,6 +135,26 @@ describe('AgentProgressParser', () => {
     })
   })
 
+  describe('subagent tracking', () => {
+    it('detects Running N agents header', () => {
+      const result = parser.feed('term-1', '● Running 2 Explore agents…\n')
+      expect(result!.activity.type).toBe('subagent')
+      expect(result!.activity.label).toBe('2 Explore agents')
+    })
+
+    it('collects subagent details from tree lines', () => {
+      parser.feed('term-1', '● Running 2 Explore agents…\n')
+      parser.feed('term-1', '├─ Explore v2 workspace/project UI · 10 tool uses · 44.9k tokens\n')
+      const result = parser.feed('term-1', '└─ Explore v1 workspace/project UI · 9 tool uses · 63.7k tokens\n')
+      expect(result!.subagents).toEqual([
+        { name: 'Explore v2 workspace/project UI', status: '10 tool uses · 44.9k tokens' },
+        { name: 'Explore v1 workspace/project UI', status: '9 tool uses · 63.7k tokens' },
+      ])
+      expect(result!.activity.type).toBe('subagent')
+      expect(result!.activity.label).toBe('2 agents')
+    })
+  })
+
   describe('text response', () => {
     it('detects text response with ● bullet', () => {
       const result = parser.feed('term-1', '● Good. Now let me read the key files.\n')
