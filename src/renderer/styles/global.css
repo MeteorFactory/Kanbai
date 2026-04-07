@@ -2006,12 +2006,10 @@ body {
   background: transparent;
   border: 1px solid var(--text-muted);
   font-family: var(--font-mono);
-  max-width: 100px;
-  min-width: 40px;
+  width: 80px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  margin-left: auto;
   text-align: center;
 }
 
