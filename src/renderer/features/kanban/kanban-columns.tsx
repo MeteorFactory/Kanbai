@@ -33,6 +33,7 @@ export function KanbanColumns({
   onArchiveTask,
   onRestoreFromArchive,
   onToggleArchive,
+  agentProgress,
 }: {
   getTasksByStatus: (status: KanbanStatus) => KanbanTask[]
   sortTasks: (taskList: KanbanTask[], newestFirst?: boolean) => KanbanTask[]
@@ -59,6 +60,7 @@ export function KanbanColumns({
   onArchiveTask: (task: KanbanTask) => void
   onRestoreFromArchive: (task: KanbanTask) => void
   onToggleArchive: () => void
+  agentProgress: Record<string, { progress?: string; message?: string }>
 }) {
   const { t } = useI18n()
 
@@ -90,6 +92,7 @@ export function KanbanColumns({
                 onGoToTerminal={onGoToTerminal(task.id)}
                 projects={workspaceProjects}
                 defaultAiProvider={workspaceDefaultAiProvider}
+                agentProgress={agentProgress[task.id]}
               />
             ))}
             {col.status === 'TODO' && visiblePredefined.length > 0 && (
@@ -135,6 +138,7 @@ export function KanbanColumns({
                 onGoToTerminal={onGoToTerminal(task.id)}
                 projects={workspaceProjects}
                 defaultAiProvider={workspaceDefaultAiProvider}
+                agentProgress={agentProgress[task.id]}
               />
               <button
                 className="kanban-archive-btn"

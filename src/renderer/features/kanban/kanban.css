@@ -1200,6 +1200,136 @@
   letter-spacing: 0.3px;
 }
 
+/* Agent progress bar on kanban cards */
+.kanban-card-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 4px;
+}
+
+.kanban-card-progress-track {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 14px;
+  position: relative;
+}
+
+.kanban-card-progress-track::before {
+  content: '';
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--bg-hover);
+}
+
+.kanban-card-progress-fill {
+  position: absolute;
+  left: 0;
+  top: 5px;
+  height: 4px;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.kanban-card-progress-text {
+  font-size: 9px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.kanban-card-progress-message {
+  font-size: 10px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+  line-height: 1.3;
+}
+
+/* Agent task list in detail panel */
+.kanban-detail-task-list {
+  padding: 8px 18px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.kanban-detail-task-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.kanban-detail-task-list-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.kanban-detail-task-list-count {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.kanban-detail-task-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.kanban-detail-task-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-primary);
+}
+
+.kanban-detail-task-item--completed {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+.kanban-detail-task-item--in_progress {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.kanban-detail-task-item--pending {
+  color: var(--text-muted);
+}
+
+.kanban-detail-task-item-icon {
+  flex-shrink: 0;
+  width: 14px;
+  text-align: center;
+  font-size: 10px;
+  line-height: 1.7;
+}
+
+.kanban-detail-task-item--completed .kanban-detail-task-item-icon {
+  color: var(--success);
+}
+
+.kanban-detail-task-item--in_progress .kanban-detail-task-item-icon {
+  color: var(--primary);
+}
+
+.kanban-detail-task-item-label {
+  flex: 1;
+  min-width: 0;
+}
+
 .kanban-split-section {
   background: var(--warning-soft);
   border-radius: 6px;

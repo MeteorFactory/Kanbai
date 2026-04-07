@@ -1151,6 +1151,7 @@ export const en = {
   'kanban.aiInProgress': 'AI in progress',
   'kanban.goToTerminal': 'Go to terminal',
   'kanban.terminal': 'Terminal',
+  'kanban.agentTasks': 'Agent progress',
   'terminal.goToKanban': 'Go to kanban ticket',
   'kanban.maxTerminalsReached': 'Maximum of 10 terminals reached for this workspace',
   'kanban.resultAvailable': 'Result available',

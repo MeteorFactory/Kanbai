@@ -1151,6 +1151,7 @@ export const fr = {
   'kanban.aiInProgress': 'IA en cours',
   'kanban.goToTerminal': 'Aller au terminal',
   'kanban.terminal': 'Terminal',
+  'kanban.agentTasks': 'Progression agent',
   'terminal.goToKanban': 'Aller au ticket kanban',
   'kanban.maxTerminalsReached': 'Limite de 10 terminaux atteinte pour ce workspace',
   'kanban.resultAvailable': 'Résultat disponible',

@@ -132,6 +132,7 @@ vi.mock('../../src/renderer/features/kanban/kanban-store', () => ({
         attachFromClipboard: mockAttachFromClipboard,
         removeAttachment: mockRemoveAttachment,
         kanbanTabIds: {},
+        agentProgress: {},
       }
       return selector ? selector(state) : state
     },
@@ -139,6 +140,7 @@ vi.mock('../../src/renderer/features/kanban/kanban-store', () => ({
       getState: () => ({
         tasks: mockTasks,
         kanbanTabIds: {},
+        agentProgress: {},
       }),
       setState: vi.fn(),
       subscribe: vi.fn(),

@@ -33,6 +33,7 @@ export function TaskDetailPanel({
   onAttachFromClipboard,
   onRemoveAttachment,
   projects,
+  agentProgress,
 }: {
   task: KanbanTask
   onClose: () => void
@@ -44,6 +45,7 @@ export function TaskDetailPanel({
   onAttachFromClipboard: (dataBase64: string, filename: string, mimeType: string) => void
   onRemoveAttachment: (attachmentId: string) => void
   projects: Array<{ id: string; name: string }>
+  agentProgress?: { progress?: string; message?: string; items?: Array<{ label: string; status: 'pending' | 'in_progress' | 'completed' }> }
 }) {
   const { t, locale, localeCode } = useI18n()
   const [editingTitle, setEditingTitle] = useState(false)
@@ -121,6 +123,28 @@ export function TaskDetailPanel({
           </h3>
         )}
       </div>
+
+      {/* Agent Task List */}
+      {task.status === 'WORKING' && agentProgress?.items && agentProgress.items.length > 0 && (
+        <div className="kanban-detail-task-list">
+          <div className="kanban-detail-task-list-header">
+            <span className="kanban-detail-task-list-title">{t('kanban.agentTasks')}</span>
+            {agentProgress.progress && (
+              <span className="kanban-detail-task-list-count">{agentProgress.progress}</span>
+            )}
+          </div>
+          <ul className="kanban-detail-task-items">
+            {agentProgress.items.map((item, i) => (
+              <li key={i} className={`kanban-detail-task-item kanban-detail-task-item--${item.status}`}>
+                <span className="kanban-detail-task-item-icon">
+                  {item.status === 'completed' ? '\u2713' : item.status === 'in_progress' ? '\u25B6' : '\u25CB'}
+                </span>
+                <span className="kanban-detail-task-item-label">{item.label}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* Status & Priority & Scope */}
       <div className="kanban-detail-meta">
