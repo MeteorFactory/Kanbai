@@ -174,4 +174,37 @@ describe('AgentProgressParser', () => {
       expect(result!.activity.type).toBe('thinking')
     })
   })
+
+  describe('activity priority', () => {
+    it('spinner does not overwrite recent tool activity', () => {
+      // Tool activity sets high priority
+      parser.feed('term-1', '⏺ Read src/main/index.ts\n')
+      // Spinner arrives immediately after — should NOT replace tool
+      const result = parser.feed('term-1', '✶ Thundering…\n')
+      expect(result!.activity.type).toBe('tool')
+      expect(result!.activity.label).toBe('Lecture')
+    })
+
+    it('spinner can replace tool after hold time expires', async () => {
+      parser.feed('term-1', '⏺ Read src/main/index.ts\n')
+      // Simulate time passing (> 3s)
+      const state = (parser as any).terminals.get('term-1')
+      state.activitySetAt = Date.now() - 4000
+      const result = parser.feed('term-1', '✶ Thundering…\n')
+      expect(result!.activity.type).toBe('thinking')
+    })
+
+    it('higher priority tool replaces lower priority thinking', () => {
+      parser.feed('term-1', '✶ Thinking…\n')
+      const result = parser.feed('term-1', '⏺ Edit src/file.ts\n')
+      expect(result!.activity.type).toBe('tool')
+      expect(result!.activity.label).toBe('Modification')
+    })
+
+    it('subagent replaces tool', () => {
+      parser.feed('term-1', '⏺ Read src/file.ts\n')
+      const result = parser.feed('term-1', '● Running 2 Explore agents…\n')
+      expect(result!.activity.type).toBe('subagent')
+    })
+  })
 })

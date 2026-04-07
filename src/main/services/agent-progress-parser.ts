@@ -16,10 +16,23 @@ export interface SubagentInfo {
   status: string
 }
 
+// Priority: higher = more interesting to the user
+const ACTIVITY_PRIORITY: Record<AgentActivityType, number> = {
+  idle: 0,
+  thinking: 1,
+  text: 2,
+  tool: 3,
+  subagent: 4,
+}
+
+// How long a high-priority activity stays visible before a lower one can replace it (ms)
+const ACTIVITY_HOLD_MS = 3000
+
 interface TerminalState {
   taskId: string
   lineBuffer: string
   activity: AgentActivity
+  activitySetAt: number
   subagents: SubagentInfo[]
   items: AgentTaskItem[]
   completedCount: number
@@ -139,6 +152,7 @@ export class AgentProgressParser {
       taskId,
       lineBuffer: '',
       activity: { type: 'idle', label: '' },
+      activitySetAt: 0,
       subagents: [],
       items: [],
       completedCount: 0,
@@ -176,19 +190,19 @@ export class AgentProgressParser {
     // 1. Spinner (thinking) — ✶ Hyperspacing… (2m24s · ↓ 4.1k tokens)
     const spinnerMatch = clean.match(SPINNER_PATTERN)
     if (spinnerMatch) {
-      state.activity = { type: 'thinking', label: spinnerMatch[1]! }
+      this.setActivity(state, { type: 'thinking', label: spinnerMatch[1]! })
       return true
     }
 
     // Standalone thinking word — e.g. "Pollinating…" or "Mulling…"
     if (/^\w+…$/.test(clean)) {
-      state.activity = { type: 'thinking', label: clean }
+      this.setActivity(state, { type: 'thinking', label: clean })
       return true
     }
 
     // "thinking" or "thought for Ns" in status line
     if (/thinking|thought\s+for/i.test(clean) && /·/.test(clean)) {
-      state.activity = { type: 'thinking', label: 'Réflexion...' }
+      this.setActivity(state, { type: 'thinking', label: 'Réflexion...' })
       return true
     }
 
@@ -196,11 +210,7 @@ export class AgentProgressParser {
     for (const tp of TOOL_PATTERNS) {
       const m = clean.match(tp.pattern)
       if (m) {
-        state.activity = {
-          type: tp.type,
-          label: tp.labelFn(m),
-          detail: tp.detailFn?.(m),
-        }
+        this.setActivity(state, { type: tp.type, label: tp.labelFn(m), detail: tp.detailFn?.(m) })
         return true
       }
     }
@@ -208,29 +218,26 @@ export class AgentProgressParser {
     // 3. Reading N files
     const readingMatch = clean.match(READING_FILES)
     if (readingMatch) {
-      state.activity = { type: 'tool', label: 'Lecture', detail: `${readingMatch[1]} fichiers` }
+      this.setActivity(state, { type: 'tool', label: 'Lecture', detail: `${readingMatch[1]} fichiers` })
       return true
     }
 
     // 4. Searched for
     const searchMatch = clean.match(SEARCHED_FOR)
     if (searchMatch) {
-      state.activity = { type: 'tool', label: 'Recherche', detail: searchMatch[1]?.trim() }
+      this.setActivity(state, { type: 'tool', label: 'Recherche', detail: searchMatch[1]?.trim() })
       return true
     }
 
     // 5. Running N agents — "● Running 2 Explore agents…"
     const runningMatch = clean.match(RUNNING_AGENTS)
     if (runningMatch) {
-      state.activity = {
-        type: 'subagent',
-        label: `${runningMatch[1]} ${runningMatch[2]} agents`,
-      }
       state.subagents = []
+      this.setActivity(state, { type: 'subagent', label: `${runningMatch[1]} ${runningMatch[2]} agents` })
       return true
     }
 
-    // 5b. Subagent detail lines — "├─ Explore v2 workspace/project UI · 10 tool uses · 44.9k tokens"
+    // 5b. Subagent detail lines — "├─ Name · stats"
     const detailMatch = clean.match(SUBAGENT_DETAIL)
     if (detailMatch) {
       const name = detailMatch[1]!.trim()
@@ -241,23 +248,22 @@ export class AgentProgressParser {
       } else {
         state.subagents.push({ name, status: stats })
       }
-      state.activity = {
+      this.setActivity(state, {
         type: 'subagent',
         label: `${state.subagents.length} agents`,
         detail: state.subagents.map((s) => s.name).join(', '),
-      }
+      })
       return true
     }
 
-    // 6. Generic bullet + tool call (e.g. "⏺ Update(...)" or "⏺ SomeNewTool")
-    // Must look like a tool invocation: bullet + PascalCase word + optional parens, not a sentence
+    // 6. Generic bullet + tool call (e.g. "⏺ Update(...)")
     const genericMatch = clean.match(/[⏺●]\s*([A-Z]\w+)\s*\(/)
     if (genericMatch && !clean.includes('bypass permissions') && !clean.includes('accept edits')) {
-      state.activity = { type: 'tool', label: genericMatch[1]! }
+      this.setActivity(state, { type: 'tool', label: genericMatch[1]! })
       return true
     }
 
-    // 8. Task items — ✔ completed, ◼ pending
+    // 7. Task items — ✔ completed, ◼ pending
     const completedMatch = clean.match(TASK_COMPLETED)
     if (completedMatch) {
       this.updateTaskItem(state, completedMatch[1]!.trim(), 'completed')
@@ -276,12 +282,27 @@ export class AgentProgressParser {
       return true
     }
 
-    // 9. Text response (● bullet)
+    // 8. Text response (● bullet with sentence text)
     if (clean.startsWith('●') && clean.length > 2) {
-      state.activity = { type: 'text', label: 'Réponse...' }
+      this.setActivity(state, { type: 'text', label: 'Réponse...' })
       return true
     }
 
+    return false
+  }
+
+  private setActivity(state: TerminalState, activity: AgentActivity): boolean {
+    const now = Date.now()
+    const newPriority = ACTIVITY_PRIORITY[activity.type] ?? 0
+    const currentPriority = ACTIVITY_PRIORITY[state.activity.type] ?? 0
+    const elapsed = now - state.activitySetAt
+
+    // Always accept higher or equal priority, or if hold time has elapsed
+    if (newPriority >= currentPriority || elapsed >= ACTIVITY_HOLD_MS) {
+      state.activity = activity
+      state.activitySetAt = now
+      return true
+    }
     return false
   }
 
