@@ -102,6 +102,11 @@ describe('AgentProgressParser', () => {
       expect(result!.activity).toEqual({ type: 'subagent', label: 'Find ProjectItem component' })
     })
 
+    it('detects Explore (subagent)', () => {
+      const result = parser.feed('term-1', '⏺ Explore(Explore Kanbai v1 agent tracking)\n')
+      expect(result!.activity).toEqual({ type: 'subagent', label: 'Explore Kanbai v1 agent tracking' })
+    })
+
     it('detects unknown tool calls via generic pattern', () => {
       const result = parser.feed('term-1', '⏺ Update(~/.kanbai/kanban/file.json)\n')
       expect(result!.activity).toEqual({ type: 'tool', label: 'Update' })
@@ -168,10 +173,16 @@ describe('AgentProgressParser', () => {
     })
   })
 
-  describe('partial lines', () => {
+  describe('partial lines and \\r splits', () => {
     it('handles partial line for spinner', () => {
       const result = parser.feed('term-1', '✶ Thinking…')
       expect(result!.activity.type).toBe('thinking')
+    })
+
+    it('splits on \\r for in-place status updates', () => {
+      const result = parser.feed('term-1', '● Running 2 Explore agents…\r✶ Incubating…\n')
+      // Running agents has higher priority, so it stays
+      expect(result!.activity.type).toBe('subagent')
     })
   })
 

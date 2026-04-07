@@ -109,7 +109,7 @@ const TOOL_PATTERNS: Array<{
     detailFn: (m) => m[1]?.trim(),
   },
   {
-    pattern: /[⏺●]\s*Agent\s*\((.+?)\)/,
+    pattern: /[⏺●]\s*(?:Agent|Explore|Plan)\s*\((.+?)\)/,
     type: 'subagent',
     labelFn: (m) => m[1]?.trim() ?? 'Subagent',
   },
@@ -169,8 +169,15 @@ export class AgentProgressParser {
     if (!state) return null
 
     state.lineBuffer += raw
-    const lines = state.lineBuffer.split('\n')
+
+    // Split on \n and \r — PTY uses \r for in-place status line updates
+    const lines = state.lineBuffer.split(/[\n\r]+/)
     state.lineBuffer = lines.pop() ?? ''
+
+    // Cap buffer size to prevent unbounded growth
+    if (state.lineBuffer.length > 2000) {
+      state.lineBuffer = state.lineBuffer.slice(-1000)
+    }
 
     let changed = false
     for (const line of lines) {
@@ -179,7 +186,7 @@ export class AgentProgressParser {
       if (this.parseLine(clean, state)) changed = true
     }
 
-    // Also check partial line for spinner updates (they refresh in-place)
+    // Also check partial line for spinner/status updates (written in-place without newline)
     const partialClean = stripAnsi(state.lineBuffer).trim()
     if (partialClean && this.parseLine(partialClean, state)) changed = true
 
