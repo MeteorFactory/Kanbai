@@ -28,6 +28,12 @@ const ACTIVITY_PRIORITY: Record<AgentActivityType, number> = {
 // How long a high-priority activity stays visible before a lower one can replace it (ms)
 const ACTIVITY_HOLD_MS = 3000
 
+// Minimum length for a thinking label to be displayed (excluding trailing …)
+// Below this, we show "Réflexion..." instead of garbled single-char labels like "t…"
+const MIN_THINKING_LABEL_LENGTH = 3
+
+const THINKING_FALLBACK = 'Réflexion...'
+
 interface TerminalState {
   taskId: string
   lineBuffer: string
@@ -191,13 +197,18 @@ export class AgentProgressParser {
     // 1. Spinner (thinking) — ✶ Hyperspacing… (2m24s · ↓ 4.1k tokens)
     const spinnerMatch = clean.match(SPINNER_PATTERN)
     if (spinnerMatch) {
-      this.setActivity(state, { type: 'thinking', label: spinnerMatch[1]! })
+      const rawLabel = spinnerMatch[1]!
+      const labelText = rawLabel.replace(/…$/, '')
+      const label = labelText.length >= MIN_THINKING_LABEL_LENGTH ? rawLabel : THINKING_FALLBACK
+      this.setActivity(state, { type: 'thinking', label })
       return true
     }
 
     // Standalone thinking word — e.g. "Pollinating…" or "Mulling…"
     if (/^\w+…$/.test(clean)) {
-      this.setActivity(state, { type: 'thinking', label: clean })
+      const labelText = clean.replace(/…$/, '')
+      const label = labelText.length >= MIN_THINKING_LABEL_LENGTH ? clean : THINKING_FALLBACK
+      this.setActivity(state, { type: 'thinking', label })
       return true
     }
 
@@ -305,6 +316,11 @@ export class AgentProgressParser {
     const newPriority = ACTIVITY_PRIORITY[activity.type] ?? 0
     const currentPriority = ACTIVITY_PRIORITY[state.activity.type] ?? 0
     const elapsed = now - state.activitySetAt
+
+    // Guard against garbled single-char labels from partial PTY output
+    if (activity.label.replace(/[.…]+$/, '').length < 2 && activity.type !== 'idle') {
+      activity = { ...activity, label: THINKING_FALLBACK }
+    }
 
     // While subagents are running, only subagent-level updates can change activity
     if (state.subagents.length > 0 && newPriority < ACTIVITY_PRIORITY.subagent) {

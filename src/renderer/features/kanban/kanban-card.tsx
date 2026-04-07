@@ -139,7 +139,7 @@ export function KanbanCard({
               <div className="kanban-card-activity">
                 <span className={`kanban-card-activity-dot kanban-card-activity-dot--${agentProgress.activity.type}`} />
                 <span className="kanban-card-activity-label">{agentProgress.activity.label}</span>
-                {agentProgress.activity.detail && (
+                {agentProgress.activity.detail && agentProgress.activity.detail.length > 2 && (
                   <span className="kanban-card-activity-detail">{agentProgress.activity.detail}</span>
                 )}
               </div>

@@ -138,7 +138,7 @@ export function TaskDetailPanel({
             <div className="kanban-detail-activity">
               <span className={`kanban-detail-activity-dot kanban-detail-activity-dot--${agentProgress.activity.type}`} />
               <span className="kanban-detail-activity-label">{agentProgress.activity.label}</span>
-              {agentProgress.activity.detail && (
+              {agentProgress.activity.detail && agentProgress.activity.detail.length > 2 && (
                 <span className="kanban-detail-activity-detail">{agentProgress.activity.detail}</span>
               )}
             </div>

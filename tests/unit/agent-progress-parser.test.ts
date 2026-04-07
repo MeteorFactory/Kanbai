@@ -45,6 +45,30 @@ describe('AgentProgressParser', () => {
       const result = parser.feed('term-1', '\x1b[38;2;215;119;87m✢\x1b[39m \x1b[38;2;235;159;127mMulling…\x1b[39m (thinking)\n')
       expect(result!.activity.type).toBe('thinking')
     })
+
+    it('uses fallback for single-char spinner label like "t…"', () => {
+      const result = parser.feed('term-1', '✶ t…\n')
+      expect(result!.activity.type).toBe('thinking')
+      expect(result!.activity.label).toBe('Réflexion...')
+    })
+
+    it('uses fallback for two-char spinner label like "In…"', () => {
+      const result = parser.feed('term-1', '✻ In…\n')
+      expect(result!.activity.type).toBe('thinking')
+      expect(result!.activity.label).toBe('Réflexion...')
+    })
+
+    it('uses fallback for standalone single-char word like "I…"', () => {
+      const result = parser.feed('term-1', 'I…\n')
+      expect(result!.activity.type).toBe('thinking')
+      expect(result!.activity.label).toBe('Réflexion...')
+    })
+
+    it('keeps valid short spinner labels (3+ chars)', () => {
+      const result = parser.feed('term-1', '✶ Moo…\n')
+      expect(result!.activity.type).toBe('thinking')
+      expect(result!.activity.label).toBe('Moo…')
+    })
   })
 
   describe('tool detection', () => {
