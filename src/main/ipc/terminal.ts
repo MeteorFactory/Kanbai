@@ -13,6 +13,9 @@ const execFileAsync = promisify(execFile)
 import { StorageService } from '../services/storage'
 import { getGitProfileEnvForWorkspace } from './git'
 import { bumpCompanionChangeVersion } from '../services/companion-server'
+import { AgentProgressParser } from '../services/agent-progress-parser'
+
+const agentProgressParser = new AgentProgressParser()
 
 interface ManagedTerminal {
   id: string
@@ -304,6 +307,7 @@ export function setTerminalTaskInfo(tabId: string, taskId: string, ticketNumber:
     if (terminal.tabId === tabId) {
       terminal.taskId = taskId
       terminal.ticketNumber = ticketNumber
+      agentProgressParser.register(terminal.id, taskId)
       persistTerminalSessions()
       bumpCompanionChangeVersion()
       return
@@ -809,6 +813,7 @@ export function registerTerminalHandlers(ipcMain: IpcMain): void {
         if (pending) {
           managed.taskId = pending.taskId
           managed.ticketNumber = pending.ticketNumber
+          agentProgressParser.register(id, pending.taskId)
           pendingTaskInfo.delete(tabKey)
         }
       }
@@ -830,11 +835,40 @@ export function registerTerminalHandlers(ipcMain: IpcMain): void {
               }
             } catch { /* render frame disposed — ignore */ }
           }
+          // Parse agent progress for task-linked terminals
+          if (managed.taskId) {
+            const progressUpdate = agentProgressParser.feed(id, data)
+            if (progressUpdate) {
+              for (const win of BrowserWindow.getAllWindows()) {
+                try {
+                  if (!win.isDestroyed() && !win.webContents.isDestroyed()) {
+                    win.webContents.send(IPC_CHANNELS.KANBAN_TASK_PROGRESS, progressUpdate)
+                  }
+                } catch { /* render frame disposed */ }
+              }
+            }
+          }
         }),
       )
 
       managed.disposables.push(
         pty.onExit(({ exitCode, signal }) => {
+          // Clean up agent progress parser and notify renderer
+          agentProgressParser.unregister(id)
+          const exitingTerminal = terminals.get(id)
+          if (exitingTerminal?.taskId) {
+            for (const win of BrowserWindow.getAllWindows()) {
+              try {
+                if (!win.isDestroyed() && !win.webContents.isDestroyed()) {
+                  win.webContents.send(IPC_CHANNELS.KANBAN_TASK_PROGRESS, {
+                    taskId: exitingTerminal.taskId,
+                    progress: '',
+                    message: '',
+                  })
+                }
+              } catch { /* ignore */ }
+            }
+          }
           const terminal = terminals.get(id)
           if (terminal) {
             addFinishedSession({

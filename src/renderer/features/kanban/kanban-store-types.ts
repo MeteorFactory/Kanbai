@@ -10,6 +10,7 @@ export interface KanbanState {
   kanbanTabIds: Record<string, string>
   kanbanPromptCwds: Record<string, string>
   backgroundTasks: Record<string, KanbanTask[]>
+  agentProgress: Record<string, { progress?: string; message?: string }>
 }
 
 export interface KanbanActions {

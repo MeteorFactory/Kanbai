@@ -5,6 +5,15 @@ import type { AiProviderId } from '../../../shared/types/ai-provider'
 import type { KanbanTask, AiDefaults } from '../../../shared/types/index'
 import { TYPE_CONFIG, PRIORITY_COLORS, formatTicketNumber } from './kanban-constants'
 
+function parseProgress(p?: string): number | null {
+  if (!p) return null
+  const match = p.match(/^(\d+)\s*\/\s*(\d+)$/)
+  if (!match) return null
+  const [, current, total] = match
+  if (Number(total) === 0) return 0
+  return Math.min(100, Math.max(0, (Number(current!) / Number(total!)) * 100))
+}
+
 export function KanbanCard({
   task,
   isSelected,
@@ -16,6 +25,7 @@ export function KanbanCard({
   onGoToTerminal,
   projects,
   defaultAiProvider,
+  agentProgress,
 }: {
   task: KanbanTask
   isSelected: boolean
@@ -27,6 +37,7 @@ export function KanbanCard({
   onGoToTerminal: (() => void) | null
   projects: Array<{ id: string; name: string; aiProvider?: AiProviderId | null; aiDefaults?: AiDefaults }>
   defaultAiProvider: AiProviderId
+  agentProgress?: { progress?: string; message?: string }
 }) {
   const { t, locale, localeCode } = useI18n()
   const clickTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -107,6 +118,27 @@ export function KanbanCard({
         )}
         {task.splitSuggestions && task.splitSuggestions.length > 0 && (
           <span className="kanban-card-split-badge">{t('kanban.splitDetected')}</span>
+        )}
+        {isWorking && agentProgress && (agentProgress.progress || agentProgress.message) && (
+          <div className="kanban-card-progress">
+            {agentProgress.progress && (
+              <div className="kanban-card-progress-track">
+                <div
+                  className="kanban-card-progress-fill"
+                  style={{
+                    width: `${parseProgress(agentProgress.progress) ?? 0}%`,
+                    backgroundColor: workingColor,
+                  }}
+                />
+                <span className="kanban-card-progress-text" style={{ color: workingColor }}>
+                  {agentProgress.progress}
+                </span>
+              </div>
+            )}
+            {agentProgress.message && (
+              <p className="kanban-card-progress-message">{agentProgress.message}</p>
+            )}
+          </div>
         )}
         <div className="kanban-card-footer">
           <span className="kanban-card-date" title={new Date(task.updatedAt).toLocaleString(localeCode)}>

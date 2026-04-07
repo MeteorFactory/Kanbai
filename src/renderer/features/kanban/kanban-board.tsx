@@ -46,6 +46,7 @@ export function KanbanBoard() {
     attachFromClipboard,
     removeAttachment,
     kanbanTabIds,
+    agentProgress,
   } = useKanbanStore()
   const terminalTabs = useTerminalTabStore((s) => s.tabs)
   const setActiveTerminalTab = useTerminalTabStore((s) => s.setActiveTab)
@@ -109,6 +110,25 @@ export function KanbanBoard() {
       .then(setConditionResults)
       .catch(() => setConditionResults([]))
   }, [activeWorkspaceId, workspaceProjects.length])
+
+  // Listen for agent progress updates from main process
+  useEffect(() => {
+    const unsubscribe = window.kanbai.kanban.onTaskProgress((data) => {
+      useKanbanStore.setState((s) => {
+        if (!data.progress && !data.message) {
+          const { [data.taskId]: _, ...rest } = s.agentProgress
+          return { agentProgress: rest }
+        }
+        return {
+          agentProgress: {
+            ...s.agentProgress,
+            [data.taskId]: { progress: data.progress, message: data.message },
+          },
+        }
+      })
+    })
+    return () => { unsubscribe() }
+  }, [])
 
   // Visible predefined tasks: condition-aware + project-scoped
   const visiblePredefined = useMemo((): VisiblePredefinedEntry[] => {
@@ -532,6 +552,7 @@ export function KanbanBoard() {
           onArchiveTask={handleArchiveTask}
           onRestoreFromArchive={handleRestoreFromArchive}
           onToggleArchive={() => setArchiveExpanded(!archiveExpanded)}
+          agentProgress={agentProgress}
         />
 
         {selectedTask && (

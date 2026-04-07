@@ -401,6 +401,12 @@ const api = {
       ipcRenderer.invoke(IPC_CHANNELS.KANBAN_EVALUATE_TEMPLATE_CONDITIONS, { workspaceId }),
     executeTemplateAction: (taskId: string, workspaceId: string, actionId: string, projectPath: string, projectId: string): Promise<{ success: boolean; result?: string; error?: string }> =>
       ipcRenderer.invoke(IPC_CHANNELS.KANBAN_EXECUTE_TEMPLATE_ACTION, { taskId, workspaceId, actionId, projectPath, projectId }),
+    onTaskProgress: (callback: (data: { taskId: string; progress: string; message: string }) => void) => {
+      const listener = (_event: Electron.IpcRendererEvent, payload: { taskId: string; progress: string; message: string }) =>
+        callback(payload)
+      ipcRenderer.on(IPC_CHANNELS.KANBAN_TASK_PROGRESS, listener)
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.KANBAN_TASK_PROGRESS, listener)
+    },
   },
 
   // Workspace storage

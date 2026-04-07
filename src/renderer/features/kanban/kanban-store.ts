@@ -21,6 +21,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
   kanbanTabIds: {},
   kanbanPromptCwds: {},
   backgroundTasks: {},
+  agentProgress: {},
 
   loadTasks: createLoadTasks(get, set),
   syncTasksFromFile: createSyncTasksFromFile(get, set),

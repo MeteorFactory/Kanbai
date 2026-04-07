@@ -89,6 +89,7 @@ const mockMirehub = {
     getWorkingTickets: vi.fn().mockResolvedValue([]),
     evaluateTemplateConditions: vi.fn().mockResolvedValue([]),
     executeTemplateAction: vi.fn().mockResolvedValue({ success: true }),
+    onTaskProgress: vi.fn().mockReturnValue(() => {}),
   },
   gitConfig: {
     get: vi.fn().mockResolvedValue({ userName: '', userEmail: '', isCustom: false }),
