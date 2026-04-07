@@ -2,8 +2,8 @@ import type { GitLogEntry } from '../../../shared/types'
 import type { GraphCommitInfo } from './git-types'
 
 export const GRAPH_COLORS = [
-  '#9747FF', '#20D4A0', '#F4585B', '#F5A623', '#fbbf24',
-  '#B78AFF', '#22d3ee', '#ec4899', '#B78AFF', '#B78AFF',
+  '#22d3ee', '#4ade80', '#fb923c', '#a78bfa', '#f87171',
+  '#facc15', '#60a5fa',
 ]
 
 export function computeGraph(entries: GitLogEntry[]): GraphCommitInfo[] {

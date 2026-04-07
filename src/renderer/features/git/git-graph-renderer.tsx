@@ -192,14 +192,29 @@ export function GitGraph({ data, maxLane, rowHeight, laneWidth }: {
       })}
 
       {/* 4. Commit dots (on top of everything) */}
-      {dots.map((d, i) => (
-        <circle
-          key={`dot-${i}`}
-          cx={laneX(d.lane)} cy={rowY(d.row)}
-          r={d.isMerge ? MERGE_DOT_RADIUS : DOT_RADIUS}
-          fill={d.color} stroke="var(--bg-primary)" strokeWidth={2.5}
-        />
-      ))}
+      {dots.map((d, i) =>
+        d.isMerge ? (
+          <g key={`dot-${i}`}>
+            <circle
+              cx={laneX(d.lane)} cy={rowY(d.row)}
+              r={MERGE_DOT_RADIUS}
+              fill="var(--bg-primary)" stroke={d.color} strokeWidth={2}
+            />
+            <circle
+              cx={laneX(d.lane)} cy={rowY(d.row)}
+              r={2}
+              fill={d.color}
+            />
+          </g>
+        ) : (
+          <circle
+            key={`dot-${i}`}
+            cx={laneX(d.lane)} cy={rowY(d.row)}
+            r={DOT_RADIUS}
+            fill={d.color}
+          />
+        )
+      )}
     </svg>
   )
 }

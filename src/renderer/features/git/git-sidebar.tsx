@@ -206,9 +206,20 @@ export function GitSidebar(props: GitSidebarProps) {
                 ) : (
                   <>
                     <span className="git-sidebar-branch-name">
-                      {branch.name === props.status!.branch && <span className="git-sidebar-dot" />}
+                      {branch.name === props.status!.branch ? (
+                        <svg width="10" height="10" viewBox="0 0 256 256" fill="var(--color-cyan)" className="git-sidebar-check">
+                          <path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z" />
+                        </svg>
+                      ) : (
+                        <svg width="10" height="10" viewBox="0 0 256 256" className="git-sidebar-branch-icon">
+                          <path d="M224,68a36,36,0,1,0-48,33.94V112a12,12,0,0,1-12,12H92a12,12,0,0,1-12-12v-10.06a36,36,0,1,0-16,0V112a28,28,0,0,0,28,28h28v21.94a36,36,0,1,0,16,0V140h28a28,28,0,0,0,28-28v-10.06A36.07,36.07,0,0,0,224,68ZM64,68A20,20,0,1,1,84,88,20,20,0,0,1,64,68Zm64,120a20,20,0,1,1-20-20A20,20,0,0,1,148,188ZM188,88a20,20,0,1,1,20-20A20,20,0,0,1,188,88Z" fill="currentColor"/>
+                        </svg>
+                      )}
                       {branch.name}
                     </span>
+                    {branch.name === props.status!.branch && (
+                      <span className="git-sidebar-current-badge">current</span>
+                    )}
                     <span className="git-sidebar-branch-hash">{branch.hash}</span>
                   </>
                 )}
