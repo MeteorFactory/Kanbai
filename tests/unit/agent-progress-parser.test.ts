@@ -1,31 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { AgentProgressParser } from '../../src/main/services/agent-progress-parser'
 
-function toolUseEvent(id: string, name: string, input: Record<string, unknown>): string {
-  return JSON.stringify({
-    type: 'assistant',
-    message: { content: [{ type: 'tool_use', id, name, input }] },
-  })
-}
-
-function thinkingEvent(text: string): string {
-  return JSON.stringify({
-    type: 'assistant',
-    message: { content: [{ type: 'thinking', thinking: text }] },
-  })
-}
-
-function textEvent(text: string): string {
-  return JSON.stringify({
-    type: 'assistant',
-    message: { content: [{ type: 'text', text }] },
-  })
-}
-
-function resultEvent(): string {
-  return JSON.stringify({ type: 'result', subtype: 'success', duration_ms: 5000 })
-}
-
 describe('AgentProgressParser', () => {
   let parser: AgentProgressParser
 
@@ -34,131 +9,143 @@ describe('AgentProgressParser', () => {
     parser.register('term-1', 'task-abc')
   })
 
-  it('returns null for non-JSON lines', () => {
+  it('returns null for empty/non-matching lines', () => {
     expect(parser.feed('term-1', 'some random terminal output\n')).toBeNull()
   })
 
   it('returns null for unregistered terminals', () => {
-    expect(parser.feed('unknown', toolUseEvent('t1', 'TaskCreate', { subject: 'X' }) + '\n')).toBeNull()
-  })
-
-  it('extracts progress from TodoWrite with items', () => {
-    const result = parser.feed('term-1', toolUseEvent('t1', 'TodoWrite', {
-      todos: [
-        { content: 'Setup project', status: 'completed' },
-        { content: 'Write parser', status: 'in_progress' },
-        { content: 'Add UI', status: 'pending' },
-      ],
-    }) + '\n')
-    expect(result!.progress).toBe('1/3')
-    expect(result!.items).toEqual([
-      { label: 'Setup project', status: 'completed' },
-      { label: 'Write parser', status: 'in_progress' },
-      { label: 'Add UI', status: 'pending' },
-    ])
-    expect(result!.activity.type).toBe('tool')
-  })
-
-  it('extracts progress from TaskCreate with items', () => {
-    parser.feed('term-1', toolUseEvent('t1', 'TaskCreate', { subject: 'First' }) + '\n')
-    const result = parser.feed('term-1', toolUseEvent('t2', 'TaskCreate', { subject: 'Second' }) + '\n')
-    expect(result!.progress).toBe('0/2')
-    expect(result!.items).toHaveLength(2)
-  })
-
-  it('extracts progress from TaskUpdate completed', () => {
-    parser.feed('term-1', toolUseEvent('t1', 'TaskCreate', { subject: 'Task A' }) + '\n')
-    parser.feed('term-1', toolUseEvent('t2', 'TaskCreate', { subject: 'Task B' }) + '\n')
-    const result = parser.feed('term-1', toolUseEvent('t3', 'TaskUpdate', { taskId: '1', status: 'completed', subject: 'Task A' }) + '\n')
-    expect(result!.progress).toBe('1/2')
-    expect(result!.items[0]!.status).toBe('completed')
-  })
-
-  it('handles partial lines across multiple feeds', () => {
-    const fullLine = toolUseEvent('t1', 'TodoWrite', {
-      todos: [{ content: 'Done', status: 'completed' }, { content: 'Next', status: 'in_progress' }],
-    })
-    expect(parser.feed('term-1', fullLine.slice(0, 50))).toBeNull()
-    const result = parser.feed('term-1', fullLine.slice(50) + '\n')
-    expect(result!.progress).toBe('1/2')
-  })
-
-  it('deduplicates tool_use IDs', () => {
-    const line = toolUseEvent('same-id', 'TaskCreate', { subject: 'X' })
-    parser.feed('term-1', line + '\n')
-    expect(parser.feed('term-1', line + '\n')).toBeNull()
+    expect(parser.feed('unknown', '✶ Thinking…\n')).toBeNull()
   })
 
   it('cleanup removes terminal state', () => {
     parser.unregister('term-1')
-    expect(parser.feed('term-1', toolUseEvent('t1', 'TaskCreate', { subject: 'X' }) + '\n')).toBeNull()
+    expect(parser.feed('term-1', '✶ Thinking…\n')).toBeNull()
   })
 
-  // Activity tracking tests
-  describe('activity tracking', () => {
-    it('detects thinking activity', () => {
-      const result = parser.feed('term-1', thinkingEvent('Let me analyze this...') + '\n')
-      expect(result!.activity).toEqual({ type: 'thinking', label: 'Réflexion...' })
+  describe('thinking/spinner detection', () => {
+    it('detects spinner with unicode symbol', () => {
+      const result = parser.feed('term-1', '✶ Hyperspacing…\n')
+      expect(result!.activity.type).toBe('thinking')
+      expect(result!.activity.label).toBe('Hyperspacing…')
     })
 
-    it('detects text output activity', () => {
-      const result = parser.feed('term-1', textEvent('Here is my analysis...') + '\n')
-      expect(result!.activity).toEqual({ type: 'text', label: 'Rédaction...' })
+    it('detects spinner with extra info', () => {
+      const result = parser.feed('term-1', '✻ Cerebrating… (2m24s · ↓ 4.1k tokens)\n')
+      expect(result!.activity.type).toBe('thinking')
+      expect(result!.activity.label).toBe('Cerebrating…')
     })
 
-    it('detects Read tool activity', () => {
-      const result = parser.feed('term-1', toolUseEvent('t1', 'Read', { file_path: '/src/main/index.ts' }) + '\n')
-      expect(result!.activity).toEqual({ type: 'tool', label: 'Lecture', detail: '.../main/index.ts' })
+    it('detects standalone thinking word', () => {
+      const result = parser.feed('term-1', 'Pollinating…\n')
+      expect(result!.activity.type).toBe('thinking')
+      expect(result!.activity.label).toBe('Pollinating…')
     })
 
-    it('detects Edit tool activity', () => {
-      const result = parser.feed('term-1', toolUseEvent('t1', 'Edit', { file_path: '/a/b/c.ts' }) + '\n')
-      expect(result!.activity).toEqual({ type: 'tool', label: 'Modification', detail: '.../b/c.ts' })
+    it('detects ANSI-wrapped spinner', () => {
+      const result = parser.feed('term-1', '\x1b[38;2;215;119;87m✢\x1b[39m \x1b[38;2;235;159;127mMulling…\x1b[39m (thinking)\n')
+      expect(result!.activity.type).toBe('thinking')
+    })
+  })
+
+  describe('tool detection', () => {
+    it('detects Read tool', () => {
+      const result = parser.feed('term-1', '⏺ Read src/main/index.ts\n')
+      expect(result!.activity).toEqual({ type: 'tool', label: 'Lecture', detail: 'src/main/index.ts' })
     })
 
-    it('detects Bash tool activity', () => {
-      const result = parser.feed('term-1', toolUseEvent('t1', 'Bash', { command: 'npm test' }) + '\n')
+    it('detects Reading N files', () => {
+      const result = parser.feed('term-1', 'Reading 3 files\n')
+      expect(result!.activity).toEqual({ type: 'tool', label: 'Lecture', detail: '3 fichiers' })
+    })
+
+    it('detects Edit tool', () => {
+      const result = parser.feed('term-1', '⏺ Edit src/renderer/App.tsx\n')
+      expect(result!.activity).toEqual({ type: 'tool', label: 'Modification', detail: 'src/renderer/App.tsx' })
+    })
+
+    it('detects Write tool', () => {
+      const result = parser.feed('term-1', '⏺ Write src/new-file.ts\n')
+      expect(result!.activity).toEqual({ type: 'tool', label: 'Écriture', detail: 'src/new-file.ts' })
+    })
+
+    it('detects Bash tool', () => {
+      const result = parser.feed('term-1', '⏺ Bash(npm test)\n')
       expect(result!.activity).toEqual({ type: 'tool', label: 'Commande', detail: 'npm test' })
-    })
-
-    it('detects Grep tool activity', () => {
-      const result = parser.feed('term-1', toolUseEvent('t1', 'Grep', { pattern: 'useEffect' }) + '\n')
-      expect(result!.activity).toEqual({ type: 'tool', label: 'Recherche', detail: 'useEffect' })
-    })
-
-    it('detects Agent (subagent) activity', () => {
-      const result = parser.feed('term-1', toolUseEvent('t1', 'Agent', {
-        description: 'Find ProjectItem component',
-        subagent_type: 'Explore',
-      }) + '\n')
-      expect(result!.activity).toEqual({
-        type: 'subagent',
-        label: 'Find ProjectItem component',
-        detail: 'Explore',
-      })
-    })
-
-    it('detects WebSearch activity', () => {
-      const result = parser.feed('term-1', toolUseEvent('t1', 'WebSearch', { query: 'react 19 new features' }) + '\n')
-      expect(result!.activity).toEqual({ type: 'tool', label: 'Recherche web', detail: 'react 19 new features' })
-    })
-
-    it('resets activity on session end', () => {
-      parser.feed('term-1', thinkingEvent('thinking...') + '\n')
-      const result = parser.feed('term-1', resultEvent() + '\n')
-      expect(result!.activity).toEqual({ type: 'idle', label: '' })
     })
 
     it('truncates long bash commands', () => {
       const longCmd = 'find / -name "*.ts" -exec grep -l "something very very very very very very long" {} \\;'
-      const result = parser.feed('term-1', toolUseEvent('t1', 'Bash', { command: longCmd }) + '\n')
+      const result = parser.feed('term-1', `⏺ Bash(${longCmd})\n`)
       expect(result!.activity.detail!.length).toBeLessThanOrEqual(61)
       expect(result!.activity.detail!.endsWith('…')).toBe(true)
     })
 
-    it('handles unknown tools gracefully', () => {
-      const result = parser.feed('term-1', toolUseEvent('t1', 'SomeNewTool', { arg: 'val' }) + '\n')
+    it('detects Grep tool', () => {
+      const result = parser.feed('term-1', '⏺ Grep useEffect\n')
+      expect(result!.activity).toEqual({ type: 'tool', label: 'Recherche', detail: 'useEffect' })
+    })
+
+    it('detects Searched for pattern', () => {
+      const result = parser.feed('term-1', 'Searched for 2 patterns, read 5 files\n')
+      expect(result!.activity.type).toBe('tool')
+      expect(result!.activity.label).toBe('Recherche')
+    })
+
+    it('detects Agent (subagent)', () => {
+      const result = parser.feed('term-1', '⏺ Agent(Find ProjectItem component)\n')
+      expect(result!.activity).toEqual({ type: 'subagent', label: 'Find ProjectItem component' })
+    })
+
+    it('detects unknown tools via generic pattern', () => {
+      const result = parser.feed('term-1', '⏺ SomeNewTool\n')
       expect(result!.activity).toEqual({ type: 'tool', label: 'SomeNewTool' })
+    })
+
+    it('ignores permission/UI lines', () => {
+      expect(parser.feed('term-1', '⏵⏵ bypass permissions on (shift+tab to cycle)\n')).toBeNull()
+    })
+  })
+
+  describe('task items', () => {
+    it('detects completed task', () => {
+      const result = parser.feed('term-1', '✔ Register ColorPickerView\n')
+      expect(result!.items).toEqual([{ label: 'Register ColorPickerView', status: 'completed' }])
+      expect(result!.progress).toBe('1/1')
+    })
+
+    it('detects pending task', () => {
+      const result = parser.feed('term-1', '◼ Build and test\n')
+      expect(result!.items).toEqual([{ label: 'Build and test', status: 'pending' }])
+      expect(result!.progress).toBe('0/1')
+    })
+
+    it('builds task list from multiple items', () => {
+      parser.feed('term-1', '✔ Setup project\n')
+      parser.feed('term-1', '✔ Write parser\n')
+      const result = parser.feed('term-1', '◼ Add UI\n')
+      expect(result!.items).toHaveLength(3)
+      expect(result!.progress).toBe('2/3')
+    })
+
+    it('updates existing task status', () => {
+      parser.feed('term-1', '◼ Setup project\n')
+      const result = parser.feed('term-1', '✔ Setup project\n')
+      expect(result!.items).toHaveLength(1)
+      expect(result!.items[0]!.status).toBe('completed')
+    })
+  })
+
+  describe('text response', () => {
+    it('detects text response with ● bullet', () => {
+      const result = parser.feed('term-1', '● Good. Now let me read the key files.\n')
+      expect(result!.activity).toEqual({ type: 'text', label: 'Réponse...' })
+    })
+  })
+
+  describe('partial lines', () => {
+    it('handles partial line for spinner', () => {
+      const result = parser.feed('term-1', '✶ Thinking…')
+      expect(result!.activity.type).toBe('thinking')
     })
   })
 })

@@ -1,8 +1,3 @@
-interface TodoItem {
-  content: string
-  status: string
-}
-
 export interface AgentTaskItem {
   label: string
   status: 'pending' | 'in_progress' | 'completed'
@@ -19,11 +14,10 @@ export interface AgentActivity {
 interface TerminalState {
   taskId: string
   lineBuffer: string
-  seenToolIds: Set<string>
-  taskCount: number
-  completedTasks: number
-  items: AgentTaskItem[]
   activity: AgentActivity
+  items: AgentTaskItem[]
+  completedCount: number
+  totalCount: number
 }
 
 export interface ProgressUpdate {
@@ -34,6 +28,95 @@ export interface ProgressUpdate {
   activity: AgentActivity
 }
 
+// Strip ANSI escape codes from PTY output
+function stripAnsi(text: string): string {
+  return text
+    .replace(/\x1b\[[0-9;]*[a-zA-Z?]/g, '')
+    .replace(/\x1b\][^\x07]*\x07/g, '')
+    .replace(/\x1b\[\?[0-9;]*[hlsr]/g, '')
+}
+
+// Claude Code spinner verbs — fancy animated thinking indicators
+const SPINNER_PATTERN = /[✶✻✽✳✢✺✵❋✿⊹⋆]\s*(\S+…)/
+
+// Tool use patterns — ⏺ prefix in Claude Code CLI output
+const TOOL_PATTERNS: Array<{
+  pattern: RegExp
+  type: AgentActivityType
+  labelFn: (m: RegExpMatchArray) => string
+  detailFn?: (m: RegExpMatchArray) => string | undefined
+}> = [
+  {
+    pattern: /⏺\s*(?:Read|Reading)\s+(.+)/,
+    type: 'tool',
+    labelFn: () => 'Lecture',
+    detailFn: (m) => m[1]?.trim().replace(/\.{3}$/, ''),
+  },
+  {
+    pattern: /⏺\s*(?:Edit|Editing)\s+(.+)/,
+    type: 'tool',
+    labelFn: () => 'Modification',
+    detailFn: (m) => m[1]?.trim(),
+  },
+  {
+    pattern: /⏺\s*(?:Write|Writing)\s+(.+)/,
+    type: 'tool',
+    labelFn: () => 'Écriture',
+    detailFn: (m) => m[1]?.trim(),
+  },
+  {
+    pattern: /⏺\s*Bash\((.+?)\)/,
+    type: 'tool',
+    labelFn: () => 'Commande',
+    detailFn: (m) => {
+      const cmd = m[1]?.trim()
+      return cmd && cmd.length > 60 ? cmd.slice(0, 60) + '…' : cmd
+    },
+  },
+  {
+    pattern: /⏺\s*(?:Grep|Searching)\s+(.+)/,
+    type: 'tool',
+    labelFn: () => 'Recherche',
+    detailFn: (m) => m[1]?.trim(),
+  },
+  {
+    pattern: /⏺\s*(?:Glob|Finding)\s+(.+)/,
+    type: 'tool',
+    labelFn: () => 'Recherche fichiers',
+    detailFn: (m) => m[1]?.trim(),
+  },
+  {
+    pattern: /⏺\s*Agent\s*\((.+?)\)/,
+    type: 'subagent',
+    labelFn: (m) => m[1]?.trim() ?? 'Subagent',
+  },
+  {
+    pattern: /⏺\s*(?:WebSearch|Searching the web)\s*(.+)/,
+    type: 'tool',
+    labelFn: () => 'Recherche web',
+    detailFn: (m) => m[1]?.trim(),
+  },
+  {
+    pattern: /⏺\s*(?:TodoWrite|TaskCreate|TaskUpdate)/,
+    type: 'tool',
+    labelFn: () => 'Mise à jour tâches',
+  },
+]
+
+// Task items from Claude Code TodoWrite display
+const TASK_COMPLETED = /[✔✓]\s+(.+)/
+const TASK_IN_PROGRESS = /[◐◑◒◓⏳]\s+(.+)/
+const TASK_PENDING = /[◼○◻]\s+(.+)/
+
+// Generic ⏺ tool call fallback
+const GENERIC_TOOL = /⏺\s*(\S+)/
+
+// "Reading N files" pattern
+const READING_FILES = /Reading\s+(\d+)\s+files?/
+
+// "Searched for" pattern
+const SEARCHED_FOR = /Searched\s+for\s+(.+)/
+
 export class AgentProgressParser {
   private terminals = new Map<string, TerminalState>()
 
@@ -41,11 +124,10 @@ export class AgentProgressParser {
     this.terminals.set(terminalId, {
       taskId,
       lineBuffer: '',
-      seenToolIds: new Set(),
-      taskCount: 0,
-      completedTasks: 0,
-      items: [],
       activity: { type: 'idle', label: '' },
+      items: [],
+      completedCount: 0,
+      totalCount: 0,
     })
   }
 
@@ -61,173 +143,120 @@ export class AgentProgressParser {
     const lines = state.lineBuffer.split('\n')
     state.lineBuffer = lines.pop() ?? ''
 
-    let lastUpdate: ProgressUpdate | null = null
-    for (const line of lines) {
-      const trimmed = line.trim()
-      if (!trimmed) continue
-      try {
-        const update = this.parseEvent(JSON.parse(trimmed), state)
-        if (update) lastUpdate = update
-      } catch {
-        // not JSON — skip
-      }
-    }
-    return lastUpdate
-  }
-
-  private parseEvent(
-    event: Record<string, unknown>,
-    state: TerminalState,
-  ): ProgressUpdate | null {
-    // Handle session end
-    if (event.type === 'result') {
-      state.activity = { type: 'idle', label: '' }
-      return this.buildUpdate(state)
-    }
-
-    if (event.type !== 'assistant') return null
-
-    const message = event.message as Record<string, unknown> | undefined
-    const content = message?.content as Array<Record<string, unknown>> | undefined
-    if (!Array.isArray(content)) return null
-
     let changed = false
-    for (const block of content) {
-      const blockType = block.type as string
-
-      // Thinking block
-      if (blockType === 'thinking' && block.thinking) {
-        state.activity = { type: 'thinking', label: 'Réflexion...' }
-        changed = true
-        continue
-      }
-
-      // Text block
-      if (blockType === 'text') {
-        const text = (block.text as string)?.trim()
-        if (text) {
-          state.activity = { type: 'text', label: 'Rédaction...' }
-          changed = true
-        }
-        continue
-      }
-
-      // Tool use
-      if (blockType === 'tool_use') {
-        const id = block.id as string
-        if (state.seenToolIds.has(id)) continue
-        state.seenToolIds.add(id)
-
-        const name = block.name as string
-        const input = (block.input as Record<string, unknown>) ?? {}
-
-        // Update activity based on tool type
-        state.activity = this.toolToActivity(name, input)
-        changed = true
-
-        // Extract progress for task-tracking tools
-        this.extractProgress(name, input, state)
-      }
+    for (const line of lines) {
+      const clean = stripAnsi(line).trim()
+      if (!clean) continue
+      if (this.parseLine(clean, state)) changed = true
     }
+
+    // Also check partial line for spinner updates (they refresh in-place)
+    const partialClean = stripAnsi(state.lineBuffer).trim()
+    if (partialClean && this.parseLine(partialClean, state)) changed = true
 
     return changed ? this.buildUpdate(state) : null
+  }
+
+  private parseLine(clean: string, state: TerminalState): boolean {
+    // 1. Spinner (thinking) — ✶ Hyperspacing… (2m24s · ↓ 4.1k tokens)
+    const spinnerMatch = clean.match(SPINNER_PATTERN)
+    if (spinnerMatch) {
+      state.activity = { type: 'thinking', label: spinnerMatch[1]! }
+      return true
+    }
+
+    // Standalone thinking word — e.g. "Pollinating…" or "Mulling…"
+    if (/^\w+…$/.test(clean)) {
+      state.activity = { type: 'thinking', label: clean }
+      return true
+    }
+
+    // "thinking" or "thought for Ns" in status line
+    if (/thinking|thought\s+for/i.test(clean) && /·/.test(clean)) {
+      state.activity = { type: 'thinking', label: 'Réflexion...' }
+      return true
+    }
+
+    // 2. Tool patterns
+    for (const tp of TOOL_PATTERNS) {
+      const m = clean.match(tp.pattern)
+      if (m) {
+        state.activity = {
+          type: tp.type,
+          label: tp.labelFn(m),
+          detail: tp.detailFn?.(m),
+        }
+        return true
+      }
+    }
+
+    // 3. Reading N files
+    const readingMatch = clean.match(READING_FILES)
+    if (readingMatch) {
+      state.activity = { type: 'tool', label: 'Lecture', detail: `${readingMatch[1]} fichiers` }
+      return true
+    }
+
+    // 4. Searched for
+    const searchMatch = clean.match(SEARCHED_FOR)
+    if (searchMatch) {
+      state.activity = { type: 'tool', label: 'Recherche', detail: searchMatch[1]?.trim() }
+      return true
+    }
+
+    // 5. Generic ⏺ tool
+    const genericMatch = clean.match(GENERIC_TOOL)
+    if (genericMatch && !clean.includes('bypass permissions') && !clean.includes('accept edits')) {
+      state.activity = { type: 'tool', label: genericMatch[1]! }
+      return true
+    }
+
+    // 6. Task items — ✔ completed, ◼ pending
+    const completedMatch = clean.match(TASK_COMPLETED)
+    if (completedMatch) {
+      this.updateTaskItem(state, completedMatch[1]!.trim(), 'completed')
+      return true
+    }
+
+    const inProgressMatch = clean.match(TASK_IN_PROGRESS)
+    if (inProgressMatch) {
+      this.updateTaskItem(state, inProgressMatch[1]!.trim(), 'in_progress')
+      return true
+    }
+
+    const pendingMatch = clean.match(TASK_PENDING)
+    if (pendingMatch) {
+      this.updateTaskItem(state, pendingMatch[1]!.trim(), 'pending')
+      return true
+    }
+
+    // 7. Text response (● bullet)
+    if (clean.startsWith('●') && clean.length > 2) {
+      state.activity = { type: 'text', label: 'Réponse...' }
+      return true
+    }
+
+    return false
+  }
+
+  private updateTaskItem(state: TerminalState, label: string, status: AgentTaskItem['status']): void {
+    const existing = state.items.find((i) => i.label === label)
+    if (existing) {
+      existing.status = status
+    } else {
+      state.items.push({ label, status })
+    }
+    state.completedCount = state.items.filter((i) => i.status === 'completed').length
+    state.totalCount = state.items.length
   }
 
   private buildUpdate(state: TerminalState): ProgressUpdate {
     return {
       taskId: state.taskId,
-      progress: state.taskCount > 0 || state.items.length > 0
-        ? `${state.completedTasks}/${Math.max(state.taskCount, state.items.length)}`
-        : '',
+      progress: state.totalCount > 0 ? `${state.completedCount}/${state.totalCount}` : '',
       message: state.activity.label,
       items: [...state.items],
       activity: { ...state.activity },
-    }
-  }
-
-  private toolToActivity(name: string, input: Record<string, unknown>): AgentActivity {
-    switch (name) {
-      case 'Agent':
-        return {
-          type: 'subagent',
-          label: (input.description as string) ?? 'Subagent',
-          detail: (input.subagent_type as string) ?? undefined,
-        }
-      case 'Read':
-        return { type: 'tool', label: `Lecture`, detail: this.shortPath(input.file_path as string) }
-      case 'Write':
-        return { type: 'tool', label: `Écriture`, detail: this.shortPath(input.file_path as string) }
-      case 'Edit':
-        return { type: 'tool', label: `Modification`, detail: this.shortPath(input.file_path as string) }
-      case 'Bash':
-        return { type: 'tool', label: `Commande`, detail: this.truncate(input.command as string, 60) }
-      case 'Grep':
-        return { type: 'tool', label: `Recherche`, detail: input.pattern as string }
-      case 'Glob':
-        return { type: 'tool', label: `Recherche fichiers`, detail: input.pattern as string }
-      case 'TodoWrite':
-        return { type: 'tool', label: 'Mise à jour tâches' }
-      case 'TaskCreate':
-        return { type: 'tool', label: 'Création tâche', detail: input.subject as string }
-      case 'TaskUpdate':
-        return { type: 'tool', label: 'Mise à jour tâche', detail: input.subject as string }
-      case 'WebSearch':
-        return { type: 'tool', label: 'Recherche web', detail: input.query as string }
-      case 'WebFetch':
-        return { type: 'tool', label: 'Fetch web', detail: input.url as string }
-      default:
-        return { type: 'tool', label: name }
-    }
-  }
-
-  private shortPath(filePath?: string): string | undefined {
-    if (!filePath) return undefined
-    const parts = filePath.split('/')
-    return parts.length > 2 ? `.../${parts.slice(-2).join('/')}` : filePath
-  }
-
-  private truncate(text?: string, max = 50): string | undefined {
-    if (!text) return undefined
-    return text.length > max ? text.slice(0, max) + '…' : text
-  }
-
-  private extractProgress(
-    name: string,
-    input: Record<string, unknown>,
-    state: TerminalState,
-  ): void {
-    if (name === 'TodoWrite') {
-      const todos = input.todos as TodoItem[] | undefined
-      if (!Array.isArray(todos) || todos.length === 0) return
-      state.items = todos.map((t) => ({
-        label: t.content,
-        status: t.status === 'completed' ? 'completed' as const
-          : t.status === 'in_progress' ? 'in_progress' as const
-          : 'pending' as const,
-      }))
-      const completed = todos.filter((t) => t.status === 'completed').length
-      state.completedTasks = completed
-      state.taskCount = todos.length
-    }
-
-    if (name === 'TaskCreate') {
-      state.taskCount++
-      const subject = (input.subject as string) ?? ''
-      state.items.push({ label: subject, status: 'pending' })
-    }
-
-    if (name === 'TaskUpdate') {
-      const status = input.status as string | undefined
-      const title = (input.subject as string) ?? (input.title as string) ?? ''
-      if (status === 'completed') {
-        state.completedTasks++
-        const item = state.items.find((i) => i.label === title || i.status !== 'completed')
-        if (item) item.status = 'completed'
-      }
-      if (status === 'in_progress') {
-        const item = state.items.find((i) => i.label === title)
-        if (item) item.status = 'in_progress'
-      }
     }
   }
 }
