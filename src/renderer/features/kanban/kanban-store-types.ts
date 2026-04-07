@@ -10,7 +10,12 @@ export interface KanbanState {
   kanbanTabIds: Record<string, string>
   kanbanPromptCwds: Record<string, string>
   backgroundTasks: Record<string, KanbanTask[]>
-  agentProgress: Record<string, { progress?: string; message?: string; items?: Array<{ label: string; status: 'pending' | 'in_progress' | 'completed' }> }>
+  agentProgress: Record<string, {
+    progress?: string
+    message?: string
+    items?: Array<{ label: string; status: 'pending' | 'in_progress' | 'completed' }>
+    activity?: { type: string; label: string; detail?: string }
+  }>
 }
 
 export interface KanbanActions {

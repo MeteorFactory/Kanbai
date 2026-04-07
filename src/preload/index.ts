@@ -401,8 +401,8 @@ const api = {
       ipcRenderer.invoke(IPC_CHANNELS.KANBAN_EVALUATE_TEMPLATE_CONDITIONS, { workspaceId }),
     executeTemplateAction: (taskId: string, workspaceId: string, actionId: string, projectPath: string, projectId: string): Promise<{ success: boolean; result?: string; error?: string }> =>
       ipcRenderer.invoke(IPC_CHANNELS.KANBAN_EXECUTE_TEMPLATE_ACTION, { taskId, workspaceId, actionId, projectPath, projectId }),
-    onTaskProgress: (callback: (data: { taskId: string; progress: string; message: string; items?: Array<{ label: string; status: 'pending' | 'in_progress' | 'completed' }> }) => void) => {
-      const listener = (_event: Electron.IpcRendererEvent, payload: { taskId: string; progress: string; message: string; items?: Array<{ label: string; status: 'pending' | 'in_progress' | 'completed' }> }) =>
+    onTaskProgress: (callback: (data: { taskId: string; progress: string; message: string; items?: Array<{ label: string; status: 'pending' | 'in_progress' | 'completed' }>; activity?: { type: string; label: string; detail?: string } }) => void) => {
+      const listener = (_event: Electron.IpcRendererEvent, payload: { taskId: string; progress: string; message: string; items?: Array<{ label: string; status: 'pending' | 'in_progress' | 'completed' }>; activity?: { type: string; label: string; detail?: string } }) =>
         callback(payload)
       ipcRenderer.on(IPC_CHANNELS.KANBAN_TASK_PROGRESS, listener)
       return () => ipcRenderer.removeListener(IPC_CHANNELS.KANBAN_TASK_PROGRESS, listener)
