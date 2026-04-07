@@ -982,6 +982,16 @@ const api = {
     },
   },
 
+  // External Window
+  externalWindow: {
+    open: (workspaceId: string): Promise<void> =>
+      ipcRenderer.invoke(IPC_CHANNELS.EXTERNAL_WINDOW_OPEN, workspaceId),
+    close: (workspaceId: string): Promise<void> =>
+      ipcRenderer.invoke(IPC_CHANNELS.EXTERNAL_WINDOW_CLOSE, workspaceId),
+    isOpen: (workspaceId: string): Promise<boolean> =>
+      ipcRenderer.invoke(IPC_CHANNELS.EXTERNAL_WINDOW_IS_OPEN, workspaceId),
+  },
+
   // Utility — resolve file path from drag & drop (required for sandbox mode)
   getFilePathFromDrop: (file: File): string => webUtils.getPathForFile(file),
 }

@@ -472,6 +472,11 @@ export const IPC_CHANNELS = {
   INSTALLER_CASCADE: 'installer:cascade',
   INSTALLER_PROGRESS: 'installer:progress',
 
+  // External Window
+  EXTERNAL_WINDOW_OPEN: 'externalWindow:open',
+  EXTERNAL_WINDOW_CLOSE: 'externalWindow:close',
+  EXTERNAL_WINDOW_IS_OPEN: 'externalWindow:isOpen',
+
   // Companion
   COMPANION_REGISTER: 'companion:register',
   COMPANION_CANCEL: 'companion:cancel',

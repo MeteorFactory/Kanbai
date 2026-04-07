@@ -38,7 +38,9 @@ import { initCompanionFeatures } from './companion'
 import { registerSkillsStoreHandlers, prefetchSkillsStore } from './ipc/skillsStore'
 import { registerClaudePluginsHandlers } from './ipc/claude-plugins'
 import { registerInstallerHandlers } from './ipc/installer'
+import { registerExternalWindowHandlers } from './ipc/externalWindow'
 import { cleanupTerminals } from './ipc/terminal'
+import { closeAllExternalWindows } from './services/external-window'
 import { ensureActivityHookScript, ensureAutoApproveScript, ensureKanbanDoneScript, ensurePixelAgentsHookScript, syncAllWorkspaceEnvHooks, startActivityWatcher } from './services/activityHooks'
 import { clearDockBadge } from './services/notificationService'
 import { healthCheckScheduler } from './services/healthCheckScheduler'
@@ -214,6 +216,7 @@ app.whenReady().then(() => {
   registerDevOpsHandlers(ipcMain)
   registerNotesHandlers(ipcMain)
   registerClaudePluginsHandlers(ipcMain)
+  registerExternalWindowHandlers(ipcMain)
   registerCompanionHandlers(ipcMain, () => mainWindow)
   initCompanionFeatures()
   tryReconnectCompanion(() => mainWindow)
@@ -293,6 +296,7 @@ app.on('before-quit', (event) => {
   // During app update install on Windows, let the quit proceed normally
   // so the NSIS installer can replace the app files.
   if (isAppUpdateInstalling() && IS_WIN) {
+    closeAllExternalWindows()
     cleanupTerminals()
     cleanupClaudeSessions()
     cleanupCompanion()
@@ -305,6 +309,7 @@ app.on('before-quit', (event) => {
   event.preventDefault()
   isExiting = true
 
+  closeAllExternalWindows()
   cleanupTerminals()
   cleanupClaudeSessions()
   cleanupCompanion()

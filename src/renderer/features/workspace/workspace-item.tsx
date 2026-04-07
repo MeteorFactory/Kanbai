@@ -329,6 +329,15 @@ export function WorkspaceItem({ workspace, projects, isActive }: WorkspaceItemPr
     setViewMode('database')
   }, [workspace.id, setActiveWorkspace, setPendingDbProjectPath, setViewMode])
 
+  const handleOpenExternalWindow = useCallback(async () => {
+    const isOpen = await window.kanbai.externalWindow.isOpen(workspace.id)
+    if (isOpen) {
+      await window.kanbai.externalWindow.close(workspace.id)
+    } else {
+      await window.kanbai.externalWindow.open(workspace.id)
+    }
+  }, [workspace.id])
+
   const moveToNamespaceChildren: ContextMenuItem[] = namespaces
     .filter((ns) => ns.id !== workspace.namespaceId)
     .map((ns) => ({
@@ -348,6 +357,7 @@ export function WorkspaceItem({ workspace, projects, isActive }: WorkspaceItemPr
     ...(moveToNamespaceChildren.length > 0
       ? [{ label: t('workspace.moveToNamespace'), action: () => {}, children: moveToNamespaceChildren }]
       : []),
+    { label: t('workspace.openExternalWindow'), action: handleOpenExternalWindow },
     { label: t('workspace.refresh'), action: () => refreshWorkspace(workspace.id) },
     { separator: true, label: '', action: () => {} },
     { label: t('workspace.export'), action: handleExportWorkspace },

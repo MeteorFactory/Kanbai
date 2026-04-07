@@ -53,6 +53,7 @@ export const en = {
   'sidebar.recentFiles': 'Recent files ({count})',
 
   // Workspace
+  'workspace.openExternalWindow': 'Open in external window',
   'workspace.refresh': 'Refresh workspace',
   'workspace.rename': 'Rename',
   'workspace.changeColor': 'Change color',

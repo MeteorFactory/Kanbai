@@ -1,0 +1,44 @@
+.external-window-root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.external-window-tabs {
+  display: flex;
+  gap: 0;
+  padding: 8px 12px 0;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  -webkit-app-region: drag;
+}
+
+.external-window-tab {
+  padding: 8px 20px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  -webkit-app-region: no-drag;
+}
+
+.external-window-tab:hover {
+  color: var(--text-primary);
+}
+
+.external-window-tab--active {
+  color: var(--accent-primary);
+  border-bottom-color: var(--accent-primary);
+}
+
+.external-window-content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}

@@ -12,11 +12,25 @@ window.addEventListener('unhandledrejection', (e) => {
   console.error('Unhandled rejection:', e.reason)
 })
 
+const params = new URLSearchParams(window.location.search)
+const isExternalWindow = params.get('mode') === 'external'
+
 const root = document.getElementById('root')
 if (root) {
-  createRoot(root).render(
-    <React.StrictMode>
-      <App />
-    </React.StrictMode>,
-  )
+  if (isExternalWindow) {
+    // Lazy-load external window app to avoid bundling it with the main app
+    import('./features/external-window/external-window-app').then(({ ExternalWindowApp }) => {
+      createRoot(root).render(
+        <React.StrictMode>
+          <ExternalWindowApp />
+        </React.StrictMode>,
+      )
+    })
+  } else {
+    createRoot(root).render(
+      <React.StrictMode>
+        <App />
+      </React.StrictMode>,
+    )
+  }
 }
