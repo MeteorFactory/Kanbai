@@ -12686,23 +12686,35 @@ body {
 }
 
 .app-update-progress-bar {
-  height: 6px;
+  height: 8px;
   background: var(--bg-surface);
-  border-radius: 3px;
+  border-radius: 4px;
   overflow: hidden;
   margin-bottom: 8px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .app-update-progress-fill {
   height: 100%;
-  background: var(--accent);
-  border-radius: 3px;
-  transition: width 0.3s ease;
+  background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 80%, white));
+  border-radius: 4px;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  background-size: 200% 100%;
+  animation: app-update-shimmer 2s ease-in-out infinite;
+}
+
+@keyframes app-update-shimmer {
+  0% { filter: brightness(1); }
+  50% { filter: brightness(1.15); }
+  100% { filter: brightness(1); }
 }
 
 .app-update-modal-percent {
   font-size: 12px;
-  color: var(--text-muted);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
 }
 
 .app-update-modal-error-detail {
