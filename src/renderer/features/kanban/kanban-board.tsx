@@ -115,14 +115,14 @@ export function KanbanBoard() {
   useEffect(() => {
     const unsubscribe = window.kanbai.kanban.onTaskProgress((data) => {
       useKanbanStore.setState((s) => {
-        if (!data.progress && !data.message) {
+        if (!data.progress && !data.message && (!data.activity || data.activity.type === 'idle')) {
           const { [data.taskId]: _, ...rest } = s.agentProgress
           return { agentProgress: rest }
         }
         return {
           agentProgress: {
             ...s.agentProgress,
-            [data.taskId]: { progress: data.progress, message: data.message, items: data.items },
+            [data.taskId]: { progress: data.progress, message: data.message, items: data.items, activity: data.activity },
           },
         }
       })

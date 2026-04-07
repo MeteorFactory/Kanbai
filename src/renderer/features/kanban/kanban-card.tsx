@@ -37,7 +37,7 @@ export function KanbanCard({
   onGoToTerminal: (() => void) | null
   projects: Array<{ id: string; name: string; aiProvider?: AiProviderId | null; aiDefaults?: AiDefaults }>
   defaultAiProvider: AiProviderId
-  agentProgress?: { progress?: string; message?: string }
+  agentProgress?: { progress?: string; message?: string; activity?: { type: string; label: string; detail?: string } }
 }) {
   const { t, locale, localeCode } = useI18n()
   const clickTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -119,7 +119,7 @@ export function KanbanCard({
         {task.splitSuggestions && task.splitSuggestions.length > 0 && (
           <span className="kanban-card-split-badge">{t('kanban.splitDetected')}</span>
         )}
-        {isWorking && agentProgress && (agentProgress.progress || agentProgress.message) && (
+        {isWorking && agentProgress && (agentProgress.progress || agentProgress.activity) && (
           <div className="kanban-card-progress">
             {agentProgress.progress && (
               <div className="kanban-card-progress-track">
@@ -135,8 +135,14 @@ export function KanbanCard({
                 </span>
               </div>
             )}
-            {agentProgress.message && (
-              <p className="kanban-card-progress-message">{agentProgress.message}</p>
+            {agentProgress.activity && agentProgress.activity.type !== 'idle' && (
+              <div className="kanban-card-activity">
+                <span className={`kanban-card-activity-dot kanban-card-activity-dot--${agentProgress.activity.type}`} />
+                <span className="kanban-card-activity-label">{agentProgress.activity.label}</span>
+                {agentProgress.activity.detail && (
+                  <span className="kanban-card-activity-detail">{agentProgress.activity.detail}</span>
+                )}
+              </div>
             )}
           </div>
         )}

@@ -8,6 +8,14 @@ export interface AgentTaskItem {
   status: 'pending' | 'in_progress' | 'completed'
 }
 
+export type AgentActivityType = 'thinking' | 'tool' | 'subagent' | 'text' | 'idle'
+
+export interface AgentActivity {
+  type: AgentActivityType
+  label: string
+  detail?: string
+}
+
 interface TerminalState {
   taskId: string
   lineBuffer: string
@@ -15,6 +23,7 @@ interface TerminalState {
   taskCount: number
   completedTasks: number
   items: AgentTaskItem[]
+  activity: AgentActivity
 }
 
 export interface ProgressUpdate {
@@ -22,6 +31,7 @@ export interface ProgressUpdate {
   progress: string
   message: string
   items: AgentTaskItem[]
+  activity: AgentActivity
 }
 
 export class AgentProgressParser {
@@ -35,6 +45,7 @@ export class AgentProgressParser {
       taskCount: 0,
       completedTasks: 0,
       items: [],
+      activity: { type: 'idle', label: '' },
     })
   }
 
@@ -68,62 +79,141 @@ export class AgentProgressParser {
     event: Record<string, unknown>,
     state: TerminalState,
   ): ProgressUpdate | null {
+    // Handle session end
+    if (event.type === 'result') {
+      state.activity = { type: 'idle', label: '' }
+      return this.buildUpdate(state)
+    }
+
     if (event.type !== 'assistant') return null
 
     const message = event.message as Record<string, unknown> | undefined
     const content = message?.content as Array<Record<string, unknown>> | undefined
     if (!Array.isArray(content)) return null
 
-    let lastUpdate: ProgressUpdate | null = null
+    let changed = false
     for (const block of content) {
-      if (block.type !== 'tool_use') continue
+      const blockType = block.type as string
 
-      const id = block.id as string
-      if (state.seenToolIds.has(id)) continue
-      state.seenToolIds.add(id)
+      // Thinking block
+      if (blockType === 'thinking' && block.thinking) {
+        state.activity = { type: 'thinking', label: 'Réflexion...' }
+        changed = true
+        continue
+      }
 
-      const name = block.name as string
-      const input = (block.input as Record<string, unknown>) ?? {}
-      const update = this.extractProgress(name, input, state)
-      if (update) lastUpdate = update
+      // Text block
+      if (blockType === 'text') {
+        const text = (block.text as string)?.trim()
+        if (text) {
+          state.activity = { type: 'text', label: 'Rédaction...' }
+          changed = true
+        }
+        continue
+      }
+
+      // Tool use
+      if (blockType === 'tool_use') {
+        const id = block.id as string
+        if (state.seenToolIds.has(id)) continue
+        state.seenToolIds.add(id)
+
+        const name = block.name as string
+        const input = (block.input as Record<string, unknown>) ?? {}
+
+        // Update activity based on tool type
+        state.activity = this.toolToActivity(name, input)
+        changed = true
+
+        // Extract progress for task-tracking tools
+        this.extractProgress(name, input, state)
+      }
     }
-    return lastUpdate
+
+    return changed ? this.buildUpdate(state) : null
+  }
+
+  private buildUpdate(state: TerminalState): ProgressUpdate {
+    return {
+      taskId: state.taskId,
+      progress: state.taskCount > 0 || state.items.length > 0
+        ? `${state.completedTasks}/${Math.max(state.taskCount, state.items.length)}`
+        : '',
+      message: state.activity.label,
+      items: [...state.items],
+      activity: { ...state.activity },
+    }
+  }
+
+  private toolToActivity(name: string, input: Record<string, unknown>): AgentActivity {
+    switch (name) {
+      case 'Agent':
+        return {
+          type: 'subagent',
+          label: (input.description as string) ?? 'Subagent',
+          detail: (input.subagent_type as string) ?? undefined,
+        }
+      case 'Read':
+        return { type: 'tool', label: `Lecture`, detail: this.shortPath(input.file_path as string) }
+      case 'Write':
+        return { type: 'tool', label: `Écriture`, detail: this.shortPath(input.file_path as string) }
+      case 'Edit':
+        return { type: 'tool', label: `Modification`, detail: this.shortPath(input.file_path as string) }
+      case 'Bash':
+        return { type: 'tool', label: `Commande`, detail: this.truncate(input.command as string, 60) }
+      case 'Grep':
+        return { type: 'tool', label: `Recherche`, detail: input.pattern as string }
+      case 'Glob':
+        return { type: 'tool', label: `Recherche fichiers`, detail: input.pattern as string }
+      case 'TodoWrite':
+        return { type: 'tool', label: 'Mise à jour tâches' }
+      case 'TaskCreate':
+        return { type: 'tool', label: 'Création tâche', detail: input.subject as string }
+      case 'TaskUpdate':
+        return { type: 'tool', label: 'Mise à jour tâche', detail: input.subject as string }
+      case 'WebSearch':
+        return { type: 'tool', label: 'Recherche web', detail: input.query as string }
+      case 'WebFetch':
+        return { type: 'tool', label: 'Fetch web', detail: input.url as string }
+      default:
+        return { type: 'tool', label: name }
+    }
+  }
+
+  private shortPath(filePath?: string): string | undefined {
+    if (!filePath) return undefined
+    const parts = filePath.split('/')
+    return parts.length > 2 ? `.../${parts.slice(-2).join('/')}` : filePath
+  }
+
+  private truncate(text?: string, max = 50): string | undefined {
+    if (!text) return undefined
+    return text.length > max ? text.slice(0, max) + '…' : text
   }
 
   private extractProgress(
     name: string,
     input: Record<string, unknown>,
     state: TerminalState,
-  ): ProgressUpdate | null {
+  ): void {
     if (name === 'TodoWrite') {
       const todos = input.todos as TodoItem[] | undefined
-      if (!Array.isArray(todos) || todos.length === 0) return null
-      const completed = todos.filter((t) => t.status === 'completed').length
-      const active = todos.find((t) => t.status === 'in_progress')
+      if (!Array.isArray(todos) || todos.length === 0) return
       state.items = todos.map((t) => ({
         label: t.content,
         status: t.status === 'completed' ? 'completed' as const
           : t.status === 'in_progress' ? 'in_progress' as const
           : 'pending' as const,
       }))
-      return {
-        taskId: state.taskId,
-        progress: `${completed}/${todos.length}`,
-        message: active?.content ?? '',
-        items: [...state.items],
-      }
+      const completed = todos.filter((t) => t.status === 'completed').length
+      state.completedTasks = completed
+      state.taskCount = todos.length
     }
 
     if (name === 'TaskCreate') {
       state.taskCount++
       const subject = (input.subject as string) ?? ''
       state.items.push({ label: subject, status: 'pending' })
-      return {
-        taskId: state.taskId,
-        progress: `${state.completedTasks}/${state.taskCount}`,
-        message: subject,
-        items: [...state.items],
-      }
     }
 
     if (name === 'TaskUpdate') {
@@ -133,25 +223,11 @@ export class AgentProgressParser {
         state.completedTasks++
         const item = state.items.find((i) => i.label === title || i.status !== 'completed')
         if (item) item.status = 'completed'
-        return {
-          taskId: state.taskId,
-          progress: `${state.completedTasks}/${Math.max(state.taskCount, state.completedTasks)}`,
-          message: title,
-          items: [...state.items],
-        }
       }
       if (status === 'in_progress') {
         const item = state.items.find((i) => i.label === title)
         if (item) item.status = 'in_progress'
-        return {
-          taskId: state.taskId,
-          progress: `${state.completedTasks}/${Math.max(state.taskCount, state.completedTasks)}`,
-          message: title,
-          items: [...state.items],
-        }
       }
     }
-
-    return null
   }
 }
