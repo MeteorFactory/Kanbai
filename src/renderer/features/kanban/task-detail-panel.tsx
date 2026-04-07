@@ -48,6 +48,7 @@ export function TaskDetailPanel({
   agentProgress?: {
     progress?: string
     message?: string
+    phase?: string
     items?: Array<{ label: string; status: 'pending' | 'in_progress' | 'completed' }>
     activity?: { type: string; label: string; detail?: string }
     subagents?: Array<{ name: string; status: string }>
@@ -131,8 +132,12 @@ export function TaskDetailPanel({
       </div>
 
       {/* Agent Activity & Task List */}
-      {task.status === 'WORKING' && agentProgress && (agentProgress.activity || agentProgress.subagents?.length || (agentProgress.items && agentProgress.items.length > 0)) && (
+      {task.status === 'WORKING' && agentProgress && (agentProgress.activity || agentProgress.phase || agentProgress.subagents?.length || (agentProgress.items && agentProgress.items.length > 0)) && (
         <div className="kanban-detail-task-list">
+          {/* Current phase */}
+          {agentProgress.phase && (
+            <div className="kanban-detail-phase">{agentProgress.phase}</div>
+          )}
           {/* Current activity indicator */}
           {agentProgress.activity && agentProgress.activity.type !== 'idle' && (
             <div className="kanban-detail-activity">

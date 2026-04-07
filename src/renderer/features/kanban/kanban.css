@@ -1201,6 +1201,19 @@
 }
 
 /* Agent progress bar on kanban cards */
+/* Phase indicator on kanban cards */
+.kanban-card-phase {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-left: 6px;
+  border-left: 2px solid var(--text-muted);
+  line-height: 1.4;
+}
+
 .kanban-card-progress {
   display: flex;
   flex-direction: column;
@@ -1311,6 +1324,18 @@
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
+}
+
+/* Phase indicator in detail panel */
+.kanban-detail-phase {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  padding: 4px 10px;
+  margin-bottom: 6px;
+  border-left: 3px solid var(--accent-color, #a78bfa);
+  background: var(--bg-hover);
+  border-radius: 0 6px 6px 0;
 }
 
 /* Activity indicator in detail panel */

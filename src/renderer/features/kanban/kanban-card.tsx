@@ -37,7 +37,7 @@ export function KanbanCard({
   onGoToTerminal: (() => void) | null
   projects: Array<{ id: string; name: string; aiProvider?: AiProviderId | null; aiDefaults?: AiDefaults }>
   defaultAiProvider: AiProviderId
-  agentProgress?: { progress?: string; message?: string; activity?: { type: string; label: string; detail?: string }; subagents?: Array<{ name: string; status: string }> }
+  agentProgress?: { progress?: string; message?: string; phase?: string; activity?: { type: string; label: string; detail?: string }; subagents?: Array<{ name: string; status: string }> }
 }) {
   const { t, locale, localeCode } = useI18n()
   const clickTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -119,8 +119,13 @@ export function KanbanCard({
         {task.splitSuggestions && task.splitSuggestions.length > 0 && (
           <span className="kanban-card-split-badge">{t('kanban.splitDetected')}</span>
         )}
-        {isWorking && agentProgress && (agentProgress.progress || agentProgress.activity) && (
+        {isWorking && agentProgress && (agentProgress.progress || agentProgress.activity || agentProgress.phase) && (
           <div className="kanban-card-progress">
+            {agentProgress.phase && (
+              <div className="kanban-card-phase" style={{ borderLeftColor: workingColor }}>
+                {agentProgress.phase}
+              </div>
+            )}
             {agentProgress.progress && (
               <div className="kanban-card-progress-track">
                 <div

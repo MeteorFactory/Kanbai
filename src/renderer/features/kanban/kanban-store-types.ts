@@ -13,6 +13,7 @@ export interface KanbanState {
   agentProgress: Record<string, {
     progress?: string
     message?: string
+    phase?: string
     items?: Array<{ label: string; status: 'pending' | 'in_progress' | 'completed' }>
     activity?: { type: string; label: string; detail?: string }
     subagents?: Array<{ name: string; status: string }>

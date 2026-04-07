@@ -22,6 +22,51 @@ describe('AgentProgressParser', () => {
     expect(parser.feed('term-1', '✶ Thinking…\n')).toBeNull()
   })
 
+  describe('phase detection', () => {
+    it('detects "Phase N : Title" format', () => {
+      const result = parser.feed('term-1', 'Phase 1 : Root Cause Investigation\n')
+      expect(result!.phase).toBe('Phase 1 : Root Cause Investigation')
+    })
+
+    it('detects "Phase N: Title" without spaces around colon', () => {
+      const result = parser.feed('term-1', 'Phase 2: Implementation\n')
+      expect(result!.phase).toBe('Phase 2 : Implementation')
+    })
+
+    it('detects markdown heading phase', () => {
+      const result = parser.feed('term-1', '## Phase 3 — Testing and Validation\n')
+      expect(result!.phase).toBe('Phase 3 : Testing and Validation')
+    })
+
+    it('detects bold markdown phase', () => {
+      const result = parser.feed('term-1', '**Phase 1: Architecture Review**\n')
+      expect(result!.phase).toBe('Phase 1 : Architecture Review')
+    })
+
+    it('detects "Step N" format', () => {
+      const result = parser.feed('term-1', 'Step 2 : Fix the tests\n')
+      expect(result!.phase).toBe('Phase 2 : Fix the tests')
+    })
+
+    it('detects French "Étape N" format', () => {
+      const result = parser.feed('term-1', 'Étape 1 : Analyse du code\n')
+      expect(result!.phase).toBe('Phase 1 : Analyse du code')
+    })
+
+    it('preserves phase across subsequent updates', () => {
+      parser.feed('term-1', 'Phase 1 : Investigation\n')
+      const result = parser.feed('term-1', '⏺ Read src/main/index.ts\n')
+      expect(result!.phase).toBe('Phase 1 : Investigation')
+      expect(result!.activity.type).toBe('tool')
+    })
+
+    it('updates phase when new phase is detected', () => {
+      parser.feed('term-1', 'Phase 1 : Investigation\n')
+      const result = parser.feed('term-1', 'Phase 2 : Implementation\n')
+      expect(result!.phase).toBe('Phase 2 : Implementation')
+    })
+  })
+
   describe('thinking/spinner detection', () => {
     it('detects spinner with unicode symbol', () => {
       const result = parser.feed('term-1', '✶ Hyperspacing…\n')

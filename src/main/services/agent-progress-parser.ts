@@ -43,6 +43,7 @@ interface TerminalState {
   items: AgentTaskItem[]
   completedCount: number
   totalCount: number
+  phase: string
 }
 
 export interface ProgressUpdate {
@@ -52,6 +53,7 @@ export interface ProgressUpdate {
   items: AgentTaskItem[]
   activity: AgentActivity
   subagents: SubagentInfo[]
+  phase: string
 }
 
 // Strip ANSI escape codes from PTY output
@@ -144,6 +146,13 @@ const READING_FILES = /Reading\s+(\d+)\s+files?/
 // "Searched for" pattern
 const SEARCHED_FOR = /Searched\s+for\s+(.+)/
 
+// Phase / step header patterns — "Phase 1 : Title", "Step 2: Title", "## Phase 1 — Title", "Étape 3 : Titre"
+const PHASE_PATTERNS = [
+  /^(?:Phase|Étape|Step)\s+(\d+)\s*[:—–-]\s*(.+)/i,
+  /^#{1,3}\s*(?:Phase|Étape|Step)\s+(\d+)\s*[:—–-]\s*(.+)/i,
+  /^\*{2}(?:Phase|Étape|Step)\s+(\d+)\s*[:—–-]\s*(.+?)\*{2}/i,
+]
+
 export class AgentProgressParser {
   private terminals = new Map<string, TerminalState>()
 
@@ -157,6 +166,7 @@ export class AgentProgressParser {
       items: [],
       completedCount: 0,
       totalCount: 0,
+      phase: '',
     })
   }
 
@@ -194,6 +204,17 @@ export class AgentProgressParser {
   }
 
   private parseLine(clean: string, state: TerminalState): boolean {
+    // 0. Phase / step headers — "Phase 1 : Root Cause Investigation"
+    for (const pattern of PHASE_PATTERNS) {
+      const phaseMatch = clean.match(pattern)
+      if (phaseMatch) {
+        const num = phaseMatch[1]!
+        const title = phaseMatch[2]!.trim()
+        state.phase = `Phase ${num} : ${title}`
+        return true
+      }
+    }
+
     // 1. Spinner (thinking) — ✶ Hyperspacing… (2m24s · ↓ 4.1k tokens)
     const spinnerMatch = clean.match(SPINNER_PATTERN)
     if (spinnerMatch) {
@@ -363,6 +384,7 @@ export class AgentProgressParser {
       items: [...state.items],
       activity: { ...state.activity },
       subagents: [...state.subagents],
+      phase: state.phase,
     }
   }
 }

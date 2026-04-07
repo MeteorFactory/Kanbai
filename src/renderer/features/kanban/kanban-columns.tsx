@@ -60,7 +60,7 @@ export function KanbanColumns({
   onArchiveTask: (task: KanbanTask) => void
   onRestoreFromArchive: (task: KanbanTask) => void
   onToggleArchive: () => void
-  agentProgress: Record<string, { progress?: string; message?: string }>
+  agentProgress: Record<string, { progress?: string; message?: string; phase?: string; activity?: { type: string; label: string; detail?: string }; subagents?: Array<{ name: string; status: string }> }>
 }) {
   const { t } = useI18n()
 
