@@ -58,6 +58,12 @@ describe('AgentProgressParser', () => {
       expect(result!.activity).toEqual({ type: 'tool', label: 'Lecture', detail: '3 fichiers' })
     })
 
+    it('detects Read tool with ● bullet prefix', () => {
+      const result = parser.feed('term-1', '● Reading 1 file… (ctrl+o to expand)\n')
+      expect(result!.activity.type).toBe('tool')
+      expect(result!.activity.label).toBe('Lecture')
+    })
+
     it('detects Edit tool', () => {
       const result = parser.feed('term-1', '⏺ Edit src/renderer/App.tsx\n')
       expect(result!.activity).toEqual({ type: 'tool', label: 'Modification', detail: 'src/renderer/App.tsx' })
@@ -96,9 +102,9 @@ describe('AgentProgressParser', () => {
       expect(result!.activity).toEqual({ type: 'subagent', label: 'Find ProjectItem component' })
     })
 
-    it('detects unknown tools via generic pattern', () => {
-      const result = parser.feed('term-1', '⏺ SomeNewTool\n')
-      expect(result!.activity).toEqual({ type: 'tool', label: 'SomeNewTool' })
+    it('detects unknown tool calls via generic pattern', () => {
+      const result = parser.feed('term-1', '⏺ Update(~/.kanbai/kanban/file.json)\n')
+      expect(result!.activity).toEqual({ type: 'tool', label: 'Update' })
     })
 
     it('ignores permission/UI lines', () => {

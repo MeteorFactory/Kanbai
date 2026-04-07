@@ -46,7 +46,10 @@ function stripAnsi(text: string): string {
 // Claude Code spinner verbs — fancy animated thinking indicators
 const SPINNER_PATTERN = /[✶✻✽✳✢✺✵❋✿⊹⋆]\s*(\S+…)/
 
-// Tool use patterns — ⏺ prefix in Claude Code CLI output
+// Bullet chars used by Claude Code CLI — ⏺ (U+23FA) and ● (U+25CF)
+const BULLET = '[⏺●]'
+
+// Tool use patterns — bullet prefix in Claude Code CLI output
 const TOOL_PATTERNS: Array<{
   pattern: RegExp
   type: AgentActivityType
@@ -54,25 +57,25 @@ const TOOL_PATTERNS: Array<{
   detailFn?: (m: RegExpMatchArray) => string | undefined
 }> = [
   {
-    pattern: /⏺\s*(?:Read|Reading)\s+(.+)/,
+    pattern: /[⏺●]\s*(?:Read|Reading)\s+(.+)/,
     type: 'tool',
     labelFn: () => 'Lecture',
     detailFn: (m) => m[1]?.trim().replace(/\.{3}$/, ''),
   },
   {
-    pattern: /⏺\s*(?:Edit|Editing)\s+(.+)/,
+    pattern: /[⏺●]\s*(?:Edit|Editing)\s+(.+)/,
     type: 'tool',
     labelFn: () => 'Modification',
     detailFn: (m) => m[1]?.trim(),
   },
   {
-    pattern: /⏺\s*(?:Write|Writing)\s+(.+)/,
+    pattern: /[⏺●]\s*(?:Write|Writing)\s+(.+)/,
     type: 'tool',
     labelFn: () => 'Écriture',
     detailFn: (m) => m[1]?.trim(),
   },
   {
-    pattern: /⏺\s*Bash\((.+?)\)/,
+    pattern: /[⏺●]\s*Bash\((.+?)\)/,
     type: 'tool',
     labelFn: () => 'Commande',
     detailFn: (m) => {
@@ -81,30 +84,30 @@ const TOOL_PATTERNS: Array<{
     },
   },
   {
-    pattern: /⏺\s*(?:Grep|Searching)\s+(.+)/,
+    pattern: /[⏺●]\s*(?:Grep|Searching)\s+(.+)/,
     type: 'tool',
     labelFn: () => 'Recherche',
     detailFn: (m) => m[1]?.trim(),
   },
   {
-    pattern: /⏺\s*(?:Glob|Finding)\s+(.+)/,
+    pattern: /[⏺●]\s*(?:Glob|Finding)\s+(.+)/,
     type: 'tool',
     labelFn: () => 'Recherche fichiers',
     detailFn: (m) => m[1]?.trim(),
   },
   {
-    pattern: /⏺\s*Agent\s*\((.+?)\)/,
+    pattern: /[⏺●]\s*Agent\s*\((.+?)\)/,
     type: 'subagent',
     labelFn: (m) => m[1]?.trim() ?? 'Subagent',
   },
   {
-    pattern: /⏺\s*(?:WebSearch|Searching the web)\s*(.+)/,
+    pattern: /[⏺●]\s*(?:WebSearch|Searching the web)\s*(.+)/,
     type: 'tool',
     labelFn: () => 'Recherche web',
     detailFn: (m) => m[1]?.trim(),
   },
   {
-    pattern: /⏺\s*(?:TodoWrite|TaskCreate|TaskUpdate)/,
+    pattern: /[⏺●]\s*(?:TodoWrite|TaskCreate|TaskUpdate)/,
     type: 'tool',
     labelFn: () => 'Mise à jour tâches',
   },
@@ -116,7 +119,7 @@ const TASK_IN_PROGRESS = /[◐◑◒◓⏳]\s+(.+)/
 const TASK_PENDING = /[◼○◻]\s+(.+)/
 
 // Generic ⏺ tool call fallback
-const GENERIC_TOOL = /⏺\s*(\S+)/
+const GENERIC_TOOL = /[⏺●]\s*(\S+)/
 
 // Subagent patterns — "● Running 2 Explore agents…" header + "├─ Name · stats" details
 const RUNNING_AGENTS = /Running\s+(\d+)\s+(\w+)\s+agents?…/
@@ -246,8 +249,9 @@ export class AgentProgressParser {
       return true
     }
 
-    // 6. Generic ⏺ tool
-    const genericMatch = clean.match(GENERIC_TOOL)
+    // 6. Generic bullet + tool call (e.g. "⏺ Update(...)" or "⏺ SomeNewTool")
+    // Must look like a tool invocation: bullet + PascalCase word + optional parens, not a sentence
+    const genericMatch = clean.match(/[⏺●]\s*([A-Z]\w+)\s*\(/)
     if (genericMatch && !clean.includes('bypass permissions') && !clean.includes('accept edits')) {
       state.activity = { type: 'tool', label: genericMatch[1]! }
       return true
