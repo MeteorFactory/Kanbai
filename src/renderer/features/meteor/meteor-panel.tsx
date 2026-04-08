@@ -1,11 +1,22 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import type { ClaudePlugin } from '../../../shared/types'
+import type { ClaudePlugin, InstalledPackage } from '../../../shared/types'
 import { useI18n } from '../../lib/i18n'
 import { useAppUpdateStore } from '../updates/app-update-store'
 import { useUpdateStore } from '../updates/update-store'
 import { useTerminalTabStore } from '../terminal/terminal-store'
 import { useWorkspaceStore } from '../workspace/workspace-store'
 import { useViewStore } from '../../shared/stores/view-store'
+
+const BREW_FORMULA_URL = 'https://formulae.brew.sh/formula/'
+const NPM_PKG_URL = 'https://www.npmjs.com/package/'
+
+/** Set of recommended tool names — used to exclude from "Installed" column */
+const RECOMMENDED_NAMES = new Set([
+  'brew', 'node', 'npm', 'pnpm', 'yarn', 'claude', 'codex', 'copilot',
+  'git', 'go', 'python', 'cargo', 'rtk', 'pip', 'make', 'pixel-agents',
+  // Also match brew formula names
+  'claude-code', 'rustup', 'python3',
+])
 
 export function MeteorPanel() {
   const { t, localeCode } = useI18n()
@@ -23,9 +34,12 @@ export function MeteorPanel() {
     lastChecked: toolsLastChecked,
     installingTool,
     installStatus,
+    installedPackages,
+    isLoadingInstalled,
     checkUpdates: checkToolUpdates,
     installUpdate: installToolUpdate,
     uninstallUpdate: uninstallToolUpdate,
+    loadInstalledPackages,
     clearInstallStatus: clearToolInstallStatus,
   } = useUpdateStore()
 
@@ -109,6 +123,11 @@ export function MeteorPanel() {
   }, [toolUpdates.length, checkToolUpdates])
 
   useEffect(() => {
+    if (installedPackages.length > 0) return
+    loadInstalledPackages()
+  }, [installedPackages.length, loadInstalledPackages])
+
+  useEffect(() => {
     if (!installStatus?.success) return
     const timer = setTimeout(() => clearToolInstallStatus(), 5000)
     return () => clearTimeout(timer)
@@ -159,6 +178,29 @@ export function MeteorPanel() {
 
   const updatableTools = toolUpdates.filter((u) => u.installed && u.updateAvailable)
 
+  const handleRefreshAll = () => {
+    checkToolUpdates()
+    loadInstalledPackages()
+  }
+
+  const handleUpdatePackage = async (pkg: InstalledPackage): Promise<void> => {
+    if (!activeWorkspaceId) return
+    const command = pkg.source === 'brew'
+      ? `brew upgrade ${pkg.name}`
+      : `npm install -g ${pkg.name}@latest`
+    createTab(activeWorkspaceId, '~', `${t('meteor.updatePrefix')}: ${pkg.name}`, command)
+    setViewMode('terminal')
+  }
+
+  const handleUninstallPackage = (pkg: InstalledPackage): void => {
+    if (!activeWorkspaceId) return
+    const command = pkg.source === 'brew'
+      ? `brew uninstall ${pkg.name}`
+      : `npm uninstall -g ${pkg.name}`
+    createTab(activeWorkspaceId, '~', `Uninstall: ${pkg.name}`, command)
+    setViewMode('terminal')
+  }
+
   const handleUpdateAll = async (): Promise<void> => {
     if (!activeWorkspaceId || updatableTools.length === 0) return
     setUpdatingAll(true)
@@ -187,10 +229,10 @@ export function MeteorPanel() {
         <div className="meteor-header-actions">
           <button
             className="settings-btn"
-            onClick={checkToolUpdates}
-            disabled={toolsChecking}
+            onClick={handleRefreshAll}
+            disabled={toolsChecking || isLoadingInstalled}
           >
-            {toolsChecking ? t('common.loading') : t('updates.checkTooltip')}
+            {toolsChecking || isLoadingInstalled ? t('common.loading') : t('updates.checkTooltip')}
           </button>
           {updatableTools.length > 0 && (
             <button
@@ -291,94 +333,246 @@ export function MeteorPanel() {
         </div>
       </div>
 
-      <div className="settings-card">
-        {toolUpdates.length === 0 && !toolsChecking ? (
-          <p className="notification-empty">{t('updates.noInfo')}</p>
-        ) : (
-          <div className="notification-panel-content">
-            {[...toolUpdates]
-              .sort((a, b) => Number(b.updateAvailable) - Number(a.updateAvailable) || Number(a.installed) - Number(b.installed) || a.tool.localeCompare(b.tool))
-              .map((update) => (
-                <div
-                  key={`${update.tool}-${update.scope}`}
-                  className={`notification-item${update.updateAvailable ? ' notification-item--update' : ''}${!update.installed ? ' notification-item--missing' : ''}`}
-                >
-                  <div className="notification-item-info">
-                    <span className="notification-item-name">{update.tool}</span>
-                    {update.installed ? (
-                      <span className="notification-item-version">
-                        {update.currentVersion}
-                        {update.updateAvailable && (
-                          <> {' \u2192 '} <span className="notification-item-latest">{update.latestVersion.split('+')[0]}</span> </>
-                        )}
-                      </span>
-                    ) : (
-                      <span className="notification-item-version notification-item-version--missing">
-                        {t('updates.notInstalled')}
-                      </span>
-                    )}
-                    <span className="notification-item-scope">{update.scope}</span>
-                    {update.packageManager && update.installed && (
-                      <span className="notification-item-scope" title={update.binaryPath || ''}>{update.packageManager}{update.binaryPath ? ` \u2014 ${update.binaryPath}` : ''}</span>
-                    )}
-                  </div>
-                  <div className="notification-item-actions">
-                    {update.installed && update.binaryPath && (
-                      <>
-                        <button
-                          className="notification-item-btn notification-item-btn--subtle"
-                          onClick={() => handleOpenTerminal(update.binaryPath!, update.tool)}
-                          title={t('updates.openTerminalHere')}
-                        >
-                          {'>_'}
-                        </button>
-                        <button
-                          className="notification-item-btn notification-item-btn--subtle"
-                          onClick={() => handleOpenFolder(update.binaryPath!)}
-                          title={t('updates.openFolderHere')}
-                        >
-                          {'\uD83D\uDCC2'}
-                        </button>
-                      </>
-                    )}
-                    {update.installed && update.updateAvailable && (
-                      <button
-                        className="notification-item-btn"
-                        onClick={() => handleUpdateInTerminal(update.tool, update.scope)}
-                        disabled={installingTool === update.tool || updatingAll}
-                      >
-                        {installingTool === update.tool ? (
-                          <span className="notification-spinner">{'\u21BB'}</span>
-                        ) : t('updates.update')}
-                      </button>
-                    )}
-                    {!update.installed && update.canInstall && (
-                      <button
-                        className="notification-item-btn notification-item-btn--install"
-                        onClick={() => handleUpdateInTerminal(update.tool, update.scope)}
-                        disabled={installingTool === update.tool || updatingAll}
-                      >
-                        {installingTool === update.tool ? (
-                          <span className="notification-spinner">{'\u21BB'}</span>
-                        ) : t('updates.install')}
-                      </button>
-                    )}
-                    {update.installed && update.canUninstall && (
-                      <button
-                        className="notification-item-btn notification-item-btn--uninstall"
-                        onClick={() => handleToolUninstall(update.tool)}
-                        disabled={installingTool === update.tool}
-                      >
-                        {installingTool === update.tool ? (
-                          <span className="notification-spinner">{'\u21BB'}</span>
-                        ) : t('updates.uninstall')}
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
+      {/* Two-column layout: Recommended tools + Installed packages */}
+      <div className="meteor-columns">
+        {/* Left column — Recommended tools */}
+        <div className="meteor-column">
+          <div className="meteor-column-header">
+            <span className="meteor-column-title">{t('meteor.recommended')}</span>
+            <span className="meteor-column-count">{toolUpdates.length}</span>
           </div>
-        )}
+          <div className="settings-card">
+            {toolUpdates.length === 0 && !toolsChecking ? (
+              <p className="notification-empty">{t('updates.noInfo')}</p>
+            ) : (
+              <div className="notification-panel-content">
+                {[...toolUpdates]
+                  .sort((a, b) => Number(b.updateAvailable) - Number(a.updateAvailable) || Number(b.installed) - Number(a.installed) || a.tool.localeCompare(b.tool))
+                  .map((update) => (
+                    <div
+                      key={`${update.tool}-${update.scope}`}
+                      className={`notification-item${update.updateAvailable ? ' notification-item--update' : ''}${!update.installed ? ' notification-item--missing' : ''}`}
+                    >
+                      <div className="notification-item-info">
+                        <span className="notification-item-name">{update.tool}</span>
+                        {update.installed ? (
+                          <span className="notification-item-version">
+                            {update.currentVersion}
+                            {update.updateAvailable && (
+                              <> {' \u2192 '} <span className="notification-item-latest">{update.latestVersion.split('+')[0]}</span> </>
+                            )}
+                          </span>
+                        ) : (
+                          <span className="notification-item-version notification-item-version--missing">
+                            {t('updates.notInstalled')}
+                          </span>
+                        )}
+                        {update.packageManager && update.installed && (
+                          <span className={`notification-item-badge notification-item-badge--${update.packageManager}`} title={update.binaryPath || ''}>{update.packageManager}</span>
+                        )}
+                      </div>
+                      <div className="notification-item-actions">
+                        {update.installed && update.binaryPath && (
+                          <>
+                            <button
+                              className="notification-item-btn notification-item-btn--subtle"
+                              onClick={() => handleOpenTerminal(update.binaryPath!, update.tool)}
+                              title={t('updates.openTerminalHere')}
+                            >
+                              {'>_'}
+                            </button>
+                            <button
+                              className="notification-item-btn notification-item-btn--subtle"
+                              onClick={() => handleOpenFolder(update.binaryPath!)}
+                              title={t('updates.openFolderHere')}
+                            >
+                              {'\uD83D\uDCC2'}
+                            </button>
+                          </>
+                        )}
+                        {update.installed && update.updateAvailable && (
+                          <button
+                            className="notification-item-btn"
+                            onClick={() => handleUpdateInTerminal(update.tool, update.scope)}
+                            disabled={installingTool === update.tool || updatingAll}
+                          >
+                            {installingTool === update.tool ? (
+                              <span className="notification-spinner">{'\u21BB'}</span>
+                            ) : t('updates.update')}
+                          </button>
+                        )}
+                        {!update.installed && update.canInstall && (
+                          <button
+                            className="notification-item-btn notification-item-btn--install"
+                            onClick={() => handleUpdateInTerminal(update.tool, update.scope)}
+                            disabled={installingTool === update.tool || updatingAll}
+                          >
+                            {installingTool === update.tool ? (
+                              <span className="notification-spinner">{'\u21BB'}</span>
+                            ) : t('updates.install')}
+                          </button>
+                        )}
+                        {update.installed && update.canUninstall && (
+                          <button
+                            className="notification-item-btn notification-item-btn--uninstall"
+                            onClick={() => handleToolUninstall(update.tool)}
+                            disabled={installingTool === update.tool}
+                          >
+                            {installingTool === update.tool ? (
+                              <span className="notification-spinner">{'\u21BB'}</span>
+                            ) : t('updates.uninstall')}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Right column — All installed packages */}
+        <div className="meteor-column">
+          <div className="meteor-column-header">
+            <span className="meteor-column-title">{t('meteor.installed')}</span>
+            <span className="meteor-column-count">{installedPackages.filter((p) => !RECOMMENDED_NAMES.has(p.name)).length}</span>
+            {installedPackages.filter((p) => !RECOMMENDED_NAMES.has(p.name) && p.updateAvailable).length > 0 && (
+              <span className="meteor-column-count meteor-column-count--update">
+                {installedPackages.filter((p) => !RECOMMENDED_NAMES.has(p.name) && p.updateAvailable).length} {t('updates.updatesAvailable')}
+              </span>
+            )}
+          </div>
+
+          {isLoadingInstalled && installedPackages.length === 0 && (
+            <div className="settings-card">
+              <p className="notification-empty">{t('common.loading')}</p>
+            </div>
+          )}
+
+          {!isLoadingInstalled && installedPackages.filter((p) => !RECOMMENDED_NAMES.has(p.name)).length === 0 && (
+            <div className="settings-card">
+              <p className="notification-empty">{t('meteor.noPackages')}</p>
+            </div>
+          )}
+
+          {/* Brew section */}
+          {(() => {
+            const brewPkgs = installedPackages
+              .filter((p) => p.source === 'brew' && !RECOMMENDED_NAMES.has(p.name))
+              .sort((a, b) => Number(b.updateAvailable) - Number(a.updateAvailable) || a.name.localeCompare(b.name))
+            if (brewPkgs.length === 0) return null
+            return (
+              <div className="settings-card">
+                <div className="meteor-pkg-section-header">
+                  <span className="notification-item-badge notification-item-badge--brew">brew</span>
+                  <span className="meteor-pkg-section-count">{brewPkgs.length} packages</span>
+                </div>
+                <div className="notification-panel-content">
+                  {brewPkgs.map((pkg) => (
+                    <div
+                      key={`brew-${pkg.name}`}
+                      className={`notification-item${pkg.updateAvailable ? ' notification-item--update' : ''}`}
+                    >
+                      <div className="notification-item-info">
+                        <span className="notification-item-name">{pkg.name}</span>
+                        <span className="notification-item-version">
+                          {pkg.currentVersion}
+                          {pkg.updateAvailable && pkg.latestVersion && (
+                            <> {' \u2192 '} <span className="notification-item-latest">{pkg.latestVersion}</span> </>
+                          )}
+                        </span>
+                      </div>
+                      <div className="notification-item-actions">
+                        <button
+                          className="notification-item-btn notification-item-btn--subtle"
+                          onClick={() => window.open(`${BREW_FORMULA_URL}${pkg.name}`, '_blank')}
+                          title={t('meteor.viewPackage')}
+                        >
+                          {'\u2197'}
+                        </button>
+                        <button
+                          className="notification-item-btn notification-item-btn--uninstall"
+                          onClick={() => handleUninstallPackage(pkg)}
+                          title={t('updates.uninstall')}
+                        >
+                          {'\u2717'}
+                        </button>
+                        {pkg.updateAvailable && (
+                          <button
+                            className="notification-item-btn"
+                            onClick={() => handleUpdatePackage(pkg)}
+                            title={t('updates.update')}
+                          >
+                            {'\u2191'}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+          })()}
+
+          {/* npm section */}
+          {(() => {
+            const npmPkgs = installedPackages
+              .filter((p) => p.source === 'npm' && !RECOMMENDED_NAMES.has(p.name))
+              .sort((a, b) => Number(b.updateAvailable) - Number(a.updateAvailable) || a.name.localeCompare(b.name))
+            if (npmPkgs.length === 0) return null
+            return (
+              <div className="settings-card">
+                <div className="meteor-pkg-section-header">
+                  <span className="notification-item-badge notification-item-badge--npm">npm</span>
+                  <span className="meteor-pkg-section-count">{npmPkgs.length} packages</span>
+                </div>
+                <div className="notification-panel-content">
+                  {npmPkgs.map((pkg) => (
+                    <div
+                      key={`npm-${pkg.name}`}
+                      className={`notification-item${pkg.updateAvailable ? ' notification-item--update' : ''}`}
+                    >
+                      <div className="notification-item-info">
+                        <span className="notification-item-name">{pkg.name}</span>
+                        <span className="notification-item-version">
+                          {pkg.currentVersion}
+                          {pkg.updateAvailable && pkg.latestVersion && (
+                            <> {' \u2192 '} <span className="notification-item-latest">{pkg.latestVersion}</span> </>
+                          )}
+                        </span>
+                      </div>
+                      <div className="notification-item-actions">
+                        <button
+                          className="notification-item-btn notification-item-btn--subtle"
+                          onClick={() => window.open(`${NPM_PKG_URL}${pkg.name}`, '_blank')}
+                          title={t('meteor.viewPackage')}
+                        >
+                          {'\u2197'}
+                        </button>
+                        <button
+                          className="notification-item-btn notification-item-btn--uninstall"
+                          onClick={() => handleUninstallPackage(pkg)}
+                          title={t('updates.uninstall')}
+                        >
+                          {'\u2717'}
+                        </button>
+                        {pkg.updateAvailable && (
+                          <button
+                            className="notification-item-btn"
+                            onClick={() => handleUpdatePackage(pkg)}
+                            title={t('updates.update')}
+                          >
+                            {'\u2191'}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+          })()}
+        </div>
       </div>
 
       {/* Claude Plugins sub-section */}

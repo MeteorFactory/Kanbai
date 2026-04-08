@@ -2145,6 +2145,11 @@ export const fr = {
   'view.meteor': 'Meteor',
   'meteor.title': 'Meteor',
   'meteor.updatePrefix': 'Mise \u00e0 jour',
+  'meteor.recommended': 'Recommand\u00e9s',
+  'meteor.installed': 'Install\u00e9s',
+  'meteor.noPackages': 'Aucun paquet trouv\u00e9.',
+  'meteor.viewPackage': 'Voir le paquet',
+  'updates.updatesAvailable': 'mises \u00e0 jour',
 
   // Notes
   'view.notes': 'Notes',

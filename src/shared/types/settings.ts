@@ -67,6 +67,14 @@ export interface UpdateInfo {
   canUninstall?: boolean
 }
 
+export interface InstalledPackage {
+  name: string
+  currentVersion: string
+  latestVersion?: string
+  updateAvailable: boolean
+  source: 'brew' | 'npm'
+}
+
 export interface ClaudePlugin {
   name: string
   marketplace: string

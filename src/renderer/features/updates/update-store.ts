@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { UpdateInfo } from '../../../shared/types/index'
+import type { UpdateInfo, InstalledPackage } from '../../../shared/types/index'
 
 export interface InstallStatus {
   tool: string
@@ -36,12 +36,15 @@ interface UpdateState {
   lastChecked: number | null
   installingTool: string | null
   installStatus: InstallStatus | null
+  installedPackages: InstalledPackage[]
+  isLoadingInstalled: boolean
 }
 
 interface UpdateActions {
   checkUpdates: () => Promise<void>
   installUpdate: (tool: string, scope: UpdateInfo['scope'], projectId?: string) => Promise<void>
   uninstallUpdate: (tool: string) => Promise<void>
+  loadInstalledPackages: () => Promise<void>
   clearUpdates: () => void
   clearInstallStatus: () => void
 }
@@ -54,6 +57,8 @@ export const useUpdateStore = create<UpdateStore>((set, get) => ({
   lastChecked: null,
   installingTool: null,
   installStatus: null,
+  installedPackages: [],
+  isLoadingInstalled: false,
 
   checkUpdates: async () => {
     set({ isChecking: true })
@@ -119,6 +124,18 @@ export const useUpdateStore = create<UpdateStore>((set, get) => ({
       set({ installStatus: { tool, success: false, error } })
     } finally {
       set({ installingTool: null })
+    }
+  },
+
+  loadInstalledPackages: async () => {
+    set({ isLoadingInstalled: true })
+    try {
+      const packages: InstalledPackage[] = await window.kanbai.updates.listInstalled()
+      set({ installedPackages: packages })
+    } catch {
+      // not critical
+    } finally {
+      set({ isLoadingInstalled: false })
     }
   },
 

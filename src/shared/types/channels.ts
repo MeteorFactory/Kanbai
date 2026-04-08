@@ -72,6 +72,7 @@ export const IPC_CHANNELS = {
   UPDATE_UNINSTALL: 'update:uninstall',
   UPDATE_STATUS: 'update:status',
   UPDATE_RESOLVE_COMMAND: 'update:resolveCommand',
+  UPDATE_LIST_INSTALLED: 'update:listInstalled',
 
   // Claude Plugins
   CLAUDE_PLUGINS_LIST: 'claudePlugins:list',

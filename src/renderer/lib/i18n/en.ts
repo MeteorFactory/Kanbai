@@ -2145,6 +2145,11 @@ export const en = {
   'view.meteor': 'Meteor',
   'meteor.title': 'Meteor',
   'meteor.updatePrefix': 'Update',
+  'meteor.recommended': 'Recommended',
+  'meteor.installed': 'Installed',
+  'meteor.noPackages': 'No packages found.',
+  'meteor.viewPackage': 'View package',
+  'updates.updatesAvailable': 'updates',
 
   // Notes
   'view.notes': 'Notes',

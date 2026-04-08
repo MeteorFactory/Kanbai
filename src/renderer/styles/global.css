@@ -14978,7 +14978,7 @@ body {
 .meteor-panel {
   padding: 20px;
   overflow-y: auto;
-  max-width: 700px;
+  max-width: 1200px;
 }
 
 .meteor-header {
@@ -15004,4 +15004,85 @@ body {
 .meteor-btn-update-all {
   background: var(--accent) !important;
   color: #fff !important;
+}
+
+.meteor-columns {
+  display: flex;
+  gap: 20px;
+  min-height: 0;
+}
+
+.meteor-column {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.meteor-column-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.meteor-column-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+
+.meteor-column-count {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+}
+
+.meteor-column-count--update {
+  background: var(--accent);
+  color: #fff;
+}
+
+.meteor-pkg-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+}
+
+.meteor-pkg-section-count {
+  font-size: 10px;
+  color: var(--text-tertiary);
+}
+
+.notification-item-badge {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.notification-item-badge--brew {
+  background: rgba(234, 179, 8, 0.15);
+  color: #eab308;
+}
+
+.notification-item-badge--npm {
+  background: rgba(168, 85, 247, 0.15);
+  color: #a855f7;
+}
+
+.notification-item-badge--system {
+  background: var(--bg-tertiary);
+  color: var(--text-tertiary);
+}
+
+.notification-item-badge--winget {
+  background: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
 }

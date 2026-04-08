@@ -1,8 +1,9 @@
 import { IpcMain, BrowserWindow, app } from 'electron'
 import fs from 'fs/promises'
 import fsSync from 'fs'
+import os from 'os'
 import path from 'path'
-import { IPC_CHANNELS, UpdateInfo } from '../../shared/types'
+import { IPC_CHANNELS, UpdateInfo, InstalledPackage } from '../../shared/types'
 import { IS_WIN, getWhichCommand, getExtendedToolPaths, PATH_SEP, crossExecFile, refreshWindowsPath, addToWindowsUserPath } from '../../shared/platform'
 
 const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
@@ -23,10 +24,17 @@ function resolveNvmBinPaths(): string[] {
 
 function enrichedEnv(): NodeJS.ProcessEnv {
   const extraPaths = [...getExtendedToolPaths(), ...resolveNvmBinPaths()]
-  return {
+  const env: Record<string, string | undefined> = {
     ...process.env,
-    PATH: `${process.env.PATH || ''}${PATH_SEP}${extraPaths.join(PATH_SEP)}`,
+    PATH: `${extraPaths.join(PATH_SEP)}${PATH_SEP}${process.env.PATH || ''}`,
   }
+  // Remove pnpm-specific npm_config_ vars that cause warnings in version checks
+  for (const key of Object.keys(env)) {
+    if (key.startsWith('npm_config_')) delete env[key]
+  }
+  // Disable corepack so version checks reflect the actual global binary
+  env.COREPACK_ENABLE_STRICT = '0'
+  return env
 }
 
 /**
@@ -125,7 +133,8 @@ function enrichedExecFile(
   args: string[],
   timeout = 10000,
 ): Promise<{ stdout: string; stderr: string }> {
-  return crossExecFile(command, args, { timeout, env: enrichedEnv() })
+  // Run from HOME to avoid corepack/packageManager overrides in project directories
+  return crossExecFile(command, args, { timeout, env: enrichedEnv(), cwd: os.homedir() })
 }
 
 interface ToolCheck {
@@ -303,34 +312,65 @@ const TOOL_METADATA: Record<string, ToolMetadata> = {
 async function getVersion(command: string, args: string[]): Promise<string | null> {
   try {
     const { stdout, stderr } = await enrichedExecFile(command, args, 5000)
-    const version = (stdout || stderr)
-      .trim()
-      .replace(/^v/, '')
-      .replace(/^git version /, '')
-      .replace(/^go version go/, '')
-      .replace(/^Python /, '')
-      .replace(/^Claude Code /, '')
-      .replace(/^Homebrew /, '')
-      .replace(/^cargo /, '')
-      .replace(/^codex\s+/i, '')
-      .replace(/^copilot\s+/i, '')
-      .replace(/^GNU Make /, '')
-      .replace(/ \(.+\)$/, '')
-    if (!version) return null
-    return version
+    return extractVersion(stdout || stderr)
   } catch {
     return null
   }
 }
 
-function extractVersion(v: string): string {
-  const match = v.match(/(\d+\.\d+\.\d+)/)
-  return match ? match[1]! : v
+/**
+ * Regex-based version extraction that handles diverse output formats:
+ *  - "2.1.94 (Claude Code)"
+ *  - "go version go1.22.1 darwin/arm64"
+ *  - "Python 3.12.3"
+ *  - "codex-cli 0.118.0"
+ *  - "cargo 1.77.0 (3fe68eac7 2024-02-29)"
+ *  - plain semver "10.33.0"
+ */
+export function extractVersion(raw: string): string | null {
+  const lines = raw.trim().split('\n')
+  const line = (lines[0] ?? '').trim()
+  const match = line.match(/(\d+\.\d+\.\d+(?:[._-][\w.]+)?)/)
+  return match ? match[1]! : null
+}
+
+/**
+ * Detect install source from the resolved binary path.
+ *  - Symlink into a Homebrew Cellar -> brew
+ *  - Lives inside node_modules (npm global) -> npm
+ *  - Everything else -> system
+ */
+export function detectSourceFromPath(resolvedPath: string): 'brew' | 'npm' | 'system' {
+  if (!resolvedPath) return 'system'
+  const normalized = resolvedPath.toLowerCase()
+
+  // Homebrew Cellar (formula) or Caskroom (cask)
+  if (normalized.includes('/cellar/') || normalized.includes('/caskroom/')) return 'brew'
+
+  // npm global installs land in a node_modules tree
+  if (normalized.includes('/node_modules/')) return 'npm'
+
+  // Cargo bin
+  if (normalized.includes('/.cargo/bin/')) return 'system'
+
+  return 'system'
+}
+
+/**
+ * Resolve the real path of a binary by running `which` then following symlinks.
+ * Used by getCommandPath to resolve the actual binary location for source detection.
+ */
+function resolveRealPath(binPath: string): string {
+  try {
+    return fsSync.realpathSync(binPath)
+  } catch {
+    return binPath
+  }
 }
 
 function compareVersions(current: string, latest: string): boolean {
-  const c = extractVersion(current)
-  const l = extractVersion(latest)
+  const c = extractVersion(current) ?? current
+  const l = extractVersion(latest) ?? latest
   if (c === l) return false
   const cParts = c.split('.').map(Number)
   const lParts = l.split('.').map(Number)
@@ -448,7 +488,10 @@ async function getCommandPath(command: string): Promise<string | null> {
   try {
     const { stdout } = await enrichedExecFile(getWhichCommand(), [command], 5000)
     const firstLine = stdout.split(/\r?\n/).find((line) => line.trim())
-    return firstLine?.trim() || null
+    const binPath = firstLine?.trim() || null
+    if (!binPath) return null
+    // Follow symlinks to find the real install location (enables source detection)
+    return resolveRealPath(binPath)
   } catch {
     return null
   }
@@ -883,8 +926,8 @@ async function checkToolUpdates(): Promise<UpdateInfo[]> {
 
       return {
         tool: result.name,
-        currentVersion: extractVersion(result.version),
-        latestVersion: latestVersion ? extractVersion(latestVersion) : extractVersion(result.version),
+        currentVersion: extractVersion(result.version) ?? result.version,
+        latestVersion: latestVersion ? (extractVersion(latestVersion) ?? latestVersion) : (extractVersion(result.version) ?? result.version),
         updateAvailable: latestVersion !== null && compareVersions(result.version, latestVersion),
         installed: true,
         scope: 'global' as const,
@@ -1028,6 +1071,95 @@ async function patchPixelAgentsHtml(htmlPath: string): Promise<void> {
   )
   html = html.replace('</head>', `${PIXEL_AGENTS_SHIM}\n</head>`)
   await fs.writeFile(htmlPath, html, 'utf-8')
+}
+
+// ---------------------------------------------------------------------------
+// List all installed packages (brew + npm global)
+// ---------------------------------------------------------------------------
+
+async function listBrewPackages(): Promise<InstalledPackage[]> {
+  if (IS_WIN) return []
+  try {
+    const { stdout: listOut } = await enrichedExecFile('brew', ['list', '--versions', '--formula'], 15000)
+    const installed = new Map<string, string>()
+    for (const line of listOut.trim().split('\n')) {
+      if (!line) continue
+      const parts = line.split(/\s+/)
+      const name = parts[0]
+      const version = parts[parts.length - 1] // last token is newest version
+      if (name && version) installed.set(name, version)
+    }
+
+    // Get outdated packages
+    const outdated = new Map<string, string>()
+    try {
+      const { stdout: outdatedOut } = await enrichedExecFile('brew', ['outdated', '--json=v2'], 15000)
+      const data = JSON.parse(outdatedOut)
+      for (const formula of data.formulae ?? []) {
+        const latest = formula.current_version
+        if (formula.name && latest) outdated.set(formula.name, latest)
+      }
+    } catch {
+      // outdated check failed, proceed without
+    }
+
+    const results: InstalledPackage[] = []
+    for (const [name, currentVersion] of installed) {
+      const latestVersion = outdated.get(name)
+      results.push({
+        name,
+        currentVersion,
+        latestVersion,
+        updateAvailable: !!latestVersion,
+        source: 'brew',
+      })
+    }
+    return results
+  } catch {
+    return []
+  }
+}
+
+async function listNpmGlobalPackages(): Promise<InstalledPackage[]> {
+  try {
+    const { stdout } = await enrichedExecFile('npm', ['list', '-g', '--depth=0', '--json'], 15000)
+    const data = JSON.parse(stdout)
+    const deps: Record<string, { version: string }> = data.dependencies ?? {}
+
+    // Get outdated
+    const outdated = new Map<string, string>()
+    try {
+      const { stdout: outdatedOut } = await enrichedExecFile('npm', ['outdated', '-g', '--json'], 15000)
+      const outdatedData = JSON.parse(outdatedOut || '{}')
+      for (const [name, info] of Object.entries(outdatedData)) {
+        const latest = (info as { latest?: string }).latest
+        if (latest) outdated.set(name, latest)
+      }
+    } catch {
+      // npm outdated exits with code 1 when there are outdated packages
+    }
+
+    const results: InstalledPackage[] = []
+    for (const [name, info] of Object.entries(deps)) {
+      if (name === 'npm' || name === 'corepack') continue // skip npm itself
+      const latestVersion = outdated.get(name)
+      results.push({
+        name,
+        currentVersion: info.version,
+        latestVersion,
+        updateAvailable: !!latestVersion,
+        source: 'npm',
+      })
+    }
+    return results
+  } catch {
+    return []
+  }
+}
+
+async function listAllInstalledPackages(): Promise<InstalledPackage[]> {
+  const [brew, npm] = await Promise.all([listBrewPackages(), listNpmGlobalPackages()])
+  return [...brew, ...npm]
 }
 
 export function registerUpdateHandlers(ipcMain: IpcMain): void {
@@ -1622,4 +1754,8 @@ export function registerUpdateHandlers(ipcMain: IpcMain): void {
       }
     },
   )
+
+  ipcMain.handle(IPC_CHANNELS.UPDATE_LIST_INSTALLED, async () => {
+    return listAllInstalledPackages()
+  })
 }

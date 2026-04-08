@@ -10,16 +10,27 @@ import { describe, it, expect } from 'vitest'
  * - parseNpmOutdated(): parse la sortie de npm outdated --json
  */
 
-// Replique de extractVersion() depuis src/main/ipc/updates.ts (ligne 53-56)
-function extractVersion(v: string): string {
-  const match = v.match(/(\d+\.\d+\.\d+)/)
-  return match ? match[1]! : v
+// Replique de extractVersion() depuis src/main/ipc/updates.ts (regex-based)
+function extractVersion(raw: string): string | null {
+  const line = raw.trim().split('\n')[0].trim()
+  const match = line.match(/(\d+\.\d+\.\d+(?:[._-][\w.]+)?)/)
+  return match ? match[1]! : null
 }
 
-// Replique de compareVersions() depuis src/main/ipc/updates.ts (ligne 58-69)
+// Replique de detectSourceFromPath() depuis src/main/ipc/updates.ts
+function detectSourceFromPath(resolvedPath: string): 'brew' | 'npm' | 'system' {
+  if (!resolvedPath) return 'system'
+  const normalized = resolvedPath.toLowerCase()
+  if (normalized.includes('/cellar/') || normalized.includes('/caskroom/')) return 'brew'
+  if (normalized.includes('/node_modules/')) return 'npm'
+  if (normalized.includes('/.cargo/bin/')) return 'system'
+  return 'system'
+}
+
+// Replique de compareVersions() depuis src/main/ipc/updates.ts
 function compareVersions(current: string, latest: string): boolean {
-  const c = extractVersion(current)
-  const l = extractVersion(latest)
+  const c = extractVersion(current) ?? current
+  const l = extractVersion(latest) ?? latest
   if (c === l) return false
   const cParts = c.split('.').map(Number)
   const lParts = l.split('.').map(Number)
@@ -138,25 +149,95 @@ describe('Version comparison (updates)', () => {
     })
   })
 
-  describe('extractVersion (implementation reelle)', () => {
+  describe('extractVersion (regex-based)', () => {
     it('extrait x.y.z d une chaine simple', () => {
       expect(extractVersion('1.0.0')).toBe('1.0.0')
     })
 
     it('extrait la version d une chaine avec prefixe', () => {
-      expect(extractVersion('v20.0.0')).toBe('20.0.0')
+      expect(extractVersion('v20.11.0')).toBe('20.11.0')
     })
 
     it('extrait la version de la sortie git', () => {
-      expect(extractVersion('git version 2.40.0')).toBe('2.40.0')
+      expect(extractVersion('git version 2.44.0')).toBe('2.44.0')
     })
 
-    it('extrait la version de la sortie Claude Code', () => {
-      expect(extractVersion('Claude Code 1.5.0')).toBe('1.5.0')
+    it('extrait la version de "2.1.94 (Claude Code)"', () => {
+      expect(extractVersion('2.1.94 (Claude Code)')).toBe('2.1.94')
     })
 
-    it('retourne la chaine telle quelle si pas de version trouvee', () => {
-      expect(extractVersion('unknown')).toBe('unknown')
+    it('extrait la version de "go version go1.22.1 darwin/arm64"', () => {
+      expect(extractVersion('go version go1.22.1 darwin/arm64')).toBe('1.22.1')
+    })
+
+    it('extrait la version de "Python 3.12.3"', () => {
+      expect(extractVersion('Python 3.12.3')).toBe('3.12.3')
+    })
+
+    it('extrait la version de "cargo 1.77.0 (3fe68eac7 2024-02-29)"', () => {
+      expect(extractVersion('cargo 1.77.0 (3fe68eac7 2024-02-29)')).toBe('1.77.0')
+    })
+
+    it('extrait la version de "codex-cli 0.118.0"', () => {
+      expect(extractVersion('codex-cli 0.118.0')).toBe('0.118.0')
+    })
+
+    it('extrait la version de "2.50.1 (Apple Git-155)"', () => {
+      expect(extractVersion('2.50.1 (Apple Git-155)')).toBe('2.50.1')
+    })
+
+    it('extrait la version avec pre-release "1.0.0-beta.1"', () => {
+      expect(extractVersion('1.0.0-beta.1')).toBe('1.0.0-beta.1')
+    })
+
+    it('gere la sortie multiligne (prend la premiere ligne)', () => {
+      expect(extractVersion('2.1.94 (Claude Code)\nsome other line')).toBe('2.1.94')
+    })
+
+    it('retourne null pour une chaine vide', () => {
+      expect(extractVersion('')).toBeNull()
+    })
+
+    it('retourne null pour du texte sans version', () => {
+      expect(extractVersion('command not found')).toBeNull()
+    })
+  })
+
+  describe('detectSourceFromPath', () => {
+    it('detecte brew formula depuis un chemin Cellar', () => {
+      expect(detectSourceFromPath('/opt/homebrew/Cellar/node/25.9.0/bin/node')).toBe('brew')
+    })
+
+    it('detecte brew formula depuis /usr/local/Cellar', () => {
+      expect(detectSourceFromPath('/usr/local/Cellar/git/2.44.0/bin/git')).toBe('brew')
+    })
+
+    it('detecte brew cask depuis un chemin Caskroom', () => {
+      expect(detectSourceFromPath('/opt/homebrew/Caskroom/some-app/1.0/bin/app')).toBe('brew')
+    })
+
+    it('detecte npm depuis un chemin node_modules (brew node)', () => {
+      expect(detectSourceFromPath('/opt/homebrew/lib/node_modules/pnpm/bin/pnpm.cjs')).toBe('npm')
+    })
+
+    it('detecte npm depuis un chemin node_modules (nvm)', () => {
+      expect(detectSourceFromPath('/Users/user/.nvm/versions/node/v20.11.0/lib/node_modules/yarn/bin/yarn.js')).toBe('npm')
+    })
+
+    it('detecte system pour /usr/bin', () => {
+      expect(detectSourceFromPath('/usr/bin/python3')).toBe('system')
+    })
+
+    it('detecte system pour cargo bin', () => {
+      expect(detectSourceFromPath('/Users/user/.cargo/bin/cargo')).toBe('system')
+    })
+
+    it('retourne system pour un chemin vide', () => {
+      expect(detectSourceFromPath('')).toBe('system')
+    })
+
+    it('est insensible a la casse', () => {
+      expect(detectSourceFromPath('/opt/Homebrew/CELLAR/node/25.0.0/bin/node')).toBe('brew')
     })
   })
 

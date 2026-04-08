@@ -439,6 +439,8 @@ const api = {
       ipcRenderer.invoke(IPC_CHANNELS.UPDATE_UNINSTALL, { tool }),
     resolveCommand: (tool: string): Promise<{ command: string } | null> =>
       ipcRenderer.invoke(IPC_CHANNELS.UPDATE_RESOLVE_COMMAND, { tool }),
+    listInstalled: () =>
+      ipcRenderer.invoke(IPC_CHANNELS.UPDATE_LIST_INSTALLED),
     onStatus: (callback: (data: unknown) => void) => {
       const listener = (_event: Electron.IpcRendererEvent, payload: unknown) => callback(payload)
       ipcRenderer.on(IPC_CHANNELS.UPDATE_STATUS, listener)
