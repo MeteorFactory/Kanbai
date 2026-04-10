@@ -219,18 +219,27 @@ export async function buildRegularPrompt(params: RegularPromptParams): Promise<s
 
   // Add worktree-specific commit/merge instructions when the task uses a worktree
   if (task.worktreePath && task.worktreeBranch) {
+    const repoPath = task.worktreePath.replace(/\/\.kanbai-worktrees\/[^/]+$/, '')
+    const mergeTarget = task.worktreeBaseBranch ?? 'main'
     promptParts.push(
       ``,
-      `## ⚠ WORKTREE — COMMIT OBLIGATOIRE`,
-      `Tu travailles dans un **worktree git isolé** sur la branche \`${task.worktreeBranch}\`.`,
-      `Tes changements seront **PERDUS** si tu ne les commites pas avant de terminer.`,
+      `## WORKTREE — COMMIT ET MERGE OBLIGATOIRES`,
+      `Tu travailles dans un **worktree git isole** sur la branche \`${task.worktreeBranch}\`.`,
+      `Tes changements seront **PERDUS** si tu ne les commites pas et ne les merges pas avant de terminer.`,
       ``,
-      `**Séquence de fin OBLIGATOIRE (dans cet ordre exact) :**`,
+      `**Sequence de fin OBLIGATOIRE (dans cet ordre exact) :**`,
       `1. \`git add -A\``,
       `2. \`git commit -m "feat(kanban): ${ticketLabel} - description courte"\``,
-      `3. Mettre a jour le ticket kanban (status DONE + result + aiModel + updatedAt)`,
+      `3. Merger dans la branche cible :`,
+      `   - \`git -C "${repoPath}" checkout ${mergeTarget}\``,
+      `   - \`git -C "${repoPath}" merge ${task.worktreeBranch} --no-edit\``,
+      `4. Si il y a des conflits de merge :`,
+      `   - Resous les conflits dans les fichiers du repo principal (\`${repoPath}\`)`,
+      `   - \`git -C "${repoPath}" add -A\``,
+      `   - \`git -C "${repoPath}" commit -m "feat(kanban): ${ticketLabel} - merge worktree"\``,
+      `5. Mettre a jour le ticket kanban (status DONE + result + aiModel + updatedAt)`,
       ``,
-      `**NE JAMAIS terminer sans avoir execute les etapes 1 et 2.** Le merge sur la branche \`${task.worktreeBaseBranch ?? 'main'}\` sera fait automatiquement apres.`,
+      `**NE JAMAIS terminer sans avoir execute les etapes 1 a 3.**`,
     )
   }
 

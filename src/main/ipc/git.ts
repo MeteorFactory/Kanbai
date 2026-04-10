@@ -816,24 +816,9 @@ export function registerGitHandlers(ipcMain: IpcMain): void {
         // Detect the current working branch before creating the worktree
         const currentBranch = execGit(['rev-parse', '--abbrev-ref', 'HEAD'], cwd).trim()
 
-        // Detect default branch (main/master) to use as start point
-        let defaultBranch = 'main'
-        try {
-          // Check if 'main' exists
-          execGit(['rev-parse', '--verify', 'main'], cwd)
-        } catch {
-          try {
-            // Fallback to 'master'
-            execGit(['rev-parse', '--verify', 'master'], cwd)
-            defaultBranch = 'master'
-          } catch {
-            // Neither main nor master — use current branch as start point
-            defaultBranch = currentBranch
-          }
-        }
-
-        // Create worktree from the default branch (main/master) as start point
-        execGit(['worktree', 'add', worktreePath, '-b', validateRef(branch), defaultBranch], cwd)
+        // Create worktree from the current active branch as start point
+        // so the worktree inherits the work-in-progress of the active branch
+        execGit(['worktree', 'add', worktreePath, '-b', validateRef(branch), currentBranch], cwd)
 
         // Propagate .claude/settings.local.json to the worktree so Claude Code
         // hooks (Stop, PreToolUse, etc.) fire correctly in the worktree context.
@@ -878,7 +863,7 @@ export function registerGitHandlers(ipcMain: IpcMain): void {
         // (not tracked, won't pollute commits when merged back)
         ensureLockExcludedInWorktree(worktreePath)
 
-        return { success: true, baseBranch: currentBranch, startPoint: defaultBranch }
+        return { success: true, baseBranch: currentBranch }
       } catch (err) {
         return { success: false, error: String(err) }
       }

@@ -61,8 +61,8 @@ describe('Git Worktree IPC Handlers', { timeout: 15000 }, () => {
     } catch { /* ignore cleanup failures */ }
   })
 
-  describe('worktree creation from default branch', () => {
-    it('creates worktree from default branch as start point', async () => {
+  describe('worktree creation from active branch', () => {
+    it('creates worktree from current active branch as start point', async () => {
       const worktreePath = path.join(repoDir, '.kanbai-worktrees', 'test-task-1')
 
       const result = await mockIpcMain._invoke('git:worktreeAdd', {
@@ -74,7 +74,6 @@ describe('Git Worktree IPC Handlers', { timeout: 15000 }, () => {
       expect(result).toMatchObject({
         success: true,
         baseBranch: defaultBranch,
-        startPoint: defaultBranch,
       })
 
       // Verify worktree was created
@@ -84,13 +83,13 @@ describe('Git Worktree IPC Handlers', { timeout: 15000 }, () => {
       const branch = git(['rev-parse', '--abbrev-ref', 'HEAD'], worktreePath)
       expect(branch).toBe('kanban/t-1')
 
-      // Verify the worktree started from default branch's HEAD
+      // Verify the worktree started from current branch's HEAD
       const mainHead = git(['rev-parse', defaultBranch], repoDir)
       const worktreeBase = git(['merge-base', 'kanban/t-1', defaultBranch], repoDir)
       expect(worktreeBase).toBe(mainHead)
     })
 
-    it('creates worktree from default branch when on a feature branch', async () => {
+    it('creates worktree from feature branch when on a feature branch', async () => {
       // Create and switch to a feature branch with a commit
       git(['-c', 'user.name=Test', '-c', 'user.email=test@test.com', 'checkout', '-b', 'feat/my-feature'], repoDir)
       fs.writeFileSync(path.join(repoDir, 'feature.txt'), 'feature work')
@@ -108,19 +107,18 @@ describe('Git Worktree IPC Handlers', { timeout: 15000 }, () => {
       expect(result).toMatchObject({
         success: true,
         baseBranch: 'feat/my-feature',
-        startPoint: defaultBranch,
       })
 
-      // The worktree should start from default branch, NOT from feat/my-feature
-      const mainHead = git(['rev-parse', defaultBranch], repoDir)
+      // The worktree should start from the active branch (feat/my-feature)
+      const featureHead = git(['rev-parse', 'feat/my-feature'], repoDir)
       const worktreeHead = git(['rev-parse', 'HEAD'], worktreePath)
-      expect(worktreeHead).toBe(mainHead)
+      expect(worktreeHead).toBe(featureHead)
 
-      // The feature.txt should NOT exist in the worktree (it's on feat/my-feature, not default branch)
-      expect(fs.existsSync(path.join(worktreePath, 'feature.txt'))).toBe(false)
+      // The feature.txt SHOULD exist in the worktree (it started from feat/my-feature)
+      expect(fs.existsSync(path.join(worktreePath, 'feature.txt'))).toBe(true)
     })
 
-    it('falls back to master when main does not exist', async () => {
+    it('creates worktree from master when master is the active branch', async () => {
       // Create a repo with master as default branch
       const masterRepoDir = fs.mkdtempSync(path.join(os.tmpdir(), 'kanbai-worktree-master-test-'))
       git(['init', '-b', 'master'], masterRepoDir)
@@ -139,7 +137,6 @@ describe('Git Worktree IPC Handlers', { timeout: 15000 }, () => {
       expect(result).toMatchObject({
         success: true,
         baseBranch: 'master',
-        startPoint: 'master',
       })
 
       // Clean up
@@ -149,7 +146,7 @@ describe('Git Worktree IPC Handlers', { timeout: 15000 }, () => {
       } catch { /* ignore */ }
     })
 
-    it('returns baseBranch pointing to working branch for merge target', async () => {
+    it('returns baseBranch pointing to active branch for merge target', async () => {
       // Switch to feature branch
       git(['checkout', '-b', 'feat/login'], repoDir)
 
@@ -161,9 +158,8 @@ describe('Git Worktree IPC Handlers', { timeout: 15000 }, () => {
         branch: 'kanban/t-4',
       })
 
-      // baseBranch should be the working branch (feat/login), not the start point
+      // baseBranch should be the active branch (feat/login)
       expect(result.baseBranch).toBe('feat/login')
-      expect(result.startPoint).toBe(defaultBranch)
     })
 
     it('propagates .claude/settings.local.json to the worktree', async () => {
@@ -417,10 +413,9 @@ describe('Git Worktree IPC Handlers', { timeout: 15000 }, () => {
 
       expect(addResult.success).toBe(true)
       expect(addResult.baseBranch).toBe('feat/settings')
-      expect(addResult.startPoint).toBe(defaultBranch)
 
-      // Worktree should NOT have settings.ts (it started from default branch, not feat/settings)
-      expect(fs.existsSync(path.join(worktreePath, 'settings.ts'))).toBe(false)
+      // Worktree SHOULD have settings.ts (it started from the active branch feat/settings)
+      expect(fs.existsSync(path.join(worktreePath, 'settings.ts'))).toBe(true)
 
       // Step 2: Lock worktree (simulating session start)
       await mockIpcMain._invoke('git:worktreeLock', {

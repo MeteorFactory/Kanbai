@@ -127,7 +127,7 @@ function ensureKanbanHook(projectPath: string): void {
 # - PENDING + CTO -> auto-approve: revert to TODO (unblock CTO cycle)
 # - PENDING + regular -> activity "waiting" (double bell in Electron)
 # - FAILED  -> activity "failed" (quad bell in Electron)
-# - DONE    -> auto-commit worktree, then block AI to merge worktree branch (if not yet merged)
+# - DONE    -> auto-commit worktree (merge is handled by the AI via prompt instructions)
 $ActivityScript = "$env:USERPROFILE\\.kanbai\\hooks\\kanbai-activity.ps1"
 
 if (-not $env:KANBAI_KANBAN_TASK_ID) { exit 0 }
@@ -141,18 +141,6 @@ function Auto-CommitWorktree {
   $ticketLabel = if ($env:KANBAI_KANBAN_TICKET) { $env:KANBAI_KANBAN_TICKET } else { "unknown" }
   git add -A 2>$null
   git commit -m "chore(kanban): auto-commit $ticketLabel worktree changes" 2>$null
-}
-
-function Get-RepoPathFromWorktree($wtPath) {
-  if ($wtPath -match '(.*?)[\\\\/]\\.kanbai-worktrees[\\\\/]') { return $Matches[1] }
-  return $wtPath
-}
-
-function Test-BranchMerged($repoPath, $branch, $target) {
-  try {
-    git -C $repoPath merge-base --is-ancestor $branch $target 2>$null
-    return ($LASTEXITCODE -eq 0)
-  } catch { return $false }
 }
 
 $nodeOutput = node -e "
@@ -199,33 +187,8 @@ $AutoMerge = $parts[5]
 switch ($TicketStatus) {
   "DONE" {
     Auto-CommitWorktree
-
-    # If this task has a worktree, ask the AI to merge instead of auto-merging.
-    if ($WorktreePath -and $WorktreeBranch) {
-      $RepoPath = Get-RepoPathFromWorktree $WorktreePath
-      $MergeTarget = if ($WorktreeBaseBranch) { $WorktreeBaseBranch } else { "main" }
-
-      if (-not (Test-BranchMerged $RepoPath $WorktreeBranch $MergeTarget)) {
-        $TicketLabel = if ($env:KANBAI_KANBAN_TICKET) { $env:KANBAI_KANBAN_TICKET } else { "unknown" }
-        node -e "
-const reason = 'MERGE WORKTREE REQUIS avant de terminer !\\n\\n'
-  + 'Tu travailles dans un worktree. Tes commits sont sur la branche: $WorktreeBranch\\n'
-  + 'Tu dois merger cette branche dans la branche cible: $MergeTarget\\n'
-  + 'Repo principal: $RepoPath\\n\\n'
-  + 'Execute ces commandes :\\n'
-  + '  git -C \\\"$RepoPath\\\" checkout $MergeTarget\\n'
-  + '  git -C \\\"$RepoPath\\\" merge $WorktreeBranch --no-edit\\n\\n'
-  + 'Si il y a des conflits de merge :\\n'
-  + '  1. Resous les conflits dans les fichiers du repo principal ($RepoPath)\\n'
-  + '  2. git -C \\\"$RepoPath\\\" add -A\\n'
-  + '  3. git -C \\\"$RepoPath\\\" commit -m \\\"feat(kanban): $TicketLabel - merge worktree\\\"\\n\\n'
-  + 'Une fois le merge fait, tu peux terminer normalement.\\n'
-  + 'Le ticket kanban doit rester DONE — ne change pas son status.';
-process.stdout.write(JSON.stringify({ decision: 'block', reason: reason }));
-"
-      }
-    }
-    # Worktree removal/cleanup is deferred to the renderer (handleTabClosed)
+    # Merge is now handled by the AI via prompt instructions (like ticket status update).
+    # Worktree removal/cleanup is deferred to the renderer (handleTabClosed).
   }
   "FAILED" {
     Auto-CommitWorktree
@@ -283,25 +246,11 @@ process.stdout.write(JSON.stringify({ decision: 'block', reason: reason }));
 # - PENDING + CTO → auto-approve: revert to TODO (unblock CTO cycle)
 # - PENDING + regular → activity "waiting" (double bell in Electron)
 # - FAILED  → activity "failed" (quad bell in Electron)
-# - DONE    → auto-commit worktree, then block AI to merge worktree branch (if not yet merged)
+# - DONE    → auto-commit worktree (merge is handled by the AI via prompt instructions)
 ACTIVITY_SCRIPT="$HOME/.kanbai/hooks/kanbai-activity.sh"
 
 [ -z "$KANBAI_KANBAN_TASK_ID" ] && exit 0
 [ -z "$KANBAI_KANBAN_FILE" ] && exit 0
-
-# Derive the main repo path from the worktree path (strip /.kanbai-worktrees/{id})
-repo_path_from_worktree() {
-  local wt_path="$1"
-  echo "\${wt_path%%/.kanbai-worktrees/*}"
-}
-
-# Check if the worktree branch has been merged into the target branch
-is_branch_merged() {
-  local repo_path="$1"
-  local branch="$2"
-  local target="$3"
-  git -C "$repo_path" merge-base --is-ancestor "$branch" "$target" 2>/dev/null
-}
 
 # Auto-commit uncommitted worktree changes (runs in the worktree CWD)
 auto_commit_worktree() {
@@ -353,39 +302,8 @@ try {
 case "$TICKET_STATUS" in
   DONE)
     auto_commit_worktree
-
-    # If this task has a worktree, ask the AI to merge instead of auto-merging.
-    # The AI can handle merge conflicts, while the auto-merge would just abort.
-    if [ -n "$WORKTREE_PATH" ] && [ -n "$WORKTREE_BRANCH" ]; then
-      REPO_PATH=$(repo_path_from_worktree "$WORKTREE_PATH")
-      MERGE_TARGET="\${WORKTREE_BASE_BRANCH:-main}"
-
-      # Check if the branch is already merged — if so, let through
-      if is_branch_merged "$REPO_PATH" "$WORKTREE_BRANCH" "$MERGE_TARGET"; then
-        # Branch already merged — worktree cleanup will happen in the renderer
-        :
-      else
-        # Branch NOT merged — block and ask the AI to merge
-        TICKET_LABEL="\${KANBAI_KANBAN_TICKET:-unknown}"
-        node -e "
-const reason = 'MERGE WORKTREE REQUIS avant de terminer !\\n\\n'
-  + 'Tu travailles dans un worktree. Tes commits sont sur la branche: \${WORKTREE_BRANCH}\\n'
-  + 'Tu dois merger cette branche dans la branche cible: \${MERGE_TARGET}\\n'
-  + 'Repo principal: \${REPO_PATH}\\n\\n'
-  + 'Execute ces commandes :\\n'
-  + '  git -C \\\"$REPO_PATH\\\" checkout \${MERGE_TARGET}\\n'
-  + '  git -C \\\"$REPO_PATH\\\" merge \${WORKTREE_BRANCH} --no-edit\\n\\n'
-  + 'Si il y a des conflits de merge :\\n'
-  + '  1. Resous les conflits dans les fichiers du repo principal (\${REPO_PATH})\\n'
-  + '  2. git -C \\\"$REPO_PATH\\\" add -A\\n'
-  + '  3. git -C \\\"$REPO_PATH\\\" commit -m \\\"feat(kanban): \${TICKET_LABEL} - merge worktree\\\"\\n\\n'
-  + 'Une fois le merge fait, tu peux terminer normalement.\\n'
-  + 'Le ticket kanban doit rester DONE — ne change pas son status.';
-process.stdout.write(JSON.stringify({ decision: 'block', reason: reason }));
-"
-      fi
-    fi
-    # Worktree removal/cleanup is deferred to the renderer (handleTabClosed)
+    # Merge is now handled by the AI via prompt instructions (like ticket status update).
+    # Worktree removal/cleanup is deferred to the renderer (handleTabClosed).
     ;;
   FAILED)
     auto_commit_worktree
